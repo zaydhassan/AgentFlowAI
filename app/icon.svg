@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- AgentFlow AI — favicon / app icon (auto-served by Next at /icon.svg) — final v2 -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4338CA"/><stop offset=".5" stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <path d="M24 31 L40 31 C40 23 37 16 32 14 C27 16 24 23 24 31 C19 37 12 44 12 54 C19 63 45 63 52 54 C52 44 45 37 40 31 L24 31 Z"
+        stroke="#ffffff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

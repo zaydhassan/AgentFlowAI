@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none" font-family="Geist, Inter, system-ui, sans-serif">
+  <!-- AgentFlow AI — social preview / Open Graph card (1200×630) -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07080c"/><stop offset="1" stop-color="#0b0e1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop stop-color="#6366F1" stop-opacity=".22"/><stop offset="1" stop-color="#6366F1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="loop" x1="0" y1="0" x2="640" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/><stop offset=".5" stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="word" x1="120" y1="0" x2="640" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/><stop offset=".5" stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="315" r="320" fill="url(#glow)"/>
+
+  <!-- Flow Loop (with cycle nodes), scaled to the card -->
+  <g transform="translate(420 95) scale(7)">
+    <path d="M24 30 L40 30 C40 22 37 15 32 13 C27 15 24 22 24 30 C19 36 12 43 12 53 C19 62 45 62 52 53 C52 43 45 36 40 30 L24 30 Z"
+          stroke="url(#loop)" stroke-width="4.1" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#7C3AED">
+      <circle cx="37" cy="20" r="3.4"/><circle cx="52" cy="53" r="3.4"/>
+      <circle cx="12" cy="53" r="3.4"/><circle cx="27" cy="20" r="3.4"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="600" y="540" text-anchor="middle" font-size="74" font-weight="600" letter-spacing="-2" fill="#f4f6fb">
+    AgentFlow <tspan fill="url(#word)">AI</tspan>
+  </text>
+  <text x="600" y="586" text-anchor="middle" font-size="26" font-weight="400" fill="#9aa1b2" letter-spacing="0.5">
+    The AI-Native Automation Platform
+  </text>
+
+  <!-- Palette strip -->
+  <g transform="translate(470 612)">
+    <rect x="0"   y="0" width="86" height="6" rx="3" fill="#6366F1"/>
+    <rect x="92"  y="0" width="86" height="6" rx="3" fill="#3B82F6"/>
+    <rect x="184" y="0" width="86" height="6" rx="3" fill="#22D3EE"/>
+  </g>
+</svg>

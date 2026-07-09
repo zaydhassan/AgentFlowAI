@@ -1,0 +1,42 @@
+
+> agentflow-ai@0.1.0 build
+> next build
+
+▲ Next.js 16.2.10 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.6s
+  Running TypeScript ...
+  Finished TypeScript in 3.2s ...
+  Collecting page data using 21 workers ...
+  Generating static pages using 21 workers (0/18) ...
+  Generating static pages using 21 workers (4/18) 
+  Generating static pages using 21 workers (8/18) 
+  Generating static pages using 21 workers (13/18) 
+✓ Generating static pages using 21 workers (18/18) in 871ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /ai
+├ ○ /ai/agents
+├ ○ /ai/memory
+├ ○ /ai/rag
+├ ○ /dashboard
+├ ○ /executions
+├ ƒ /executions/[id]
+├ ○ /login
+├ ○ /marketplace
+├ ○ /observability
+├ ○ /pricing
+├ ○ /settings
+├ ○ /settings/billing
+├ ○ /signup
+├ ○ /workflows
+└ ƒ /workflows/[id]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

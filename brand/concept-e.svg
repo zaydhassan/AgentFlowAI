@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="g" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/><stop offset=".5" stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <!-- Concept E — Continuous loop (autonomous execution) -->
+  <rect x="14" y="14" width="36" height="36" rx="11" stroke="url(#g)" stroke-width="3.4"
+        stroke-linecap="round" stroke-dasharray="82 50" fill="none" transform="rotate(0 32 32)"/>
+  <circle cx="46" cy="18" r="4" fill="#22D3EE"/>
+</svg>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AgentFlow AI — Brand System</title>
+<style>
+  :root{
+    --indigo:#6366F1; --blue:#3B82F6; --cyan:#22D3EE; --purple:#7C3AED;
+    --ink:#0B1020; --ink2:#11182E; --line:#222B45; --fg:#E8ECF6; --muted:#94A0B8;
+    --bg:#070B16;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:64px 28px 120px}
+  h1{font-size:40px;letter-spacing:-.02em;margin:0 0 6px;font-weight:650}
+  h2{font-size:22px;margin:56px 0 4px;letter-spacing:-.01em;font-weight:650}
+  .lead{color:var(--muted);font-size:16px;max-width:640px;line-height:1.6}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);border:1px solid var(--line);padding:4px 10px;border-radius:999px;margin-bottom:18px}
+  .card{background:linear-gradient(180deg,var(--ink),var(--ink2));border:1px solid var(--line);border-radius:18px;padding:26px}
+  .grid{display:grid;gap:18px}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-5{grid-template-columns:repeat(5,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.cols-3,.cols-5,.cols-2{grid-template-columns:1fr 1fr}}
+  .concept{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+  .stage{background:radial-gradient(120% 120% at 50% 0%,rgba(99,102,241,.12),transparent 60%);border:1px solid var(--line);border-radius:14px;display:grid;place-items:center;height:150px;width:100%}
+  .sizes{display:flex;align-items:center;gap:14px;justify-content:center}
+  .sizes span{display:grid;place-items:center;background:#0B1020;border:1px solid var(--line);border-radius:8px}
+  .label{font-size:13px;font-weight:600}
+  .meta{font-size:12px;color:var(--muted);line-height:1.5;max-width:200px}
+  .rec{position:relative}
+  .rec .badge{position:absolute;top:10px;right:10px;background:var(--cyan);color:#04121A;font-size:10px;font-weight:700;letter-spacing:.08em;padding:3px 8px;border-radius:999px}
+  .sw{height:64px;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
+  .sw-wrap{display:flex;flex-direction:column;gap:6px}
+  .sw-wrap small{color:var(--muted);font-size:11px}
+  .row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  code{background:#0B1020;border:1px solid var(--line);padding:2px 6px;border-radius:6px;font-size:12px;color:var(--cyan)}
+  .mono{filter:brightness(0) invert(1)}  /* render on dark as white */
+  .do{border-left:3px solid #34D399;padding:10px 14px;background:rgba(52,211,153,.06);border-radius:8px;margin:6px 0;font-size:14px;color:#BFE9D6}
+  .dont{border-left:3px solid #fb7185;padding:10px 14px;background:rgba(251,113,133,.06);border-radius:8px;margin:6px 0;font-size:14px;color:#F3C3CC}
+  .specimen{font-size:30px;letter-spacing:-.02em}
+  .scale{display:flex;gap:2px;align-items:flex-end}
+  .scale i{display:block;width:14px;background:linear-gradient(var(--indigo),var(--cyan));border-radius:3px}
+  footer{margin-top:80px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="tag">Brand System · v1.0</span>
+  <h1>AgentFlow&nbsp;AI</h1>
+  <p class="lead">The AI-Native Automation Platform. A minimal, geometric identity built around one idea: a single continuous loop that carries an agent through <strong>Plan → Reason → Execute → Learn → Improve</strong>. Designed to be recognizable at 16×16 and premium at any size.</p>
+
+  <h2>Recommended Mark</h2>
+  <div class="card rec" style="margin-top:14px">
+    <span class="badge">PRIMARY · CONCEPT B</span>
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <div class="stage" style="height:120px;width:120px"><img src="concept-b.svg" width="84" alt="AgentFlow mark"></div>
+        <div>
+          <div class="label">The Flow Loop</div>
+          <p class="meta" style="max-width:420px">One continuous closed path — the workflow loop stays the foundation. Its upper counter curves into a hidden "A" via negative space (rounded apex + waist crossbar); the lower half is the execution swoop. Four balanced nodes ride the loop: Plan, Reason, Execute, Learn. Stroke thickened ~14%, perfect symmetry, every corner rounded, scales clean from 16px.</p>
+        </div>
+      </div>
+      <div class="sizes">
+        <span style="height:64px;width:64px"><img src="concept-b.svg" width="48"></span>
+        <span style="height:40px;width:40px"><img src="concept-b.svg" width="30"></span>
+        <span style="height:24px;width:24px"><img src="concept-b.svg" width="18"></span>
+        <span style="height:18px;width:18px"><img src="favicon.svg" width="14"></span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Five Concepts</h2>
+  <div class="grid cols-5">
+    <div class="card concept"><div class="stage"><img src="concept-a.svg" width="92" alt="A"></div><div class="label">A · Interconnected Nodes</div><p class="meta">Hub + diamond ring — an intelligent workflow graph.</p><div class="sizes"><span style="height:24px;width:24px"><img src="concept-a.svg" width="18"></span><span style="height:18px;width:18px"><img src="concept-a.svg" width="14"></span></div></div>
+    <div class="card concept" style="border-color:rgba(34,211,238,.5)"><div class="stage"><img src="concept-b.svg" width="92" alt="B"></div><div class="label">B · Infinity Workflow</div><p class="meta">Continuous execution loop + cycle nodes. <strong style="color:var(--cyan)">Recommended.</strong></p><div class="sizes"><span style="height:24px;width:24px"><img src="concept-b.svg" width="18"></span><span style="height:18px;width:18px"><img src="concept-b.svg" width="14"></span></div></div>
+    <div class="card concept"><div class="stage"><img src="concept-c.svg" width="92" alt="C"></div><div class="label">C · Agent Network</div><p class="meta">An autonomous agent in continuous orbit.</p><div class="sizes"><span style="height:24px;width:24px"><img src="concept-c.svg" width="18"></span><span style="height:18px;width:18px"><img src="concept-c.svg" width="14"></span></div></div>
+    <div class="card concept"><div class="stage"><img src="concept-d.svg" width="92" alt="D"></div><div class="label">D · Geometric "A"</div><p class="meta">An "A" built entirely from connected workflow paths.</p><div class="sizes"><span style="height:24px;width:24px"><img src="concept-d.svg" width="18"></span><span style="height:18px;width:18px"><img src="concept-d.svg" width="14"></span></div></div>
+    <div class="card concept"><div class="stage"><img src="concept-e.svg" width="92" alt="E"></div><div class="label">E · Continuous Loop</div><p class="meta">A single loop with directional flow = autonomous execution.</p><div class="sizes"><span style="height:24px;width:24px"><img src="concept-e.svg" width="18"></span><span style="height:18px;width:18px"><img src="concept-e.svg" width="14"></span></div></div>
+  </div>
+
+  <h2>Adaptations</h2>
+  <div class="grid cols-3">
+    <div class="card concept"><div class="stage"><img src="app-icon.svg" width="96"></div><div class="label">App Icon</div><p class="meta">Gradient tile + white loop. iOS / Android / desktop.</p></div>
+    <div class="card concept"><div class="stage"><img src="favicon.svg" width="64"></div><div class="label">Favicon</div><p class="meta">Dot-free loop for crisp 16px rendering.</p></div>
+    <div class="card concept"><div class="stage"><img src="concept-b-mono.svg" width="64" class="mono"></div><div class="label">Monochrome</div><p class="meta">Single-color form for stamps, etch, print.</p></div>
+    <div class="card concept"><div class="stage"><img src="spinner.svg" width="84"></div><div class="label">Loading Spinner</div><p class="meta">Flow traveling the loop — live below.</p></div>
+    <div class="card concept" style="grid-column:span 2"><div class="stage"><img src="animated-mark.svg" width="120"></div><div class="label">Animated Logo</div><p class="meta">A flow segment travels the loop while the four cycle nodes pulse in sequence (Plan → Reason → Execute → Learn) — the brand's operating model, in motion.</p></div>
+    <div class="card concept"><div class="stage"><img src="concept-b-dark.svg" width="64" style="background:#07080c;border-radius:12px"></div><div class="label">Dark Ink</div><p class="meta">Near-white loop on dark surfaces.</p></div>
+    <div class="card concept"><div class="stage"><img src="splash.svg" width="96" style="border-radius:12px"></div><div class="label">Splash</div><p class="meta">App-launch splash (1024, animated).</p></div>
+    <div class="card concept" style="grid-column:span 3"><div class="stage" style="height:auto;padding:0"><img src="social-preview.svg" style="width:100%;border-radius:12px;display:block"></div><div class="label">Social Preview</div><p class="meta">Open Graph / X / LinkedIn card (1200×630).</p></div>
+  </div>
+
+  <h2>Color Palette</h2>
+  <div class="grid cols-5">
+    <div class="sw-wrap"><div class="sw" style="background:#4338CA"></div><small>Deep Indigo<br>#4338CA</small></div>
+    <div class="sw-wrap"><div class="sw" style="background:#6366F1"></div><small>Indigo<br>#6366F1</small></div>
+    <div class="sw-wrap"><div class="sw" style="background:#3B82F6"></div><small>Electric Blue<br>#3B82F6</small></div>
+    <div class="sw-wrap"><div class="sw" style="background:#22D3EE"></div><small>Cyan<br>#22D3EE</small></div>
+    <div class="sw-wrap"><div class="sw" style="background:#7C3AED"></div><small>Purple<br>#7C3AED</small></div>
+  </div>
+  <p class="lead" style="margin-top:14px">Gradient: <code>#6366F1 → #3B82F6 → #22D3EE</code> (diagonal, indigo→blue→cyan). Slate surfaces: <code>#0B1020</code> / <code>#11182E</code>. Text: <code>#E8ECF6</code> on dark, <code>#0F172A</code> on light.</p>
+
+  <h2>Typography</h2>
+  <div class="card">
+    <div class="specimen" style="font-weight:650">Geist — the system voice</div>
+    <p class="meta" style="max-width:none;margin-top:6px">Display & UI: <code>Geist</code> (already in your Next.js setup) — weights 450–650, tight tracking (-.01em to -.02em) for headings.<br>Alternative: <code>Inter</code>. Mono: <code>Geist Mono</code> for code/logs. Numerals: tabular for dashboards.</p>
+    <div class="row" style="margin-top:12px;gap:22px">
+      <span><code>H1</code> 40px / 650 / -.02em</span>
+      <span><code>H2</code> 22px / 650</span>
+      <span><code>Body</code> 16px / 450 / 1.6</span>
+      <span><code>Caption</code> 12px / muted</span>
+    </div>
+  </div>
+
+  <h2>Spacing System (8pt base)</h2>
+  <div class="card">
+    <div class="scale" style="margin-bottom:10px">
+      <i style="height:4px"></i><i style="height:8px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:24px"></i><i style="height:32px"></i><i style="height:48px"></i><i style="height:64px"></i>
+    </div>
+    <p class="meta" style="max-width:none">Scale: <code>4 · 8 · 12 · 16 · 24 · 32 · 48 · 64</code>. Clear-space: keep a minimum 1× mark-height margin around the logo. Minimum mark size: 16px (favicon) / 24px (UI).</p>
+  </div>
+
+  <h2>Usage</h2>
+  <div class="grid cols-2">
+    <div>
+      <div class="do">Use the gradient loop on dark surfaces, or white/mono on light.</div>
+      <div class="do">Respect clear-space equal to the mark height.</div>
+      <div class="do">Use the dot-free loop at ≤24px; add cycle nodes only ≥64px.</div>
+    </div>
+    <div>
+      <div class="dont">Don't recolor the gradient or add shadows/glows.</div>
+      <div class="dont">Don't stretch, rotate, or place on busy photos without contrast.</div>
+      <div class="dont">Don't swap in generic AI icons (robot, brain, circuit, bolt, hex).</div>
+    </div>
+  </div>
+
+  <h2>Animation Ideas</h2>
+  <div class="card">
+    <p class="meta" style="max-width:none">• <strong>Intro</strong>: loop draws in as a single stroke (dashoffset → 0), then the 4 nodes pop in clockwise.<br>
+    • <strong>Processing</strong>: spinner — a short segment travels the loop continuously (see spinner above).<br>
+    • <strong>Success</strong>: the loop completes and pulses cyan once.<br>
+    • <strong>Idle</strong>: nodes breathe (opacity 1↔.2) in sequence to imply a live agent.<br>
+    • <strong>Page load</strong>: logo draws, then morphs into the favicon state in the tab.<br>
+    • Keep motion ≤400ms, ease-out, one gesture at a time. Respect <code>prefers-reduced-motion</code>.</p>
+  </div>
+
+  <footer>AgentFlow AI brand system — concept exploration. Files live in <code>/brand</code>. The recommended mark is wired into the app as <code>app/icon.svg</code> and <code>components/ui/logo.tsx</code>.</footer>
+</div>
+</body>
+</html>
