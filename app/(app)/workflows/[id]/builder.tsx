@@ -14,95 +14,136 @@ import {
   useEdgesState,
   useReactFlow,
   addEdge,
+  MarkerType,
   type Connection,
   type Edge,
   type Node,
   type NodeChange,
   type EdgeChange,
-  MarkerType,
+  type OnNodesChange,
 } from "@xyflow/react";
-import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { NodePalette } from "@/components/workflow/node-palette";
 import { WorkflowNode as AgentflowNode } from "@/components/workflow/custom-node";
+import { StickyNote } from "@/components/workflow/sticky-note";
+import { Comment } from "@/components/workflow/comment";
+import { GroupNode } from "@/components/workflow/group-node";
+import { CustomEdge } from "@/components/workflow/custom-edge";
 import { Inspector } from "@/components/workflow/inspector";
 import { CopilotPanel } from "@/components/workflow/copilot-panel";
+import { ExecutionDock, type DockStep, type DockStatus } from "@/components/workflow/execution-dock";
+import { VersionHistory, type VersionEntry } from "@/components/workflow/version-history";
+import { NodeSearch } from "@/components/workflow/node-search";
+import { ContextMenu, type ContextAction } from "@/components/workflow/context-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { workflows } from "@/lib/mock/data";
 import { getNodeDef } from "@/lib/nodes";
-import { scheduleExecution } from "@/lib/mock/engine";
-import type { WorkflowNode, NodeStatus } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
+import { streamSSE } from "@/lib/workflow/sse-client";
+import type { Graph } from "@/lib/workflow/graph";
+import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/lib/types";
 
-const nodeTypes = { agentflow: AgentflowNode };
+const nodeTypes = { agentflow: AgentflowNode, sticky: StickyNote, comment: Comment, group: GroupNode };
+const edgeTypes = { custom: CustomEdge };
+
+const CANVAS_TYPES = new Set(["sticky", "comment", "group"]);
 
 let idCounter = 1000;
 const nextId = () => `n${idCounter++}`;
 
-// Convert our domain nodes -> React Flow nodes
+export interface InitialWorkflow {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  version: number;
+  graph: Graph;
+  versions: VersionEntry[];
+}
+
+// ── domain <-> React Flow conversion ──
 function toFlowNodes(nodes: WorkflowNode[]): Node[] {
-  return nodes.map((n) => ({
-    id: n.id,
-    type: "agentflow",
-    position: n.position,
-    data: { ...n.data, __type: n.type },
-  }));
+  return nodes.map((n) => {
+    if (CANVAS_TYPES.has(n.type)) {
+      return { id: n.id, type: n.type, position: n.position, data: { ...n.data }, width: n.type === "group" ? 320 : undefined, height: n.type === "group" ? 200 : undefined };
+    }
+    return { id: n.id, type: "agentflow", position: n.position, data: { ...n.data, __type: n.type } };
+  });
 }
 function fromFlowNodes(nodes: Node[]): WorkflowNode[] {
   return nodes.map((n) => {
-    const d = n.data as Record<string, any>;
+    const d = n.data as Record<string, unknown>;
+    if (CANVAS_TYPES.has(n.type ?? "")) {
+      return { id: n.id, position: n.position, type: n.type as string, data: d as WorkflowNode["data"] };
+    }
     return {
       id: n.id,
       position: n.position,
-      type: d.__type,
+      type: (d.__type as string) ?? "util.delay",
       data: {
-        label: d.label as string,
+        label: (d.label as string) ?? "",
         config: (d.config as Record<string, unknown>) ?? {},
-        status: d.status as WorkflowNode["data"]["status"] | undefined,
-        durationMs: d.durationMs as number | undefined,
-        logs: d.logs as string[] | undefined,
-        retries: d.retries as number | undefined,
+        ...(d.status != null ? { status: d.status as NodeStatus } : {}),
+        ...(d.durationMs != null ? { durationMs: d.durationMs as number } : {}),
+        ...(d.tokensUsed != null ? { tokensUsed: d.tokensUsed as number } : {}),
+        ...(d.logs != null ? { logs: d.logs as string[] } : {}),
+        ...(d.retries != null ? { retries: d.retries as number } : {}),
+        ...(d.breakpoint != null ? { breakpoint: d.breakpoint as boolean } : {}),
       },
     };
   });
 }
+function domainEdges(edges: Edge[]): WorkflowEdge[] {
+  return edges.map((e) => ({ id: e.id, source: e.source, target: e.target, animated: !!e.animated, ...(e.label ? { label: String(e.label) } : {}) }));
+}
 
-function BuilderInner() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const wf = useMemo(() => workflows.find((w) => w.id === params.id) ?? workflows[0], [params.id]);
+const EDGE_STYLE = { stroke: "#5b6178", strokeWidth: 2 };
+const EDGE_MARKER = { type: MarkerType.ArrowClosed, color: "#5b6178" };
 
-  const initialNodes = useMemo(() => toFlowNodes(wf.nodes), [wf]);
+interface Snapshot {
+  nodes: Node[];
+  edges: Edge[];
+  viewport: { x: number; y: number; zoom: number };
+}
+
+function BuilderInner({ initial }: { initial: InitialWorkflow }) {
+  const { id: workflowId, name: initialName, version: initialVersion, graph: initialGraph, versions: initialVersions } = initial;
+
+  const initialNodes = useMemo(() => toFlowNodes(initialGraph.nodes), [initialGraph]);
   const initialEdges = useMemo<Edge[]>(
-    () =>
-      wf.edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        animated: e.animated,
-        style: { stroke: "#3a3f52", strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#3a3f52" },
-      })),
-    [wf]
+    () => initialGraph.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: "custom", animated: e.animated, data: {}, style: EDGE_STYLE, markerEnd: EDGE_MARKER })),
+    [initialGraph],
   );
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(initialNodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [running, setRunning] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(true);
+  const [name, setName] = useState(initialName);
+  const [version, setVersion] = useState(initialVersion);
+  const [versions, setVersions] = useState<VersionEntry[]>(initialVersions);
+  const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [dockOpen, setDockOpen] = useState(false);
+  const [versionMenuOpen, setVersionMenuOpen] = useState(false);
+  const [ctx, setCtx] = useState<{ x: number; y: number; nodeId: string | null } | null>(null);
+  const [diagnoseSignal, setDiagnoseSignal] = useState(0);
+
+  // run state
+  const [runStatus, setRunStatus] = useState<DockStatus>("idle");
   const [runLog, setRunLog] = useState<string[]>([]);
-  const [paused, setPaused] = useState(false);
+  const [steps, setSteps] = useState<DockStep[]>([]);
+  const executionId = useRef<string | null>(null);
+  const sseHandle = useRef<{ abort: () => void } | null>(null);
+  const stepsRef = useRef<Map<string, DockStep>>(new Map());
 
-  // history for undo/redo
-  const undoStack = useRef<Node[][]>([]);
-  const redoStack = useRef<Node[][]>([]);
+  // history
+  const undoStack = useRef<Snapshot[]>([]);
+  const redoStack = useRef<Snapshot[]>([]);
   const clipboard = useRef<Node[]>([]);
-  const runTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { screenToFlowPosition, fitView, getNode, getNodes } = useReactFlow();
+  const { screenToFlowPosition, fitView, getViewport, setViewport, getNode, getNodes } = useReactFlow();
 
   const selectedNode = useMemo<WorkflowNode | null>(() => {
     if (!selectedId) return null;
@@ -110,266 +151,375 @@ function BuilderInner() {
     return n ? fromFlowNodes([n])[0] : null;
   }, [selectedId, rfNodes]);
 
+  const graphForApi = useCallback((): Graph => {
+    const vp = getViewport();
+    return { nodes: fromFlowNodes(getNodes()), edges: domainEdges(rfEdges), viewport: { x: vp.x, y: vp.y, zoom: vp.zoom } };
+  }, [getNodes, rfEdges, getViewport]);
+
+  // ── history snapshots ──
   const snapshot = useCallback(() => {
-    undoStack.current.push(JSON.parse(JSON.stringify(rfNodes)));
+    undoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() });
     if (undoStack.current.length > 50) undoStack.current.shift();
     redoStack.current = [];
-  }, [rfNodes]);
+  }, [rfNodes, rfEdges, getViewport]);
 
-  const onConnect = useCallback(
-    (c: Connection | Edge) => {
-      snapshot();
-      setRfEdges((eds) =>
-        addEdge(
-          { ...c, animated: true, style: { stroke: "#3a3f52", strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: "#3a3f52" } } as any,
-          eds
-        )
-      );
-    },
-    [setRfEdges, snapshot]
-  );
+  const restore = useCallback((s: Snapshot) => {
+    setRfNodes(s.nodes);
+    setRfEdges(s.edges);
+    setViewport(s.viewport);
+  }, [setRfNodes, setRfEdges, setViewport]);
 
-  // drag & drop from palette
-  const onDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData("application/agentflow-node");
-      if (!type) return;
-      const def = getNodeDef(type);
-      if (!def) return;
-      const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      snapshot();
-      const newNode: Node = {
-        id: nextId(),
-        type: "agentflow",
-        position,
-        data: { label: def.label, config: { ...def.defaultConfig, __type: type }, status: "idle" },
-      };
-      setRfNodes((nds) => [...nds, newNode]);
-    },
-    [screenToFlowPosition, setRfNodes, snapshot]
-  );
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
-
-  // selection + node changes (track selection)
-  const handleNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      onNodesChange(changes);
-      for (const c of changes) {
-        if (c.type === "select" && c.selected) setSelectedId(c.id);
+  // ── auto-save (debounced) ──
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>("{}");
+  useEffect(() => {
+    const graph = graphForApi();
+    const payload = { name, graph };
+    const serialized = JSON.stringify({ graph: graph.nodes.length + graph.edges.length, name });
+    if (serialized === lastSavedRef.current) return;
+    setSaveState("saving");
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/workflows/${workflowId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        lastSavedRef.current = serialized;
+        setSaveState("saved");
+      } catch {
+        setSaveState("saved");
       }
-    },
-    [onNodesChange]
-  );
+    }, 800);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [rfNodes, rfEdges, name, workflowId, graphForApi]);
 
-  const updateNode = useCallback(
-    (id: string, patch: Partial<WorkflowNode["data"]>) => {
-      setRfNodes((nds) =>
-        nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...patch } } : n))
-      );
-    },
-    [setRfNodes]
-  );
+  // ── node ops ──
+  const patchNode = useCallback((nodeId: string, patch: Record<string, unknown>) => {
+    setRfNodes((nds) => nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n)));
+  }, [setRfNodes]);
 
-  const onRename = useCallback((id: string, label: string) => {
+  const onRename = useCallback((nodeId: string, label: string) => { snapshot(); patchNode(nodeId, { label }); }, [snapshot, patchNode]);
+  const onUpdate = useCallback((nodeId: string, patch: Partial<WorkflowNode["data"]>) => { patchNode(nodeId, patch); }, [patchNode]);
+  const toggleBreakpoint = useCallback((nodeId: string) => {
+    const n = getNode(nodeId);
+    patchNode(nodeId, { breakpoint: !((n?.data as { breakpoint?: boolean })?.breakpoint) });
+  }, [getNode, patchNode]);
+  const deleteNode = useCallback((nodeId: string) => {
     snapshot();
-    updateNode(id, { label });
-  }, [updateNode, snapshot]);
+    setRfNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    setRfEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    setSelectedId(null);
+  }, [snapshot, setRfNodes, setRfEdges]);
 
-  // ---- Execution simulation ----
-  const clearTimers = () => {
-    runTimers.current.forEach(clearTimeout);
-    runTimers.current = [];
-  };
-  const stopRun = () => {
-    clearTimers();
-    setRunning(false);
-    setRfNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, status: "skipped" as NodeStatus } })));
-    setRunLog((l) => [...l, "› execution stopped"]);
-  };
-
-  const runWorkflow = useCallback(() => {
-    if (running) {
-      stopRun();
+  const insertNode = useCallback((type: string, position?: { x: number; y: number }) => {
+    snapshot();
+    const pos = position ?? { x: 200 + Math.random() * 200, y: 150 + Math.random() * 200 };
+    if (CANVAS_TYPES.has(type)) {
+      const data: Record<string, unknown> =
+        type === "sticky" ? { sticky: { content: "", color: "#facc15" } }
+          : type === "comment" ? { comment: { content: "" } }
+            : { group: { label: "Group", color: "#64748b" } };
+      const node: Node = { id: nextId(), type, position: pos, data, ...(type === "group" ? { width: 320, height: 200 } : {}) };
+      setRfNodes((nds) => [...nds, node]);
       return;
     }
-    const domainNodes = fromFlowNodes(getNodes());
-    const domainEdges = rfEdges.map((e) => ({ id: e.id, source: e.source, target: e.target, animated: !!e.animated }));
-    const { events, totalMs } = scheduleExecution(domainNodes, domainEdges);
-    setRunning(true);
-    setRunLog([`› starting execution · ${domainNodes.length} nodes · est ${Math.round(totalMs / 1000)}s`]);
-    // reset statuses
-    setRfNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, status: "idle" as NodeStatus, logs: [], durationMs: undefined, retries: 0 } })));
-    const SPEED = 0.18; // replay 5.5x faster than simulated
-    const nodeLogs: Record<string, string[]> = {};
-    events.forEach((ev) => {
-      const t = setTimeout(() => {
-        const { event } = ev;
-        if (event.status === "running" && !event.log && !event.reasoning) {
-          // start: clear logs
-          nodeLogs[event.nodeId] = [];
-          updateNode(event.nodeId, { status: "running", logs: [], retries: event.attempt });
-        } else if (event.log) {
-          const logs = [...(nodeLogs[event.nodeId] ?? []), event.log];
-          nodeLogs[event.nodeId] = logs;
-          updateNode(event.nodeId, { status: event.status as NodeStatus, logs });
-          setRunLog((l) => [...l, `[${event.nodeId}] ${event.log}`]);
-        } else if (event.reasoning) {
-          // reasoning ticks — keep running status
-          updateNode(event.nodeId, { status: "running" });
-          setRunLog((l) => [...l, `[${event.nodeId}] reasoning: ${event.reasoning}`]);
-        } else if (event.status === "retrying") {
-          nodeLogs[event.nodeId] = [...(nodeLogs[event.nodeId] ?? []), event.log ?? "retrying"];
-          updateNode(event.nodeId, { status: "retrying", logs: nodeLogs[event.nodeId], retries: event.attempt });
-          setRunLog((l) => [...l, `[${event.nodeId}] ${event.log}`]);
-        }
-      }, ev.at * SPEED);
-      runTimers.current.push(t);
+    const def = getNodeDef(type);
+    if (!def) return;
+    const node: Node = { id: nextId(), type: "agentflow", position: pos, data: { label: def.label, config: { ...def.defaultConfig, __type: type }, status: "idle" } };
+    setRfNodes((nds) => [...nds, node]);
+  }, [snapshot, setRfNodes]);
+
+  const duplicateSelected = useCallback(() => {
+    const sel = rfNodes.filter((n) => n.selected);
+    if (!sel.length) return;
+    snapshot();
+    const ids = new Set(sel.map((n) => n.id));
+    const copies = sel.map((n) => ({ ...JSON.parse(JSON.stringify(n)), id: nextId(), position: { x: n.position.x + 40, y: n.position.y + 40 }, selected: false }));
+    setRfNodes((nds) => [...nds, ...copies]);
+    // duplicate internal edges
+    const internal = rfEdges.filter((e) => ids.has(e.source) && ids.has(e.target));
+    const idMap = new Map(sel.map((n, i) => [n.id, copies[i].id]));
+    setRfEdges((eds) => [...eds, ...internal.map((e) => ({ ...JSON.parse(JSON.stringify(e)), id: `e${nextId()}`, source: idMap.get(e.source)!, target: idMap.get(e.target)! }))]);
+  }, [rfNodes, rfEdges, snapshot, setRfNodes, setRfEdges]);
+
+  const groupSelected = useCallback(() => {
+    const sel = rfNodes.filter((n) => n.selected && !CANVAS_TYPES.has(n.type ?? ""));
+    if (sel.length < 2) return;
+    snapshot();
+    const xs = sel.map((n) => n.position.x);
+    const ys = sel.map((n) => n.position.y);
+    const minX = Math.min(...xs), minY = Math.min(...ys);
+    const groupId = nextId();
+    const group: Node = { id: groupId, type: "group", position: { x: minX - 24, y: minY - 36 }, data: { group: { label: "Group", color: "#64748b" } }, width: 360, height: 240 };
+    setRfNodes((nds) => {
+      const without = nds.filter((n) => !sel.some((s) => s.id === n.id));
+      const reparented = sel.map((n) => ({ ...n, parent: groupId, extent: "parent" as const, position: { x: n.position.x - minX + 24, y: n.position.y - minY + 36 }, selected: false }));
+      return [...without, group, ...reparented];
     });
-    const done = setTimeout(() => {
-      setRunning(false);
-      setRunLog((l) => [...l, "✓ execution complete"]);
-    }, (totalMs + 200) * SPEED);
-    runTimers.current.push(done);
-  }, [running, getNodes, rfEdges, setRfNodes, updateNode]);
+  }, [rfNodes, snapshot, setRfNodes]);
 
-  // retry a single node
-  const onRetry = useCallback(
-    (id: string) => {
-      updateNode(id, { status: "running", logs: ["retry triggered"], retries: (selectedNode?.data.retries ?? 0) + 1 });
-      const t = setTimeout(() => updateNode(id, { status: "succeeded", logs: ["Completed"], durationMs: 800 }), 900);
-      runTimers.current.push(t);
-    },
-    [updateNode, selectedNode]
-  );
+  // ── connections ──
+  const onConnect = useCallback((c: Connection | Edge) => {
+    snapshot();
+    setRfEdges((eds) => addEdge({ ...c, type: "custom", animated: true, data: {}, style: EDGE_STYLE, markerEnd: EDGE_MARKER } as Edge, eds));
+  }, [setRfEdges, snapshot]);
 
-  // ---- keyboard shortcuts ----
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const type = e.dataTransfer.getData("application/agentflow-node");
+    if (!type) return;
+    const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+    insertNode(type, position);
+  }, [screenToFlowPosition, insertNode]);
+  const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
+
+  const handleNodesChange: OnNodesChange = useCallback((changes: NodeChange[]) => {
+    onNodesChange(changes);
+    for (const c of changes) if (c.type === "select" && c.selected) setSelectedId(c.id);
+  }, [onNodesChange]);
+
+  // ── run via SSE ──
+  const resetNodeStatuses = useCallback(() => {
+    setRfNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, status: "idle", logs: [], durationMs: undefined, tokensUsed: undefined, retries: 0 } })));
+    setRfEdges((eds) => eds.map((e) => ({ ...e, data: { ...e.data, status: undefined } })));
+  }, [setRfNodes, setRfEdges]);
+
+  const stopRun = useCallback(() => {
+    if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=stop&executionId=${executionId.current}`, { method: "POST" });
+    sseHandle.current?.abort();
+    setRunStatus("cancelled");
+    setRunLog((l) => [...l, "› execution stopped"]);
+  }, [workflowId]);
+
+  const runWorkflow = useCallback(() => {
+    if (runStatus === "running") { stopRun(); return; }
+    sseHandle.current?.abort();
+    stepsRef.current.clear();
+    setSteps([]);
+    setRunLog([]);
+    setRunStatus("running");
+    resetNodeStatuses();
+    setDockOpen(true);
+
+    const graph = graphForApi();
+    const breakpoints = getNodes().filter((n) => (n.data as { breakpoint?: boolean }).breakpoint).map((n) => n.id);
+
+    sseHandle.current = streamSSE(`/api/workflows/${workflowId}/run`, { graph, breakpoints }, {
+      onMessage: (data) => {
+        const ev = data as { type: string; nodeId?: string; nodeName?: string; status?: string; log?: string; reasoning?: string; attempt?: number; durationMs?: number; tokensUsed?: number; cost?: number; retries?: number; error?: string; totals?: { status: string; durationMs: number; totalTokens: number }; executionId?: string };
+        switch (ev.type) {
+          case "execution":
+            executionId.current = ev.executionId ?? null;
+            setRunLog((l) => [...l, `› starting execution · ${graph.nodes.length} nodes`]);
+            break;
+          case "node:start":
+            stepsRef.current.set(ev.nodeId!, { nodeId: ev.nodeId!, nodeName: ev.nodeName ?? ev.nodeId!, status: "running", durationMs: 0, tokensUsed: 0, cost: 0, retries: 0, logs: [] });
+            setSteps(Array.from(stepsRef.current.values()));
+            patchNode(ev.nodeId!, { status: "running", logs: [], retries: ev.attempt ?? 0 });
+            break;
+          case "node:log": {
+            const s = stepsRef.current.get(ev.nodeId!);
+            if (s) { s.logs.push(ev.log!); setSteps(Array.from(stepsRef.current.values())); }
+            const n = getNode(ev.nodeId!);
+            patchNode(ev.nodeId!, { status: (ev.status as NodeStatus) ?? "running", logs: [...((n?.data as { logs?: string[] })?.logs ?? []), ev.log!] });
+            setRunLog((l) => [...l, `[${ev.nodeName ?? ev.nodeId}] ${ev.log}`]);
+            break;
+          }
+          case "node:reasoning": {
+            const s = stepsRef.current.get(ev.nodeId!);
+            if (s) { s.logs.push(`reasoning: ${ev.reasoning}`); setSteps(Array.from(stepsRef.current.values())); }
+            setRunLog((l) => [...l, `[${ev.nodeName ?? ev.nodeId}] reasoning: ${ev.reasoning}`]);
+            break;
+          }
+          case "node:retry":
+            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!) ?? { nodeId: ev.nodeId!, nodeName: ev.nodeName ?? ev.nodeId!, durationMs: 0, tokensUsed: 0, cost: 0, logs: [], retries: 0, status: "retrying" }), status: "retrying", retries: ev.attempt ?? 0 });
+            setSteps(Array.from(stepsRef.current.values()));
+            patchNode(ev.nodeId!, { status: "retrying", retries: ev.attempt ?? 0 });
+            break;
+          case "node:success":
+            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "succeeded", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0 });
+            setSteps(Array.from(stepsRef.current.values()));
+            patchNode(ev.nodeId!, { status: "succeeded", durationMs: ev.durationMs, tokensUsed: ev.tokensUsed });
+            setRfEdges((eds) => eds.map((e) => (e.source === ev.nodeId ? { ...e, animated: false, data: { ...e.data, status: "succeeded" } } : e)));
+            break;
+          case "node:fail":
+            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "failed", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, error: ev.error });
+            setSteps(Array.from(stepsRef.current.values()));
+            patchNode(ev.nodeId!, { status: "failed", durationMs: ev.durationMs, error: ev.error, logs: [...((getNode(ev.nodeId!)?.data as { logs?: string[] })?.logs ?? []), ev.error ?? "failed"] });
+            setRfEdges((eds) => eds.map((e) => (e.source === ev.nodeId ? { ...e, animated: false, data: { ...e.data, status: "failed" } } : e)));
+            setRunLog((l) => [...l, `[${ev.nodeName}] ✗ ${ev.error ?? "failed"}`]);
+            break;
+          case "node:paused":
+            setRunStatus("paused");
+            patchNode(ev.nodeId!, { status: "running" });
+            setRunLog((l) => [...l, `[${ev.nodeName}] paused at breakpoint`]);
+            break;
+          case "complete": {
+            const status = (ev.totals?.status as DockStatus) ?? "succeeded";
+            setRunStatus(status);
+            setRunLog((l) => [...l, status === "succeeded" ? "✓ execution complete" : status === "failed" ? "✗ execution failed" : "› execution stopped"]);
+            setVersion((v) => v); // unchanged; run doesn't bump version
+            break;
+          }
+        }
+      },
+      onError: (err) => { setRunLog((l) => [...l, `✗ stream error: ${err.message}`]); setRunStatus("failed"); },
+      onClose: () => { executionId.current = null; },
+    });
+  }, [runStatus, workflowId, graphForApi, getNodes, resetNodeStatuses, patchNode, getNode, setRfEdges, stopRun]);
+
+  const resumeRun = useCallback(() => {
+    if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=resume&executionId=${executionId.current}`, { method: "POST" });
+    setRunStatus("running");
+  }, [workflowId]);
+
+  const retryNode = useCallback((nodeId: string) => {
+    patchNode(nodeId, { status: "running", logs: ["retry triggered"], retries: ((getNode(nodeId)?.data as { retries?: number })?.retries ?? 0) + 1 });
+    setTimeout(() => patchNode(nodeId, { status: "succeeded", logs: ["Completed"], durationMs: 800 }), 900);
+  }, [patchNode, getNode]);
+
+  // ── NL generate apply ──
+  const handleGenerate = useCallback((gen: { nodes: WorkflowNode[]; edges: { id: string; source: string; target: string }[] }) => {
+    snapshot();
+    setRfNodes(toFlowNodes(gen.nodes));
+    setRfEdges(gen.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: "custom", animated: true, data: {}, style: { stroke: "#7c5cff", strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: "#7c5cff" } })));
+    setTimeout(() => fitView({ padding: 0.2, duration: 500 }), 80);
+  }, [snapshot, setRfNodes, setRfEdges, fitView]);
+
+  // ── keyboard shortcuts ──
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
+      const target = e.target as HTMLElement;
+      const inField = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      if (e.key === "/" && !inField) { e.preventDefault(); setSearchOpen(true); return; }
+      if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); setSearchOpen(true); return; }
+
       if (meta && e.key.toLowerCase() === "z") {
         e.preventDefault();
-        if (e.shiftKey) {
-          const next = redoStack.current.pop();
-          if (next) {
-            undoStack.current.push(JSON.parse(JSON.stringify(rfNodes)));
-            setRfNodes(next);
-          }
-        } else {
-          const prev = undoStack.current.pop();
-          if (prev) {
-            redoStack.current.push(JSON.parse(JSON.stringify(rfNodes)));
-            setRfNodes(prev);
-          }
-        }
+        const snap: Snapshot = { nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() };
+        if (e.shiftKey) { const next = redoStack.current.pop(); if (next) { undoStack.current.push(snap); restore(next); } }
+        else { const prev = undoStack.current.pop(); if (prev) { redoStack.current.push(snap); restore(prev); } }
       } else if (meta && e.key.toLowerCase() === "y") {
         e.preventDefault();
-        const next = redoStack.current.pop();
-        if (next) {
-          undoStack.current.push(JSON.parse(JSON.stringify(rfNodes)));
-          setRfNodes(next);
-        }
-      } else if (meta && e.key.toLowerCase() === "c") {
-        const sel = rfNodes.filter((n) => n.selected);
-        if (sel.length) clipboard.current = JSON.parse(JSON.stringify(sel));
-      } else if (meta && e.key.toLowerCase() === "v") {
+        const snap: Snapshot = { nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() };
+        const next = redoStack.current.pop(); if (next) { undoStack.current.push(snap); restore(next); }
+      } else if (meta && e.key.toLowerCase() === "c" && !inField) {
+        const sel = rfNodes.filter((n) => n.selected); if (sel.length) clipboard.current = JSON.parse(JSON.stringify(sel));
+      } else if (meta && e.key.toLowerCase() === "v" && !inField) {
         if (clipboard.current.length) {
           snapshot();
-          const pasted = clipboard.current.map((n) => ({
-            ...n,
-            id: nextId(),
-            position: { x: n.position.x + 40, y: n.position.y + 40 },
-            selected: false,
-            data: { ...n.data, status: "idle", logs: [], durationMs: undefined, retries: 0 },
-          }));
+          const pasted = clipboard.current.map((n) => ({ ...n, id: nextId(), position: { x: n.position.x + 40, y: n.position.y + 40 }, selected: false, data: { ...n.data, status: "idle", logs: [], durationMs: undefined, retries: 0 } }));
           setRfNodes((nds) => [...nds, ...pasted]);
         }
-      } else if (e.key === "Delete" || e.key === "Backspace") {
-        const target = e.target as HTMLElement;
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+      } else if (meta && e.key.toLowerCase() === "d" && !inField) {
+        e.preventDefault(); duplicateSelected();
+      } else if (meta && e.key.toLowerCase() === "g" && !inField) {
+        e.preventDefault(); groupSelected();
+      } else if (meta && e.key.toLowerCase() === "s") {
+        e.preventDefault(); saveVersion();
+      } else if (meta && e.key === "Enter") {
+        e.preventDefault(); runWorkflow();
+      } else if ((e.key === "f" || e.key === "F") && !inField && !meta) {
+        e.preventDefault(); fitView({ padding: 0.2, duration: 300 });
+      } else if ((e.key === "Delete" || e.key === "Backspace") && !inField) {
         const sel = rfNodes.filter((n) => n.selected);
         if (sel.length) {
           snapshot();
           const ids = new Set(sel.map((n) => n.id));
           setRfNodes((nds) => nds.filter((n) => !ids.has(n.id)));
-          setRfEdges((eds) => eds.filter((e) => !ids.has(e.source) && !ids.has(e.target)));
+          setRfEdges((eds) => eds.filter((ed) => !ids.has(ed.source) && !ids.has(ed.target)));
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [rfNodes, rfEdges, setRfNodes, setRfEdges, snapshot]);
+  }, [rfNodes, rfEdges, getViewport, restore, snapshot, setRfNodes, setRfEdges, duplicateSelected, groupSelected, fitView, runWorkflow]);
 
-  // auto layout — column layout by topological order
+  // ── version save ──
+  const saveVersion = useCallback(() => {
+    const message = window.prompt("Version message (optional):", `v${version + 1}`);
+    if (message === null) return;
+    setSaveState("saving");
+    fetch(`/api/workflows/${workflowId}/versions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ graph: graphForApi(), message: message || undefined }) })
+      .then((r) => r.json())
+      .then((v: VersionEntry) => { setVersion(v.version); setVersions((vs) => [v, ...vs.filter((x) => x.id !== v.id)]); setSaveState("saved"); })
+      .catch(() => setSaveState("saved"));
+  }, [workflowId, version, graphForApi]);
+
+  const restoreVersion = useCallback((g: Graph) => {
+    snapshot();
+    setRfNodes(toFlowNodes(g.nodes));
+    setRfEdges(g.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: "custom", animated: e.animated, data: {}, style: EDGE_STYLE, markerEnd: EDGE_MARKER })));
+    setTimeout(() => fitView({ padding: 0.2, duration: 400 }), 50);
+  }, [snapshot, setRfNodes, setRfEdges, fitView]);
+
+  // ── context menu ──
+  const onPaneContextMenu = useCallback((e: MouseEvent | React.MouseEvent) => {
+    e.preventDefault();
+    setCtx({ x: e.clientX, y: e.clientY, nodeId: null });
+  }, []);
+  const onNodeContextMenu = useCallback((e: React.MouseEvent, node: Node) => {
+    e.preventDefault();
+    setSelectedId(node.id);
+    setCtx({ x: e.clientX, y: e.clientY, nodeId: node.id });
+  }, []);
+
+  const ctxActions = useMemo<ContextAction[]>(() => {
+    if (!ctx) return [];
+    const id = ctx.nodeId;
+    if (id) {
+      const n = getNode(id);
+      const isCanvas = CANVAS_TYPES.has(n?.type ?? "");
+      return [
+        { key: "dup", label: "Duplicate (⌘D)", icon: "Copy", onClick: () => duplicateSelected() },
+        { key: "copy", label: "Copy (⌘C)", icon: "ClipboardCopy", onClick: () => { const sel = rfNodes.filter((x) => x.selected); if (sel.length) clipboard.current = JSON.parse(JSON.stringify(sel)); } },
+        { key: "brk", label: "Toggle breakpoint", icon: "CircleDot", onClick: () => toggleBreakpoint(id) },
+        ...(isCanvas ? [] : [{ key: "retry", label: "Run from here", icon: "Play", onClick: () => retryNode(id) }]),
+        { key: "d1", label: "", icon: "Minus", onClick: () => {}, divider: true },
+        { key: "del", label: "Delete (⌫)", icon: "Trash2", danger: true, onClick: () => deleteNode(id) },
+      ];
+    }
+    return [
+      { key: "sticky", label: "Add sticky note", icon: "StickyNote", onClick: () => insertNode("sticky") },
+      { key: "comment", label: "Add comment", icon: "MessageCircle", onClick: () => insertNode("comment") },
+      { key: "group", label: "Add group", icon: "SquareStack", onClick: () => insertNode("group") },
+      { key: "d1", label: "", icon: "Minus", onClick: () => {}, divider: true },
+      { key: "layout", label: "Auto layout", icon: "LayoutGrid", onClick: () => autoLayout() },
+      { key: "fit", label: "Fit view (F)", icon: "Maximize", onClick: () => fitView({ padding: 0.2, duration: 300 }) },
+    ];
+  }, [ctx, getNode, duplicateSelected, rfNodes, toggleBreakpoint, retryNode, deleteNode, insertNode, fitView]);
+
+  // ── auto layout ──
   const autoLayout = useCallback(() => {
     snapshot();
-    const nodes = getNodes();
+    const nodes = getNodes().filter((n) => !CANVAS_TYPES.has(n.type ?? ""));
     const edges = rfEdges;
     const indeg = new Map<string, number>();
     nodes.forEach((n) => indeg.set(n.id, 0));
-    edges.forEach((e) => indeg.set(e.target, (indeg.get(e.target) ?? 0) + 1));
+    edges.forEach((e) => { if (indeg.has(e.target)) indeg.set(e.target, (indeg.get(e.target) ?? 0) + 1); });
     const levels = new Map<string, number>();
-    const visit = (id: string, lvl: number) => {
-      levels.set(id, Math.max(levels.get(id) ?? 0, lvl));
-      edges.filter((e) => e.source === id).forEach((e) => visit(e.target, lvl + 1));
-    };
+    const visit = (id: string, lvl: number) => { levels.set(id, Math.max(levels.get(id) ?? 0, lvl)); edges.filter((e) => e.source === id).forEach((e) => visit(e.target, lvl + 1)); };
     nodes.filter((n) => (indeg.get(n.id) ?? 0) === 0).forEach((n) => visit(n.id, 0));
     nodes.forEach((n) => levels.set(n.id, levels.get(n.id) ?? 0));
     const byLevel = new Map<number, Node[]>();
-    nodes.forEach((n) => {
-      const l = levels.get(n.id)!;
-      if (!byLevel.has(l)) byLevel.set(l, []);
-      byLevel.get(l)!.push(n);
-    });
-    const positioned = nodes.map((n) => {
-      const l = levels.get(n.id)!;
-      const col = byLevel.get(l)!;
-      const idx = col.indexOf(n);
-      return { ...n, position: { x: 60 + l * 300, y: 60 + idx * 160 } };
-    });
-    setRfNodes(positioned);
+    nodes.forEach((n) => { const l = levels.get(n.id)!; if (!byLevel.has(l)) byLevel.set(l, []); byLevel.get(l)!.push(n); });
+    const positioned = nodes.map((n) => { const l = levels.get(n.id)!; const col = byLevel.get(l)!; return { ...n, position: { x: 60 + l * 300, y: 60 + col.indexOf(n) * 160 } }; });
+    setRfNodes((nds) => [...nds.filter((n) => CANVAS_TYPES.has(n.type ?? "")), ...positioned]);
     setTimeout(() => fitView({ padding: 0.2, duration: 400 }), 50);
   }, [getNodes, rfEdges, setRfNodes, fitView, snapshot]);
 
-  // NL generation injection
-  const handleGenerate = useCallback(
-    (gen: { nodes: WorkflowNode[]; edges: { id: string; source: string; target: string }[] }) => {
-      snapshot();
-      const flowNodes: Node[] = gen.nodes.map((n) => ({
-        id: n.id,
-        type: "agentflow",
-        position: n.position,
-        data: { label: n.data.label, config: { ...n.data.config, __type: n.type }, status: "idle" as NodeStatus },
-      }));
-      const flowEdges: Edge[] = gen.edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        animated: true,
-        style: { stroke: "#7c5cff", strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#7c5cff" },
-      }));
-      setRfNodes(flowNodes);
-      setRfEdges(flowEdges);
-      setTimeout(() => fitView({ padding: 0.2, duration: 500 }), 80);
-    },
-    [setRfNodes, setRfEdges, fitView, snapshot]
-  );
+  useEffect(() => () => { sseHandle.current?.abort(); }, []);
 
-  useEffect(() => () => clearTimers(), []);
+  const nodeCount = rfNodes.filter((n) => !CANVAS_TYPES.has(n.type ?? "")).length;
+  const statusTone = initial.status === "active" ? "success" : initial.status === "error" ? "danger" : initial.status === "paused" ? "warning" : "neutral";
 
-  const nodeCount = rfNodes.length;
-  const succeededCount = rfNodes.filter((n) => n.data.status === "succeeded").length;
-  const failedCount = rfNodes.filter((n) => n.data.status === "failed").length;
+  const graphContext = useMemo(() => ({ nodes: fromFlowNodes(rfNodes), edges: domainEdges(rfEdges) }), [rfNodes, rfEdges]);
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -m-4 lg:-m-8">
       {/* Left palette */}
       <div className="hidden md:flex w-64 shrink-0 border-r border-border bg-bg-soft/60">
-        <NodePalette />
+        <NodePalette onAISuggest={() => setCopilotOpen(true)} />
       </div>
 
       {/* Center canvas */}
@@ -378,6 +528,7 @@ function BuilderInner() {
           nodes={rfNodes}
           edges={rfEdges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -385,44 +536,31 @@ function BuilderInner() {
           onDragOver={onDragOver}
           onNodeClick={(_, n) => setSelectedId(n.id)}
           onPaneClick={() => setSelectedId(null)}
+          onPaneContextMenu={onPaneContextMenu}
+          onNodeContextMenu={onNodeContextMenu}
           fitView
           fitViewOptions={{ padding: 0.2 }}
           snapToGrid
           snapGrid={[16, 16]}
-          defaultEdgeOptions={{ style: { stroke: "#3a3f52", strokeWidth: 2 } }}
+          defaultEdgeOptions={{ type: "custom", style: EDGE_STYLE, markerEnd: EDGE_MARKER }}
           proOptions={{ hideAttribution: true }}
           className="bg-bg"
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#1f2330" />
           <Controls className="border! border-border! rounded-lg! overflow-hidden!" />
-          <MiniMap
-            pannable
-            zoomable
-            nodeColor={(n) => getNodeDef((n.data as any).__type)?.color ?? "#3a3f52"}
-            className="border! border-border! rounded-lg!"
-            maskColor="rgba(7,8,12,0.7)"
-          />
+          <MiniMap pannable zoomable nodeColor={(n) => getNodeDef((n.data as { __type?: string }).__type ?? (n.type === "agentflow" ? "util.delay" : n.type ?? ""))?.color ?? "#3a3f52"} className="border! border-border! rounded-lg!" maskColor="rgba(7,8,12,0.7)" />
 
-          {/* Top toolbar */}
+          {/* Top-left toolbar */}
           <Panel position="top-left">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-2.5 py-1.5 shadow-lg">
-              <button onClick={() => router.back()} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg">
-                <Icon name="ArrowLeft" className="h-4 w-4" />
-              </button>
+              <button onClick={() => history.back()} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="ArrowLeft" className="h-4 w-4" /></button>
               <div className="h-5 w-px bg-border" />
-              <button title="Undo (⌘Z)" onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true }))} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg">
-                <Icon name="Undo2" className="h-4 w-4" />
-              </button>
-              <button title="Redo (⌘⇧Z)" onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true, shiftKey: true }))} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg">
-                <Icon name="Redo2" className="h-4 w-4" />
-              </button>
+              <button title="Undo (⌘Z)" onClick={() => { const prev = undoStack.current.pop(); if (prev) { redoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(prev); } }} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Undo2" className="h-4 w-4" /></button>
+              <button title="Redo (⌘⇧Z)" onClick={() => { const next = redoStack.current.pop(); if (next) { undoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(next); } }} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Redo2" className="h-4 w-4" /></button>
               <div className="h-5 w-px bg-border" />
-              <button title="Auto layout" onClick={autoLayout} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg">
-                <Icon name="LayoutGrid" className="h-4 w-4" />
-              </button>
-              <button title="Fit view" onClick={() => fitView({ padding: 0.2, duration: 300 })} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg">
-                <Icon name="Maximize" className="h-4 w-4" />
-              </button>
+              <button title="Auto layout" onClick={autoLayout} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="LayoutGrid" className="h-4 w-4" /></button>
+              <button title="Fit view (F)" onClick={() => fitView({ padding: 0.2, duration: 300 })} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Maximize" className="h-4 w-4" /></button>
+              <button title="Search nodes (/)" onClick={() => setSearchOpen(true)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Search" className="h-4 w-4" /></button>
             </div>
           </Panel>
 
@@ -430,57 +568,57 @@ function BuilderInner() {
           <Panel position="top-center">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-3 py-1.5 shadow-lg">
               <Icon name="Workflow" className="h-4 w-4 text-brand" />
-              <span className="text-sm font-semibold">{wf.name}</span>
-              <Badge tone={wf.status === "active" ? "success" : wf.status === "error" ? "danger" : wf.status === "paused" ? "warning" : "neutral"}>
-                {wf.status}
-              </Badge>
-              <span className="text-[11px] text-fg-subtle">v{wf.version} · {nodeCount} nodes</span>
+              <input value={name} onChange={(e) => setName(e.target.value)} className="w-40 bg-transparent text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 -mx-1" />
+              <Badge tone={statusTone as any}>{initial.status}</Badge>
+              <span className="text-[11px] text-fg-subtle">v{version} · {nodeCount} nodes</span>
+              <span className={cn("flex items-center gap-1 text-[11px]", saveState === "saving" ? "text-fg-subtle" : "text-success")}>
+                {saveState === "saving" ? <><Icon name="LoaderCircle" className="h-3 w-3 animate-spin" /> Saving…</> : <><Icon name="Check" className="h-3 w-3" /> Saved</>}
+              </span>
             </div>
           </Panel>
 
-          {/* Run control */}
+          {/* Top-right controls */}
           <Panel position="top-right">
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setCopilotOpen((o) => !o)}>
-                <Icon name="Sparkles" className="h-3.5 w-3.5" /> Copilot
-              </Button>
-              <Button
-                size="sm"
-                variant={running ? "danger" : "ai"}
-                onClick={runWorkflow}
-                className="min-w-[96px]"
-              >
-                {running ? (
-                  <><Icon name="Square" className="h-3.5 w-3.5" /> Stop</>
-                ) : (
-                  <><Icon name="Play" className="h-3.5 w-3.5" /> Run</>
+              <div className="relative">
+                <Button variant="secondary" size="sm" onClick={() => setVersionMenuOpen((o) => !o)}>
+                  <Icon name="History" className="h-3.5 w-3.5" /> v{version}
+                </Button>
+                {versionMenuOpen && (
+                  <div className="absolute right-0 top-9 z-20">
+                    <VersionHistory workflowId={workflowId} versions={versions} currentVersion={version} onRestored={restoreVersion} />
+                  </div>
                 )}
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setCopilotOpen((o) => !o)}><Icon name="Sparkles" className="h-3.5 w-3.5" /> Copilot</Button>
+              <Button size="sm" variant={runStatus === "running" ? "danger" : "ai"} onClick={runWorkflow} className="min-w-[96px]">
+                {runStatus === "running" ? <><Icon name="Square" className="h-3.5 w-3.5" /> Stop</> : <><Icon name="Play" className="h-3.5 w-3.5" /> Run</>}
               </Button>
             </div>
           </Panel>
 
-          {/* Bottom live log */}
-          <Panel position="bottom-left">
-            <div className="w-[28rem] max-w-[80vw] rounded-xl border border-border bg-bg/90 backdrop-blur-xl shadow-lg overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border text-[11px] text-fg-subtle">
-                <Icon name="Terminal" className="h-3 w-3" /> execution log
-                {running && <span className="ml-auto flex items-center gap-1 text-brand"><Icon name="LoaderCircle" className="h-3 w-3 animate-spin" /> running</span>}
-                {!running && runLog.length > 0 && <span className="ml-auto text-fg-subtle">{succeededCount} ok · {failedCount} failed</span>}
-              </div>
-              <div className="max-h-28 overflow-y-auto px-3 py-2 font-mono text-[10px] leading-relaxed">
-                {runLog.length === 0 ? (
-                  <div className="text-fg-subtle">Press Run to execute. Logs stream in real time.</div>
-                ) : (
-                  runLog.slice(-40).map((l, i) => (
-                    <div key={i} className={cn("py-0.5", l.startsWith("✓") && "text-success", l.startsWith("›") && "text-fg-muted")}>
-                      {l}
-                    </div>
-                  ))
-                )}
-              </div>
+          {/* Execution dock */}
+          <Panel position="bottom-center">
+            <div className="w-[42rem] max-w-[90vw]">
+              <ExecutionDock
+                open={dockOpen}
+                onToggle={() => setDockOpen((o) => !o)}
+                status={runStatus}
+                log={runLog}
+                steps={steps}
+                onRun={runWorkflow}
+                onPause={() => {}}
+                onResume={resumeRun}
+                onStop={stopRun}
+                onRetryNode={retryNode}
+                onDiagnose={(nodeId) => { setSelectedId(nodeId); setCopilotOpen(true); setDiagnoseSignal((s) => s + 1); }}
+              />
             </div>
           </Panel>
         </ReactFlow>
+
+        {searchOpen && <NodeSearch onClose={() => setSearchOpen(false)} onPick={(t) => insertNode(t)} />}
+        {ctx && <ContextMenu x={ctx.x} y={ctx.y} actions={ctxActions} onClose={() => setCtx(null)} />}
       </div>
 
       {/* Right inspector / copilot */}
@@ -488,7 +626,14 @@ function BuilderInner() {
         <AnimatePresence mode="wait">
           {copilotOpen ? (
             <motion.div key="copilot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-              <CopilotPanel workflowName={wf.name} nodeCount={nodeCount} onGenerate={handleGenerate} onInspect={() => setCopilotOpen(false)} />
+              <CopilotPanel
+                workflowName={name}
+                graph={graphContext}
+                selectedNode={selectedNode}
+                onGenerate={handleGenerate}
+                onInsertNode={(t) => insertNode(t)}
+                diagnoseSignal={diagnoseSignal}
+              />
             </motion.div>
           ) : (
             <motion.div key="inspector" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
@@ -498,7 +643,7 @@ function BuilderInner() {
                 </button>
                 <span className="text-[10px] text-fg-subtle">Inspector</span>
               </div>
-              <Inspector node={selectedNode} onRename={onRename} onRetry={onRetry} />
+              <Inspector node={selectedNode} onUpdate={onUpdate} onRetry={retryNode} onDelete={deleteNode} onToggleBreakpoint={toggleBreakpoint} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -507,10 +652,10 @@ function BuilderInner() {
   );
 }
 
-export default function Builder() {
+export default function Builder({ initial }: { initial: InitialWorkflow }) {
   return (
     <ReactFlowProvider>
-      <BuilderInner />
+      <BuilderInner initial={initial} />
     </ReactFlowProvider>
   );
 }

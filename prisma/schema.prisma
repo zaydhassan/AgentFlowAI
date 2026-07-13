@@ -23,20 +23,28 @@ model User {
   passwordHash  String?
   role          String    @default("user") // "user" | "admin"
 
-  // SaaS profile
-  stripeCustomerId String? @unique
+  // SaaS profile — provider customer ids. Only the active provider's id is set;
+  // the other stays null. Both kept so switching providers never drops data.
+  stripeCustomerId   String? @unique
+  razorpayCustomerId String? @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  memberships Membership[]
-  ownedOrgs   Organization[] @relation("OrgOwner")
-  subscription Subscription?
-  invoices     Invoice[]
-  usage        Usage[]
-  auditLogs    AuditLog[]
+  accounts            Account[]
+  sessions            Session[]
+  memberships         Membership[]
+  ownedOrgs           Organization[]       @relation("OrgOwner")
+  subscription        Subscription?
+  invoices            Invoice[]
+  usage               Usage[]
+  auditLogs           AuditLog[]
+  workflows           Workflow[]
+  executions          Execution[]
+  integrationAccounts IntegrationAccount[]
+  memories            Memory[]
+  memoryCollections   MemoryCollection[]
+  mcpServers          McpServer[]
 }
 
 model Account {
@@ -87,15 +95,15 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner      User        @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User         @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   memberships Membership[]
 }
 
 model Membership {
-  id      String   @id @default(cuid())
-  userId  String
-  orgId   String
-  role    String   @default("member") // "owner" | "admin" | "member"
+  id       String   @id @default(cuid())
+  userId   String
+  orgId    String
+  role     String   @default("member") // "owner" | "admin" | "member"
   joinedAt DateTime @default(now())
 
   user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -105,17 +113,39 @@ model Membership {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  stripeCustomerId     String
-  stripeSubscriptionId String?  @unique
-  stripePriceId        String?
-  plan                 String   @default("free") // "free" | "pro" | "business" | "enterprise"
-  status               String   @default("incomplete") // Stripe subscription status
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  // Stripe linkage (null for Razorpay-owned subscriptions).
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeProductId        String?
+  // Razorpay linkage (null for Stripe-owned subscriptions).
+  razorpayCustomerId     String?
+  razorpaySubscriptionId String?   @unique
+  razorpayPaymentId      String?
+  razorpayOrderId        String?
+  razorpayPlanId         String?
+  // Shared billing state (provider-agnostic).
+  plan                   String    @default("free") // "free" | "pro" | "business" | "enterprise"
+  interval               String? // "monthly" | "yearly"
+  status                 String    @default("incomplete") // provider subscription status
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean   @default(false)
+  cancelAt               DateTime?
+  paused                 Boolean   @default(false)
+  trialEnd               DateTime?
+  latestInvoiceId        String?
+
+  // Denormalized default payment method for display (synced by the provider).
+  cardBrand    String?
+  cardLast4    String?
+  cardExpMonth Int?
+  cardExpYear  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -123,11 +153,14 @@ model Subscription {
 model Invoice {
   id                String   @id @default(cuid())
   userId            String
-  stripeInvoiceId   String   @unique
+  // Provider invoice id — one of these is set depending on the active provider.
+  stripeInvoiceId   String?  @unique
+  razorpayInvoiceId String?  @unique
+  razorpayPaymentId String?
   number            String?
-  amount            Int      // in cents
+  amount            Int // in the smallest currency unit (cents/paise)
   currency          String   @default("usd")
-  status            String   // "paid" | "open" | "void" | "uncollectible" | "draft"
+  status            String // "paid" | "open" | "void" | "uncollectible" | "draft"
   hostedInvoiceUrl  String?  @db.Text
   pdfUrl            String?  @db.Text
   createdAt         DateTime @default(now())
@@ -145,6 +178,9 @@ model Usage {
   executions  Int      @default(0)
   aiCredits   Int      @default(0)
   apiCalls    Int      @default(0)
+  storage     Int      @default(0)
+  tokenUsage  Int      @default(0)
+  compute     Int      @default(0)
   updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -164,4 +200,365 @@ model AuditLog {
 
   @@index([userId, createdAt])
   @@index([action, createdAt])
+}
+
+// Cached provider plan/price provisioning. Lets the app auto-create provider
+// plans/prices on first checkout when the *_PRICE_*/RAZORPAY_PLAN_* env vars
+// are absent, while still allowing env-configured ids to take precedence.
+// Either the stripe pair or the razorpayPlanId is set, depending on provider.
+model PlanPrice {
+  id              String   @id @default(cuid())
+  plan            String // "pro" | "business"
+  interval        String // "monthly" | "yearly"
+  stripeProductId String?
+  stripePriceId   String?  @unique
+  razorpayPlanId  String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([plan, interval])
+}
+
+// =============================================================================
+// Visual Workflow Builder — persistence
+// graph JSON holds { nodes, edges, viewport }; comments / sticky notes / groups
+// are custom node types inside that JSON (no extra models).
+// =============================================================================
+
+model Workflow {
+  id          String    @id @default(cuid())
+  ownerId     String
+  name        String    @default("Untitled workflow")
+  description String    @default("")
+  status      String    @default("draft") // "active" | "draft" | "paused" | "error"
+  category    String    @default("")
+  graph       Json // { nodes: WorkflowNode[], edges: WorkflowEdge[], viewport? }
+  tags        String[]  @default([])
+  version     Int       @default(1)
+  schedule    String?
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner      User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  versions   WorkflowVersion[]
+  executions Execution[]
+  memories   Memory[]
+
+  @@index([ownerId, updatedAt])
+}
+
+model WorkflowVersion {
+  id         String   @id @default(cuid())
+  workflowId String
+  version    Int
+  graph      Json
+  message    String?
+  createdBy  String?
+  createdAt  DateTime @default(now())
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, version])
+  @@index([workflowId, createdAt])
+}
+
+model Execution {
+  id          String    @id @default(cuid())
+  workflowId  String
+  ownerId     String
+  status      String    @default("running") // running | succeeded | failed | cancelled | paused
+  trigger     String    @default("manual")
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  durationMs  Int       @default(0)
+  totalTokens Int       @default(0)
+  totalCost   Float     @default(0)
+  retried     Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  workflow Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  owner    User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  steps    ExecutionStep[]
+
+  @@index([workflowId, startedAt])
+  @@index([ownerId, startedAt])
+}
+
+model ExecutionStep {
+  id          String   @id @default(cuid())
+  executionId String
+  nodeId      String
+  nodeName    String
+  status      String // NodeStatus
+  startedAt   DateTime @default(now())
+  durationMs  Int      @default(0)
+  tokensUsed  Int      @default(0)
+  cost        Float    @default(0)
+  retries     Int      @default(0)
+  logs        Json // string[]
+  reasoning   Json? // string[]
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+// =============================================================================
+// Integrations — provider-agnostic OAuth credential store
+// One row per connected third-party account (Gmail today; Slack/Notion/GitHub/
+// Google Drive later reuse the same table). Tokens are AES-256-GCM encrypted
+// at rest (see lib/integrations/crypto.ts); this row NEVER holds plaintext
+// tokens and the API layer NEVER returns token fields to the client.
+// =============================================================================
+
+model IntegrationAccount {
+  id                String    @id @default(cuid())
+  ownerId           String // user who connected the account
+  orgId             String? // workspace; nullable (session orgId may be null)
+  provider          String // "gmail"
+  providerAccountId String // provider's stable user id (Google `sub`)
+  email             String? // display email from userinfo
+  label             String // display label (email or account name)
+  scopes            String[]  @default([])
+  accessToken       String    @db.Text // AES-256-GCM ciphertext (JSON {iv,ct,tag})
+  refreshToken      String    @db.Text // encrypted
+  expiresAt         DateTime?
+  status            String    @default("active") // active | expired | revoked | error
+  metadata          Json? // { name, picture } from userinfo
+  lastPollHistoryId String? // Gmail historyId watermark for the New Email trigger
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // A user can't connect the same provider account twice; a workspace may hold
+  // multiple distinct provider accounts (orgId indexed for workspace listing).
+  @@unique([ownerId, provider, providerAccountId])
+  @@index([orgId, provider])
+  @@index([ownerId, provider])
+}
+
+// =============================================================================
+// Long-Term AI Memory — provider-agnostic memory engine (PostgreSQL + pgvector)
+// One Memory row per remembered fact/exchange. The embedding vector lives in a
+// separate Embedding row (so a memory can later hold multiple chunk embeddings).
+// Vectors are read/written via prisma.$queryRaw (the `vector` column is
+// Unsupported() — Prisma can't type it natively without preview flags). This
+// layer NEVER returns the vector to the client; the API returns the client-safe
+// Memory shape only. Memory is isolated per owner (ownerId) and optionally per
+// workspace (orgId). See lib/memory/ and docs/memory-migration-report.md.
+// =============================================================================
+
+model Memory {
+  id              String    @id @default(cuid())
+  ownerId         String // user who owns the memory (isolation boundary)
+  orgId           String? // workspace scope; nullable (user may have no org)
+  workflowId      String? // workflow scope (the workflow that produced it)
+  agentId         String? // agent/node scope (the node id; no FK — like ExecutionStep.nodeId)
+  collectionId    String? // optional named grouping
+  scope           String // short_term | conversation | long_term | workflow | agent | workspace
+  status          String    @default("active") // active | expired | merged
+  content         String    @db.Text // the remembered text (plaintext — needed for full-text search)
+  contentHash     String // SHA-256 of normalized content; dedup key per (ownerId, scope)
+  importanceScore Float     @default(0.5) // 0–1; drives promote/expire
+  accessCount     Int      @default(0) // bumped on every retrieval touch
+  hitCount        Int      @default(0) // bumped when this memory contributed to a hit
+  lastAccessedAt  DateTime?
+  expiresAt       DateTime? // soft-expiry; null = permanent
+  metadata        Json? // Jsonb — queryable filter scope (tags, source, conversationId, …)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user       User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  workflow   Workflow?        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  collection MemoryCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  embedding  Embedding?
+  metas      MemoryMetadata[]
+
+  @@unique([ownerId, scope, contentHash]) // dedup
+  @@index([ownerId, scope, updatedAt])
+  @@index([ownerId, importanceScore])
+  @@index([workflowId])
+  @@index([agentId])
+  @@index([collectionId])
+}
+
+// The vector column. Unsupported() keeps Prisma from trying to type it; all
+// reads/writes go through prisma.$queryRaw with parameterized SQL.
+model Embedding {
+  id        String                    @id @default(cuid())
+  memoryId  String                    @unique
+  vector    Unsupported("vector(1536)")?
+  model     String                    @default("text-embedding-3-small")
+  dims      Int                       @default(1536)
+  createdAt DateTime                  @default(now())
+
+  memory Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+}
+
+model MemoryCollection {
+  id          String   @id @default(cuid())
+  ownerId     String
+  orgId       String?
+  name        String
+  description String   @default("")
+  createdAt   DateTime @default(now())
+
+  user       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  memories   Memory[]
+
+  @@unique([ownerId, name])
+  @@index([orgId])
+}
+
+// Structured key/value attributes for a memory (the brief's explicit model).
+// Used for indexed, individually-queryable metadata; arbitrary metadata also
+// rides on Memory.metadata (Jsonb) for flexible JSONB filtering.
+model MemoryMetadata {
+  id        String   @id @default(cuid())
+  memoryId   String
+  key       String
+  value      String
+  valueType String   @default("string") // string | number | boolean | json
+  createdAt  DateTime @default(now())
+
+  memory Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId, key])
+  @@index([key, value])
+}
+
+// Observability/audit: powers the dashboard's writes / hits / misses /
+// recall-rate KPIs and the per-run memory activity log.
+model MemoryEvent {
+  id        String   @id @default(cuid())
+  ownerId   String
+  orgId     String?
+  kind      String // retrieve | write | hit | miss | merge | expire | promote
+  scope     String
+  memoryId  String?
+  score     Float?
+  createdAt DateTime @default(now())
+
+  @@index([ownerId, createdAt])
+  @@index([kind])
+}
+
+// =============================================================================
+// Model Context Protocol (MCP) — external tool/resource/prompt discovery + invocation
+// A user/workspace registers one or more MCP servers (stdio / HTTP / SSE). Each
+// connection discovers tools, resources, prompts, and capabilities, cached in
+// McpCapability + McpToolCache. Every tool call is audited in McpInvocation and
+// mirrored into the Memory Engine (lib/memory) as tool_call/tool_output/tool_failure
+// entries — the memory engine is never bypassed. Credentials (auth tokens) are
+// AES-256-GCM encrypted at rest via lib/integrations/crypto.ts (reused) and are
+// NEVER returned to the client. Workspace isolation mirrors IntegrationAccount:
+// ownerId (FK→User) + orgId (nullable workspace filter, no FK). See lib/mcp/.
+// =============================================================================
+
+model McpServer {
+  id          String   @id @default(cuid())
+  ownerId     String // user who registered the server (isolation boundary)
+  orgId       String? // workspace; nullable (session orgId may be null)
+  name        String // display name; unique per owner
+  transport   String // "stdio" | "http" | "sse"
+  endpoint    String? // URL for http/sse transports
+  command     String? // executable for stdio transport
+  args        String[] @default([]) // stdio args
+  envEncrypted String? @db.Text // AES-256-GCM ciphertext of the stdio env JSON blob
+  authScheme  String? // "none" | "bearer" | "header" | "basic"
+  credentials String?  @db.Text // AES-256-GCM ciphertext (JSON) — auth token/header value
+  status      String   @default("disconnected") // disconnected | connected | error | disabled
+  health      Json? // { lastCheckedAt, latencyMs, ok, error }
+  allowList   String[] @default([]) // tool/resource name patterns to allow ("*" / prefix)
+  denyList    String[] @default([]) // tool/resource name patterns to deny (deny-first)
+  lastSessionId     String? // MCP session id (Streamable HTTP), when provided
+  lastDiscoveredAt  DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  capabilities McpCapability[]
+  tools       McpToolCache[]
+  invocations McpInvocation[]
+
+  // A user can't register two servers with the same name; a workspace may hold
+  // multiple distinct servers (orgId indexed for workspace listing).
+  @@unique([ownerId, name])
+  @@index([orgId])
+  @@index([ownerId])
+}
+
+// Capabilities advertised by a server (tools/resources/prompts/logging/completion).
+// Refreshed on (re)connect via getServerCapabilities().
+model McpCapability {
+  id        String   @id @default(cuid())
+  serverId  String
+  kind      String // "tools" | "resources" | "prompts" | "logging" | "completion"
+  supported Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  server McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, kind])
+}
+
+// Cached discovered tools/resources/prompts for a server. Refreshed on connect
+// and on reconnect (and via POST /servers/[id]/discover). inputSchema is the
+// JSON Schema for a tool's arguments; uri/mimeType apply to resources.
+model McpToolCache {
+  id          String   @id @default(cuid())
+  serverId    String
+  kind        String // "tool" | "resource" | "prompt"
+  name        String
+  title       String?
+  description String?  @db.Text
+  inputSchema Json? // tool argument JSON Schema
+  annotations Json? // tool annotations (readOnlyHint, destructiveHint, …)
+  uri         String? // resource uri (kind=resource)
+  mimeType    String? // resource mime type
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  server McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, kind, name])
+  @@index([serverId, kind])
+}
+
+// Audit log for every tool invocation. Powers observability (connected servers,
+// tool calls, latency, errors, retries, streaming events). Mirrored into the
+// Memory Engine as a tool_call/tool_output/tool_failure memory entry.
+model McpInvocation {
+  id            String   @id @default(cuid())
+  serverId      String
+  ownerId       String
+  orgId         String?
+  toolName      String // tool name OR resource uri
+  arguments     Json?
+  status        String // succeeded | failed | streaming | cancelled
+  durationMs    Int      @default(0)
+  retries       Int      @default(0)
+  error         String?  @db.Text
+  tokensEstimate Int     @default(0)
+  streamed      Boolean  @default(false)
+  workflowId    String?
+  nodeId        String?
+  agentId       String? // agent id (planner/…) when invoked from the agent runtime
+  runId         String? // agent run id when invoked from the agent runtime
+  createdAt     DateTime @default(now())
+
+  server McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, createdAt])
+  @@index([ownerId, createdAt])
+  @@index([workflowId])
 }

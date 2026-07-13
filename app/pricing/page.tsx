@@ -7,10 +7,12 @@ import { Footer } from "@/components/marketing/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { PricingCheckoutButton } from "@/components/billing/billing-actions";
 import { cn } from "@/lib/utils";
 
 const plans = [
   {
+    id: "free" as const,
     name: "Free",
     price: { monthly: 0, yearly: 0 },
     period: "forever",
@@ -20,6 +22,7 @@ const plans = [
     featured: false,
   },
   {
+    id: "pro" as const,
     name: "Pro",
     price: { monthly: 29, yearly: 24 },
     period: "/ mo",
@@ -29,6 +32,7 @@ const plans = [
     featured: true,
   },
   {
+    id: "business" as const,
     name: "Business",
     price: { monthly: 99, yearly: 82 },
     period: "/ mo",
@@ -38,6 +42,7 @@ const plans = [
     featured: false,
   },
   {
+    id: "enterprise" as const,
     name: "Enterprise",
     price: { monthly: null, yearly: null },
     period: "",
@@ -88,7 +93,24 @@ export default function PricingPage() {
                   {price !== null && <span className="text-xs text-fg-subtle">{p.period}</span>}
                 </div>
                 {yearly && price !== null && price > 0 && <div className="text-[11px] text-success">billed annually</div>}
-                <Link href="/signup" className="mt-5"><Button variant={p.featured ? "ai" : "secondary"} size="md" className="w-full">{p.cta}</Button></Link>
+                <div className="mt-5">
+                  {p.id === "pro" || p.id === "business" ? (
+                    <PricingCheckoutButton
+                      plan={p.id}
+                      interval={yearly ? "yearly" : "monthly"}
+                      label={p.cta}
+                      variant={p.featured ? "ai" : "secondary"}
+                    />
+                  ) : p.id === "enterprise" ? (
+                    <Link href="/contact" className="block">
+                      <Button variant="outline" size="md" className="w-full">{p.cta}</Button>
+                    </Link>
+                  ) : (
+                    <Link href="/signup" className="block">
+                      <Button variant={p.featured ? "ai" : "secondary"} size="md" className="w-full">{p.cta}</Button>
+                    </Link>
+                  )}
+                </div>
                 <ul className="mt-6 space-y-2.5">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-fg-muted">

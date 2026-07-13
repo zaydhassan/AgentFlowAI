@@ -10,7 +10,7 @@ import type { WorkflowNode, WorkflowEdge, CopilotSuggestion } from "../types";
 function detectNode(p: string, i: number): string | null {
   const t = p.toLowerCase();
   const map: { keys: string[]; type: string }[] = [
-    { keys: ["gmail", "email", "mail"], type: "comm.gmail" },
+    { keys: ["gmail", "email", "mail"], type: "gmail.search" },
     { keys: ["outlook"], type: "comm.outlook" },
     { keys: ["slack"], type: "comm.slack" },
     { keys: ["discord"], type: "comm.discord" },

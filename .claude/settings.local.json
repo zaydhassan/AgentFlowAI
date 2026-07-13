@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__ide__getDiagnostics"
+      "Bash(curl -sS --max-time 120 \"http://localhost:3137/api/agents/devtest?objective=Count%20to%203%20and%20list%20three%20mitigations%20for%20Friday%20deploys\")"
     ]
   }
 }

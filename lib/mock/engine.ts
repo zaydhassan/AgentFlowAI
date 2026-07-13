@@ -48,10 +48,13 @@ export function nodeDurationMs(node: WorkflowNode): number {
   const h = hash(node.id + node.type);
   const def = getNodeDef(node.type);
   if (def?.category === "ai") return 1800 + (h % 4000);
-  if (def?.category === "storage") return 120 + (h % 400);
-  if (def?.category === "documents") return 600 + (h % 1200);
+  if (def?.category === "memory") return 200 + (h % 500);
+  if (def?.category === "rag") return 900 + (h % 1800);
+  if (def?.category === "database") return 120 + (h % 400);
+  if (def?.category === "files") return 600 + (h % 1200);
   if (node.type.startsWith("trigger")) return 40 + (h % 120);
   if (def?.category === "communication") return 400 + (h % 900);
+  if (def?.category === "integrations") return 350 + (h % 700);
   return 80 + (h % 300);
 }
 
@@ -82,16 +85,24 @@ export function nodeLogs(node: WorkflowNode): string[] {
   switch (def?.category) {
     case "ai":
       return [`Calling ${label}`, "Streaming response", "Parsed structured output", "Completed"];
-    case "storage":
+    case "memory":
+      return [`Querying memory`, "Scored relevance", "Injected context", "Done"];
+    case "rag":
+      return ["Embedding query", "Searching index", "Top-K retrieved", "Done"];
+    case "database":
       return [`Connecting to ${label}`, "Query executed", "1 row(s) affected", "Done"];
     case "communication":
       return [`Authenticating with ${label}`, "Message prepared", "Delivered"];
-    case "documents":
+    case "files":
       return [`Loading document`, "Extracting content", "Structured fields ready"];
     case "developer":
       return [`HTTP ${node.data.config.method ?? "GET"} request`, "Response 200", "Body parsed"];
     case "cloud":
       return [`Uploading to ${label}`, "Transfer complete"];
+    case "integrations":
+      return [`Connecting to ${label}`, "Request sent", "Response received"];
+    case "logic":
+      return [`Evaluating ${label}`, "Branch resolved"];
     case "utilities":
       return [`Evaluating ${label}`, "Branch resolved"];
     default:

@@ -2,17 +2,51 @@
 // AgentFlow AI — Shared domain types
 // ============================================================
 
+// The 12 brief categories. Node `type` strings keep their original prefixes
+// (e.g. "trigger.*", "store.*"); `category` only drives palette grouping.
 export type NodeCategory =
-  | "trigger"
-  | "communication"
   | "ai"
-  | "storage"
-  | "documents"
-  | "developer"
+  | "communication"
+  | "database"
+  | "logic"
+  | "files"
   | "cloud"
-  | "utilities";
+  | "integrations"
+  | "developer"
+  | "utilities"
+  | "scheduling"
+  | "memory"
+  | "rag"
+  | "gmail"
+  | "mcp";
 
 export type NodeStatus = "idle" | "running" | "succeeded" | "failed" | "retrying" | "skipped";
+
+// Inspector form field descriptor. Drives the generated config UI per node.
+export type ConfigFieldType =
+  | "text"
+  | "number"
+  | "select"
+  | "boolean"
+  | "code"
+  | "secret"
+  | "textarea"
+  | "account" // connected-integration-account dropdown (fetches /api/integrations/accounts?provider=<provider>)
+  | "mcp.tool" // discovered MCP tool dropdown (fetches /api/mcp/tools); value "<serverId>::<toolName>"
+  | "mcp.resource"; // discovered MCP resource dropdown (fetches /api/mcp/resources); value "<serverId>::<uri>"
+
+export interface ConfigField {
+  key: string;
+  label: string;
+  type: ConfigFieldType;
+  default?: unknown;
+  options?: { label: string; value: string }[];
+  required?: boolean;
+  placeholder?: string;
+  help?: string;
+  /** For "account" fields — which integration provider to list accounts for. */
+  provider?: string;
+}
 
 export interface NodeDef {
   type: string;
@@ -24,19 +58,28 @@ export interface NodeDef {
   inputs: number;
   outputs: number;
   defaultConfig?: Record<string, unknown>;
+  configSchema?: ConfigField[];
+  metrics?: { tokens?: boolean; cost?: boolean };
 }
 
 export interface WorkflowNode {
   id: string;
-  type: string; // node def type
+  type: string; // node def type, or "sticky" | "comment" | "group" for canvas nodes
   position: { x: number; y: number };
   data: {
     label: string;
     config: Record<string, unknown>;
     status?: NodeStatus;
     durationMs?: number;
+    tokensUsed?: number;
+    cost?: number;
     logs?: string[];
     retries?: number;
+    breakpoint?: boolean;
+    // canvas-node payloads (only set for sticky/comment/group types)
+    sticky?: { content: string; color: string };
+    comment?: { content: string };
+    group?: { label: string; color: string };
   };
 }
 
@@ -58,6 +101,7 @@ export interface Workflow {
   category: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+  viewport?: { x: number; y: number; zoom: number };
   lastRun: string; // ISO
   schedule?: string;
   health: number; // 0-100

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { LogoMark } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,26 @@ type ShellUser = {
 };
 
 export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; user: ShellUser }) {
+  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<null | "notif">(null);
   const [items, setItems] = useState<Notification[]>(seedNotifications);
+  const [creating, setCreating] = useState(false);
+
+  const newWorkflow = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      if (res.ok) {
+        const { id } = await res.json();
+        if (id) router.push(`/workflows/${id}`);
+        return;
+      }
+      if (res.status === 401) router.push("/login?callbackUrl=/workflows");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const unread = items.filter((n) => !n.read).length;
   const markAll = () => setItems((arr) => arr.map((n) => ({ ...n, read: true })));
@@ -52,8 +71,8 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
           <span className="text-fg-muted">12 agents running</span>
         </div>
 
-        <Button variant="ai" size="sm" className="hidden sm:inline-flex">
-          <Icon name="Sparkles" className="h-3.5 w-3.5" />
+        <Button variant="ai" size="sm" className="hidden sm:inline-flex" onClick={newWorkflow} disabled={creating}>
+          <Icon name={creating ? "LoaderCircle" : "Sparkles"} className={cn("h-3.5 w-3.5", creating && "animate-spin")} />
           New Workflow
         </Button>
 

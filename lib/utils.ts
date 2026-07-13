@@ -15,6 +15,19 @@ export function formatCurrency(n: number): string {
   return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
+/**
+ * Format an amount held in the smallest currency unit (cents/paise) with the
+ * given currency's symbol. Used by billing invoices so amounts render correctly
+ * regardless of the active provider's charge currency. `formatCurrency` is left
+ * intact for non-billing callers that pass whole major units.
+ */
+export function formatMoney(amountMinor: number, currency = "usd"): string {
+  const c = (currency || "usd").toLowerCase();
+  const major = amountMinor / 100;
+  const symbol = c === "inr" ? "₹" : "$";
+  return symbol + major.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;

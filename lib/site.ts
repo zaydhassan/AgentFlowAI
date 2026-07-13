@@ -26,6 +26,7 @@ export const site = {
     {
       title: "Product",
       links: [
+        { label: "Workflow Builder", href: "/workflows" },
         { label: "Features", href: "/#features" },
         { label: "Pricing", href: "/pricing" },
         { label: "Templates", href: "/marketplace" },

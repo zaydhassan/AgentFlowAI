@@ -86,7 +86,7 @@ export const workflows: Workflow[] = [
     createdBy: "Maya Chen",
     nodes: [
       { id: "n1", type: "trigger.schedule", position: { x: 40, y: 120 }, data: { label: "Schedule", config: { cron: "*/5 * * * *" } } },
-      { id: "n2", type: "comm.gmail", position: { x: 280, y: 40 }, data: { label: "Gmail", config: { filter: "subject:invoice" } } },
+      { id: "n2", type: "gmail.search", position: { x: 280, y: 40 }, data: { label: "Gmail Search", config: { query: "subject:invoice" } } },
       { id: "n3", type: "ai.claude", position: { x: 540, y: 40 }, data: { label: "Claude Extract", config: { model: "claude-opus-4-8" } } },
       { id: "n4", type: "doc.ocr", position: { x: 540, y: 220 }, data: { label: "OCR Backup", config: {} } },
       { id: "n5", type: "store.postgres", position: { x: 820, y: 40 }, data: { label: "Postgres", config: { table: "invoices" } } },
