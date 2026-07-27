@@ -33,9 +33,11 @@ const PUBLIC_ROUTES = new Set<string>([
 function isPublic(pathname: string): boolean {
   // Public API routes
   if (pathname.startsWith("/api/auth")) return true;
-  if (pathname.startsWith("/api/stripe/webhook")) return true;
+  if (pathname.startsWith("/api/payments/webhook")) return true;
   // /login/error and /signup/error are public
   if (pathname === "/login/error" || pathname === "/signup/error") return true;
+  // The whole documentation tree is public (/docs + every article under it).
+  if (pathname === "/docs" || pathname.startsWith("/docs/")) return true;
   return PUBLIC_ROUTES.has(pathname);
 }
 
@@ -114,7 +116,7 @@ export const authConfig = {
       const { pathname } = request.nextUrl;
       // Always allow the Auth.js API and the Stripe webhook through.
       if (pathname.startsWith("/api/auth")) return true;
-      if (pathname.startsWith("/api/stripe/webhook")) return true;
+      if (pathname.startsWith("/api/payments/webhook")) return true;
       // Always allow Next internals and static files (the matcher handles most).
       if (pathname.startsWith("/_next")) return true;
       if (pathname.startsWith("/favicon")) return true;

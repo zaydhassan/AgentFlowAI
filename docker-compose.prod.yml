@@ -1,0 +1,153 @@
+# =============================================================================
+# AgentFlow AI — production compose (standalone, not an override).
+# Start:   docker compose -f docker-compose.prod.yml up -d --build
+# (Or, layered on dev: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d)
+#
+# Differences from dev (docker-compose.yml):
+#   • web:    standalone `runner` image (next build → node server.js), restart: always,
+#             QUEUE_WORKER_AUTOSTART=false (web-only — no worker contention).
+#   • worker: dedicated worker container (standalone runner, autostart=true), no port.
+#   • Per-service resource limits + restart: always + no debug env.
+#   • Migrations run via the same one-shot `migrate` service.
+#
+# Secrets: a `.env` at the repo root is REQUIRED for production — set at least
+# AUTH_SECRET, and any provider keys you use (OPENAI_API_KEY, RAZORPAY_*,
+# INTEGRATIONS_ENCRYPTION_KEY, etc.). Compose interpolates ${VAR} from .env and
+# injects the rest into the containers.
+# =============================================================================
+
+name: agentflow-ai-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agentflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-agentflow}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agentflow} -d ${POSTGRES_DB:-agentflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks: [agentflow-net]
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks: [agentflow-net]
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    command: ["./node_modules/.bin/prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agentflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-agentflow}
+    depends_on:
+      db: { condition: service_healthy }
+    restart: "no"
+    networks: [agentflow-net]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?NEXT_PUBLIC_APP_URL is required in .env}
+    restart: always
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agentflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-agentflow}
+      REDIS_URL: redis://redis:6379
+      QUEUE_ENABLED: "true"
+      # Web-only: the dedicated `worker` service runs the BullMQ worker.
+      QUEUE_WORKER_AUTOSTART: "false"
+      CACHE_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks: [agentflow-net]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?NEXT_PUBLIC_APP_URL is required in .env}
+    restart: always
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agentflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-agentflow}
+      REDIS_URL: redis://redis:6379
+      QUEUE_ENABLED: "true"
+      # Worker mode: instrumentation.ts starts the memory-embedding worker.
+      QUEUE_WORKER_AUTOSTART: "true"
+      CACHE_ENABLED: "true"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    networks: [agentflow-net]
+
+networks:
+  agentflow-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:

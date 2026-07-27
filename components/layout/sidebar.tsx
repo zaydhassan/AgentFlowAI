@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { pickActiveHref } from "@/lib/nav";
 import { Icon } from "@/components/ui/icon";
 import { LogoMark } from "@/components/ui/logo";
 
@@ -26,8 +27,14 @@ const nav = [
   ]},
 ];
 
+// Flat list of every sidebar href — used to pick the single most-specific match
+// for the current pathname so exactly ONE item is ever active (no more
+// "/ai" + "/ai/rag" both lighting up on a nested route).
+const ALL_HREFS = nav.flatMap((g) => g.items.map((i) => i.href));
+
 export function Sidebar({ user: _user }: { user: { id: string; name: string | null; email: string | null; image: string | null } }) {
   const pathname = usePathname();
+  const activeHref = pickActiveHref(pathname, ALL_HREFS);
   return (
     <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border bg-bg-soft/80 backdrop-blur-xl">
       <Link href="/" className="flex h-14 items-center gap-2.5 px-5 border-b border-border hover:bg-surface-2/60 transition-colors">
@@ -48,11 +55,15 @@ export function Sidebar({ user: _user }: { user: { id: string; name: string | nu
             </div>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                // Exactly one winner: the item whose href equals the
+                // most-specific match for the current pathname. Derived purely
+                // from routing — no hardcoded active flags anywhere.
+                const active = item.href === activeHref;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                       active

@@ -14,8 +14,8 @@ export const site = {
   // Bumped in lockstep with the changelog page (app/changelog/page.tsx).
   version: "1.0.0",
   // Business contact inbox (used by the footer, contact page, and the
-  // contact-form server action).
-  email: "hello@agentflow.ai",
+  // contact-form server action). Contact form submissions are delivered here.
+  email: "zaydthirteen@gmail.com",
   socials: {
     github: "https://github.com/agentflow-ai",
     linkedin: "https://www.linkedin.com/company/agentflow-ai",

@@ -41,6 +41,7 @@ import { Icon } from "@/components/ui/icon";
 import { getNodeDef } from "@/lib/nodes";
 import { cn, formatDuration } from "@/lib/utils";
 import { streamSSE } from "@/lib/workflow/sse-client";
+import { useDropdown } from "@/lib/hooks/use-dropdown";
 import type { Graph } from "@/lib/workflow/graph";
 import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/lib/types";
 
@@ -126,7 +127,13 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const [searchOpen, setSearchOpen] = useState(false);
   const [dockOpen, setDockOpen] = useState(false);
-  const [versionMenuOpen, setVersionMenuOpen] = useState(false);
+  const {
+    open: versionMenuOpen,
+    toggle: toggleVersionMenu,
+    close: closeVersionMenu,
+    panelRef: versionPanelRef,
+    triggerRef: versionTriggerRef,
+  } = useDropdown<HTMLButtonElement>("builder-version-menu");
   const [ctx, setCtx] = useState<{ x: number; y: number; nodeId: string | null } | null>(null);
   const [diagnoseSignal, setDiagnoseSignal] = useState(0);
 
@@ -581,12 +588,19 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
           <Panel position="top-right">
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Button variant="secondary" size="sm" onClick={() => setVersionMenuOpen((o) => !o)}>
+                <Button
+                  ref={versionTriggerRef}
+                  variant="secondary"
+                  size="sm"
+                  onClick={toggleVersionMenu}
+                  aria-haspopup="menu"
+                  aria-expanded={versionMenuOpen}
+                >
                   <Icon name="History" className="h-3.5 w-3.5" /> v{version}
                 </Button>
                 {versionMenuOpen && (
-                  <div className="absolute right-0 top-9 z-20">
-                    <VersionHistory workflowId={workflowId} versions={versions} currentVersion={version} onRestored={restoreVersion} />
+                  <div ref={versionPanelRef} className="absolute right-0 top-9 z-20">
+                    <VersionHistory workflowId={workflowId} versions={versions} currentVersion={version} onRestored={(g) => { restoreVersion(g); closeVersionMenu(); }} />
                   </div>
                 )}
               </div>

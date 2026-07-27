@@ -13,6 +13,9 @@
 import "server-only";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpAuthScheme, McpCredentials, StoredMcpServer } from "../types";
+import { stdioAdapter } from "./stdio";
+import { httpAdapter } from "./http";
+import { sseAdapter } from "./sse";
 
 export interface McpTransportBuildContext {
   server: StoredMcpServer;
@@ -26,6 +29,22 @@ export interface McpTransportAdapter {
 
 // ─────────────────────────── registry ───────────────────────────────────────
 
+// IMPORTANT: registration order vs. the adapter modules.
+//
+// Each adapter (./stdio, ./http, ./sse) USED to call `registerTransport(...)`
+// at its own top level, and this module wired them in with side-effect imports
+// (`import "./stdio"`) at the bottom. That created a circular import:
+// index → adapter → index. Because ES module imports are hoisted, the adapters'
+// top-level `registerTransport()` calls ran BEFORE this module's body — i.e.
+// before `const REGISTRY` was initialised — throwing
+// "Cannot access 'REGISTRY' before initialization" (temporal dead zone) under
+// Turbopack during `next build` page-data collection.
+//
+// The fix: adapters now just EXPORT their adapter object; THIS module imports
+// them as values and registers them in its own body, after `REGISTRY` exists.
+// The adapters still only import `buildAuthHeaders` (a hoisted function) +
+// types from here, so the remaining index↔adapter cycle is safe — no top-level
+// access to this module's `let`/`const` happens during the import phase.
 const REGISTRY = new Map<string, McpTransportAdapter>();
 
 export function registerTransport(adapter: McpTransportAdapter): void {
@@ -77,7 +96,10 @@ export function buildAuthHeaders(
   return headers;
 }
 
-// Register the built-in transports. Importing this module wires them up.
-import "./stdio";
-import "./http";
-import "./sse";
+// Register the built-in transports. Done here in the module body (after
+// `REGISTRY` is initialised) rather than via side-effect imports at the bottom
+// — see the note above the registry for why the side-effect form caused a
+// circular-import TDZ. Importing this module wires the three adapters up.
+registerTransport(stdioAdapter);
+registerTransport(httpAdapter);
+registerTransport(sseAdapter);

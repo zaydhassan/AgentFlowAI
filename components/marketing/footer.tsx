@@ -1,6 +1,4 @@
-// AgentFlow AI — application footer. Shared across all marketing surfaces.
-// Server component (no client interactivity). Every link resolves to a real
-// route — see lib/site.ts for the single source of truth.
+
 import Link from "next/link";
 import { LogoMark } from "@/components/ui/logo";
 import { site } from "@/lib/site";

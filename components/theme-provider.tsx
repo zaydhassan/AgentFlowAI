@@ -36,9 +36,7 @@ function applyResolved(resolved: ResolvedTheme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // The boot script in app/layout.tsx already painted the correct class on <html>.
-  // On the client we just read it back to stay in sync — using lazy init so we
-  // don't call setState inside an effect.
+  
   const [{ theme, resolvedTheme }, setState] = useState<{ theme: Theme; resolvedTheme: ResolvedTheme }>(
     () => {
       const stored = getStoredTheme();
@@ -46,7 +44,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   );
 
-  // React to OS preference changes when in 'system' mode, and to cross-tab edits.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mql = window.matchMedia("(prefers-color-scheme: dark)");

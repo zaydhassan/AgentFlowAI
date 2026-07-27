@@ -7,17 +7,19 @@
 // Premium behaviour:
 //  - Spring entrance + staggered items (framer-motion AnimatePresence).
 //  - Hover highlight + icon tint shift per row.
-//  - Esc-to-close, click-outside overlay, focus rings.
+//  - Esc-to-close, outside-click, single-open coordination, focus rings
+//    (all via the shared useDropdown hook in lib/hooks/use-dropdown).
 //  - Theme picker retained (it lives on a shared component, so the marketing
 //    pages can still switch themes).
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { useTheme, type Theme } from "@/components/theme-provider";
+import { useDropdown } from "@/lib/hooks/use-dropdown";
 
 export type UserMenuUser = {
   name?: string | null;
@@ -60,24 +62,65 @@ const item: Variants = {
   show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 480, damping: 34 } },
 };
 
+// Top-nav avatar. Falls back to a gradient initials tile whenever the image
+// URL is missing OR fails to load at runtime (expired Google/GitHub URLs,
+// deleted avatars, network/CSP failures). A subtle skeleton fills the fixed
+// 7×7 box while the image loads so there's no layout shift.
+function UserAvatar({ user }: { user: UserMenuUser }) {
+  const src = user.image?.trim() || null;
+  // "error" doubles as "show fallback" — used both when there's no URL and
+  // when the <img> fires onError.
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">(
+    src ? "loading" : "error",
+  );
+  // Reset the load state when the URL changes (e.g. session update). Done
+  // during render (guarded) rather than in an effect to avoid cascading
+  // renders — the official "adjust state on prop change" pattern.
+  const [prevSrc, setPrevSrc] = useState(src);
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setStatus(src ? "loading" : "error");
+  }
+
+  const fallback = (
+    <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-[11px] font-semibold text-white">
+      {initials(user.name, user.email)}
+    </div>
+  );
+
+  if (!src || status === "error") return fallback;
+
+  return (
+    <div className="relative h-7 w-7 shrink-0">
+      {/* Skeleton behind the image while it loads (same 7×7 box → no shift). */}
+      {status !== "loaded" && (
+        <div
+          className="absolute inset-0 rounded-full bg-surface-3 animate-pulse"
+          aria-hidden
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        loading="eager"
+        decoding="async"
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("error")}
+        className={cn(
+          "h-7 w-7 rounded-full object-cover transition-opacity duration-200",
+          status === "loaded" ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
+  );
+}
+
 export function UserMenu({ user }: { user: UserMenuUser }) {
-  const [open, setOpen] = useState(false);
+  const { open, close, toggle, panelRef, triggerRef } =
+    useDropdown<HTMLButtonElement>("user-menu");
   const [signingOut, startSignOut] = useTransition();
   const { theme, setTheme } = useTheme();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  // Esc closes the menu and returns focus to the trigger.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
 
   const handleSignOut = () => {
     startSignOut(() => {
@@ -90,19 +133,12 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-colors hover:bg-surface-2 focus-ring"
       >
-        {user.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.image} alt="" className="h-7 w-7 rounded-full object-cover" />
-        ) : (
-          <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-[11px] font-semibold text-white">
-            {initials(user.name, user.email)}
-          </div>
-        )}
+        <UserAvatar user={user} />
         <div className="hidden text-left leading-tight sm:block">
           <div className="text-xs font-medium">{user.name ?? user.email ?? "Account"}</div>
           <div className="text-[10px] text-fg-subtle">{user.email}</div>
@@ -115,38 +151,36 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
 
       <AnimatePresence>
         {open && (
-          <>
-            {/* Click-outside overlay. */}
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
-            <motion.div
-              role="menu"
-              initial={{ opacity: 0, y: -6, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-2/95 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl"
-            >
-              {/* Identity header. */}
-              <div className="border-b border-border px-3.5 py-2.5">
-                <div className="text-sm font-medium truncate">{user.name ?? "Account"}</div>
-                <div className="text-[11px] text-fg-muted truncate">{user.email}</div>
-              </div>
+          <motion.div
+            ref={panelRef}
+            role="menu"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-2/95 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl"
+          >
+            {/* Identity header. */}
+            <div className="border-b border-border px-3.5 py-2.5">
+              <div className="text-sm font-medium truncate">{user.name ?? "Account"}</div>
+              <div className="text-[11px] text-fg-muted truncate">{user.email}</div>
+            </div>
 
-              <motion.div variants={container} initial="hidden" animate="show" className="p-1.5">
-                {MENU_ITEMS.map((m) => (
-                  <motion.div key={m.label} variants={item}>
-                    <Link
-                      role="menuitem"
-                      href={m.href}
-                      onClick={() => setOpen(false)}
-                      className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg focus-ring"
-                    >
-                      <Icon name={m.icon} className="h-3.5 w-3.5 text-fg-subtle transition-colors group-hover:text-brand" />
-                      <span className="flex-1">{m.label}</span>
-                    </Link>
-                  </motion.div>
-                ))}
-              </motion.div>
+            <motion.div variants={container} initial="hidden" animate="show" className="p-1.5">
+              {MENU_ITEMS.map((m) => (
+                <motion.div key={m.label} variants={item}>
+                  <Link
+                    role="menuitem"
+                    href={m.href}
+                    onClick={() => close()}
+                    className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg focus-ring"
+                  >
+                    <Icon name={m.icon} className="h-3.5 w-3.5 text-fg-subtle transition-colors group-hover:text-brand" />
+                    <span className="flex-1">{m.label}</span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
 
               {/* Theme switcher. */}
               <div className="border-t border-border px-1.5 py-1.5">
@@ -189,7 +223,6 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
                 </button>
               </div>
             </motion.div>
-          </>
         )}
       </AnimatePresence>
     </div>

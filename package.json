@@ -13,6 +13,8 @@
     "@langchain/langgraph": "^1.4.7",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@prisma/client": "^6.19.3",
+    "@sentry/node": "^10.65.0",
+    "@sentry/react": "^10.65.0",
     "@xyflow/react": "^12.11.2",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.80.2",

@@ -325,8 +325,8 @@ function McpSelectShell({
   return (
     <div className="space-y-1">
       {children}
-      <Link href="/settings/mcp" className="inline-flex items-center gap-1 text-[10px] text-brand hover:underline">
-        <Icon name="Plug" className="h-3 w-3" /> Manage MCP servers in Settings
+      <Link href="/settings/integrations" className="inline-flex items-center gap-1 text-[10px] text-brand hover:underline">
+        <Icon name="Plug" className="h-3 w-3" /> Manage integrations in Settings
       </Link>
     </div>
   );

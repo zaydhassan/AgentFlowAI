@@ -4,32 +4,50 @@ import { MarketingPage } from "@/components/marketing/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { CoreConceptCard, type CoreConcept } from "@/components/marketing/core-concept-card";
+import { DocsSearch } from "@/components/docs/docs-search";
 
 export const metadata: Metadata = {
   title: "Documentation — AgentFlow AI",
   description: "AgentFlow AI documentation — concepts, the visual builder, the Developer Guide, and reference.",
 };
 
-const concepts = [
+const concepts: CoreConcept[] = [
   {
     icon: "Workflow",
-    title: "Workflows & nodes",
-    body: "A workflow is a graph of nodes. Learn the node lifecycle, triggers, branching, and how outputs flow between steps.",
+    category: "AI Orchestration",
+    title: "Workflows & Nodes",
+    tone: "brand",
+    body: "Design workflows visually using typed nodes and intelligent branching. Compose triggers, transforms, and AI steps into reliable, reviewable runs.",
+    bullets: ["60+ built-in nodes", "Conditional routing", "Parallel execution"],
+    href: "/docs/workflows",
   },
   {
     icon: "BrainCircuit",
-    title: "Agents & memory",
-    body: "Invoke LLM-backed agents as nodes. Wire tools, persistent memory, and retrieval (RAG) into a run.",
+    category: "Intelligence Layer",
+    title: "Agents & Memory",
+    tone: "ai",
+    body: "Invoke LLM-backed agents as nodes. Wire tools, persistent memory, and retrieval (RAG) into a single, observable run.",
+    bullets: ["Persistent agent memory", "Tool & function calling", "RAG retrieval"],
+    href: "/docs/agents",
   },
   {
     icon: "Activity",
-    title: "Execution & self-healing",
-    body: "Understand the scheduler, retries, timeouts, and how runs recover from transient failures automatically.",
+    category: "Runtime",
+    title: "Execution & Self-healing",
+    tone: "success",
+    body: "Understand the scheduler, retries, timeouts, and how runs recover from transient failures automatically — with full per-step observability.",
+    bullets: ["Retry & timeout policies", "Self-healing runs", "Per-step observability"],
+    href: "/docs/execution",
   },
   {
     icon: "KeyRound",
-    title: "Secrets & integrations",
-    body: "Store scoped credentials per workspace and connect the 60+ built-in integrations.",
+    category: "Trust & Access",
+    title: "Secrets & Integrations",
+    tone: "warning",
+    body: "Store scoped credentials per workspace and connect the 60+ built-in integrations through a managed, encrypted vault.",
+    bullets: ["Scoped workspace credentials", "60+ built-in integrations", "Encrypted OAuth vault"],
+    href: "/docs/integrations",
   },
 ];
 
@@ -73,24 +91,22 @@ export default function DocsPage() {
             Everything you need to design, run, and operate AI-native workflows — from the visual
             builder to the command line.
           </p>
+          <DocsSearch />
         </div>
       </section>
 
       {/* Concepts */}
-      <section className="mx-auto max-w-5xl px-5 lg:px-8 py-16">
-        <h2 className="text-2xl font-semibold tracking-tight">Core concepts</h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {concepts.map((c) => (
-            <div
-              key={c.title}
-              className="card-hover rounded-2xl border border-border bg-surface-2/40 p-6"
-            >
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Icon name={c.icon} className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 text-base font-semibold">{c.title}</h3>
-              <p className="mt-1.5 text-sm text-fg-muted">{c.body}</p>
-            </div>
+      <section className="mx-auto max-w-5xl px-5 lg:px-8 py-20">
+        <Badge tone="ai" className="mb-5">Documentation</Badge>
+        <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          Core Concepts
+        </h2>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-fg-muted sm:text-lg">
+          Build, orchestrate and deploy autonomous AI systems with enterprise-grade tooling.
+        </p>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {concepts.map((c, i) => (
+            <CoreConceptCard key={c.title} concept={c} index={i} />
           ))}
         </div>
       </section>

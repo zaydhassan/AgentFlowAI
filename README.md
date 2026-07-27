@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/zaydhassan/AgentFlowAI/actions/workflows/ci.yml"><img src="https://github.com/zaydhassan/AgentFlowAI/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/zaydhassan/AgentFlowAI"><img src="https://img.shields.io/github/stars/zaydhassan/AgentFlowAI?style=flat" alt="stars" /></a>
   <a href="https://github.com/zaydhassan/AgentFlowAI/blob/master/LICENSE"><img src="https://img.shields.io/github/license/zaydhassan/AgentFlowAI?style=flat" alt="license" /></a>
   <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js 16" /></a>

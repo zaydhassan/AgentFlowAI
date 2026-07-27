@@ -10,6 +10,20 @@ export type { Interval, PlanId, PaidPlan };
 export const PAID_PLANS: PaidPlan[] = ["pro", "business"];
 export const INTERVALS: Interval[] = ["monthly", "yearly"];
 
+/**
+ * Numeric monthly credit allotment per plan. `PLAN_META[plan].credits` is the
+ * human display string (e.g. "150,000 / mo"); this is the numeric form used by
+ * metering/remaining-credit math (dashboard, billing). Values mirror the
+ * display strings for paid plans; free/enterprise have no display string and
+ * use conservative defaults. Additive — the display strings stay as-is.
+ */
+export const PLAN_CREDIT_LIMIT: Record<PlanId, number> = {
+  free: 50_000,
+  pro: 150_000,
+  business: 1_000_000,
+  enterprise: 50_000_000,
+};
+
 /** Currency for charges (Razorpay + Stripe). Default USD to preserve pricing. */
 export function chargeCurrency(): string {
   return (process.env.RAZORPAY_CURRENCY ?? process.env.CHARGE_CURRENCY ?? "usd").toLowerCase();

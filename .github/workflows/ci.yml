@@ -1,0 +1,322 @@
+# =============================================================================
+# AgentFlow AI — CI pipeline.
+# Runs on every pull request and every push to master. Validates that the
+# project meets production-quality standards before merge/deploy.
+#
+# Triggers: pull_request (any target), push to master, manual dispatch.
+# Concurrency: newer runs cancel older runs on the same ref (no duplicate work).
+#
+# Jobs (parallel where possible):
+#   lint-typecheck — TypeScript (full repo) + ESLint (changed files)
+#   build          — Prisma validate/generate → next build → upload artifacts
+#   test           — unit tests (npm test --if-present) + coverage (if any)
+#   security       — npm audit (non-blocking) + dependency summary + dep review
+#   docker         — builds both Dockerfiles (needs build, to avoid wasted work)
+#   e2e            — Playwright (ONLY if a playwright config exists)
+#
+# Quality gates (fail the pipeline): tsc, ESLint-on-changed-files, prisma
+# validate, next build, docker build. Unit/e2e/security do not hard-fail when
+# their tooling is absent ("if present" steps).
+#
+# NOTE on ESLint scope: the repository has pre-existing lint errors in protected
+# modules (payments, resend, …) that this workflow is not permitted to modify.
+# ESLint therefore enforces on CHANGED files only (incremental enforcement) so
+# new code must be clean while existing debt is cleaned up over time. `tsc` is
+# enforced on the full repo (it is currently clean). See docs/ci-cd.md.
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Build-time env so module-level env reads don't crash the build. No DB/auth
+  # connections are opened at build time; these only satisfy env readers.
+  DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+  AUTH_SECRET: ci-build-only-not-a-real-secret
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # TypeScript + ESLint (parallel with build).
+  # ---------------------------------------------------------------------------
+  lint-typecheck:
+    name: TypeScript & ESLint
+    runs-on: ubuntu-latest
+    # Full history so changed-file diffing against the base is reliable.
+    # tsc/eslint need the generated Prisma client (no postinstall hook exists).
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: ESLint (changed files)
+        # Enforce lint on changed/new TS/JS files only. Full-repo lint has
+        # pre-existing errors in protected modules we cannot modify.
+        run: |
+          set +e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+            git fetch --no-tags --depth=1 origin "+${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" >/dev/null 2>&1
+            RANGE="$BASE...${{ github.event.pull_request.head.sha }}"
+          else
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              echo "::notice::No previous commit to diff against — skipping changed-file lint."
+              exit 0
+            fi
+            RANGE="$BEFORE..${{ github.sha }}"
+          fi
+          FILES=$(git diff --name-only --diff-filter=AM "$RANGE" | grep -E '\.(ts|tsx|js|jsx)$' || true)
+          if [ -z "$FILES" ]; then
+            echo "::notice::No TypeScript/JavaScript files changed — lint skipped."
+            exit 0
+          fi
+          echo "Linting changed files:"
+          echo "$FILES" | sed 's/^/  /'
+          npx eslint $FILES
+
+  # ---------------------------------------------------------------------------
+  # Prisma validate/generate + Next.js production build + artifacts.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (Prisma + Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma validate
+        run: npx prisma validate --schema=prisma/schema.prisma
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Next.js production build
+        run: npm run build 2>&1 | tee build.log
+
+      - name: Build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 14
+
+      - name: Production build artifacts (.next/standalone + static)
+        if: success() && hashFiles('.next/standalone/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-standalone
+          path: |
+            .next/standalone
+            .next/static
+            public
+          retention-days: 7
+
+      - name: Coverage (if available)
+        if: always() && hashFiles('coverage/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Unit tests — runs `npm test` only if a test script is defined.
+  # No test runner is present today; this is a no-op until one is added.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Unit tests (if present)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run unit tests
+        # `--if-present` no-ops (exit 0) when no `test` script is defined.
+        run: npm test --if-present
+
+      - name: Coverage (if available)
+        if: always() && hashFiles('coverage/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Security — npm audit (non-blocking, high+) + dependency summary.
+  # Does NOT fail on low/moderate severity (per spec).
+  # ---------------------------------------------------------------------------
+  security:
+    name: Security & dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high+, non-blocking)
+        # Never fails the pipeline; low/moderate issues are surfaced only.
+        continue-on-error: true
+        run: |
+          npm audit --audit-level=high 2>&1 | tee audit.log || true
+
+      - name: Dependency summary
+        run: |
+          {
+            echo "# Dependency summary"
+            echo
+            echo "_Generated by CI on $(date -u +'%Y-%m-%dT%H:%M:%SZ')_"
+            echo
+            echo "## Top-level dependencies"
+            echo
+            npm ls --depth=0 --all 2>/dev/null || true
+          } > dependency-summary.md
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit
+          path: |
+            audit.log
+            dependency-summary.md
+          retention-days: 30
+
+  # Dependency review on PRs (GitHub-native: scans changed package-lock for advisories).
+  dependency-review:
+    name: Dependency review (PR)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail only on high/critical; low/moderate are advisory.
+          fail-on-severity: high
+
+  # ---------------------------------------------------------------------------
+  # Docker build verification — builds both images (needs build to avoid
+  # wasting CI minutes building images for code that already failed to build).
+  # ---------------------------------------------------------------------------
+  docker:
+    name: Docker build (${{ matrix.dockerfile }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: Dockerfile
+            image: agentflow-ai-web
+          - dockerfile: Dockerfile.backend
+            image: agentflow-ai-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (verification, no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: ${{ matrix.image }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Playwright E2E — ONLY when a Playwright config exists. Skips (no fail) otherwise.
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: Playwright (if present)
+    needs: build
+    runs-on: ubuntu-latest
+    if: hashFiles('playwright.config.*') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - name: Playwright report
+        if: always() && hashFiles('playwright-report/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14

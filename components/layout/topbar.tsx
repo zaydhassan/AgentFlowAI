@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { notifications as seedNotifications } from "@/lib/mock/data";
 import type { Notification } from "@/lib/types";
 import { UserMenu } from "@/components/layout/user-menu";
+import { useDropdown } from "@/lib/hooks/use-dropdown";
 
 type ShellUser = {
   id: string;
@@ -20,7 +21,12 @@ type ShellUser = {
 
 export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; user: ShellUser }) {
   const router = useRouter();
-  const [openMenu, setOpenMenu] = useState<null | "notif">(null);
+  const {
+    open: notifOpen,
+    toggle: toggleNotif,
+    panelRef: notifPanelRef,
+    triggerRef: notifTriggerRef,
+  } = useDropdown<HTMLButtonElement>("topbar-notifications");
   const [items, setItems] = useState<Notification[]>(seedNotifications);
   const [creating, setCreating] = useState(false);
 
@@ -79,7 +85,10 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
         {/* Notifications */}
         <div className="relative">
           <button
-            onClick={() => setOpenMenu(openMenu === "notif" ? null : "notif")}
+            ref={notifTriggerRef}
+            onClick={toggleNotif}
+            aria-haspopup="menu"
+            aria-expanded={notifOpen}
             className="relative grid h-9 w-9 place-items-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
           >
             <Icon name="Bell" className="h-4 w-4" />
@@ -89,8 +98,8 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
               </span>
             )}
           </button>
-          {openMenu === "notif" && (
-            <Dropdown onClose={() => setOpenMenu(null)} className="w-80">
+          {notifOpen && (
+            <Dropdown panelRef={notifPanelRef} className="w-80">
               <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
                 <span className="text-sm font-semibold">Notifications</span>
                 <button onClick={markAll} className="text-xs text-brand hover:underline">
@@ -140,25 +149,25 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
 
 function Dropdown({
   children,
-  onClose,
+  panelRef,
   className,
 }: {
   children: React.ReactNode;
-  onClose: () => void;
+  panelRef: React.RefObject<HTMLDivElement | null>;
   className?: string;
 }) {
+  // No overlay hack: outside-click + Escape + single-open coordination are handled
+  // by the useDropdown hook in the parent. This is just the presentational panel.
   return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div
-        className={cn(
-          "absolute right-0 top-11 z-50 overflow-hidden rounded-xl border border-border bg-surface-2/95 backdrop-blur-xl shadow-2xl shadow-black/40 animate-float-up",
-          className
-        )}
-      >
-        {children}
-      </div>
-    </>
+    <div
+      ref={panelRef}
+      className={cn(
+        "absolute right-0 top-11 z-50 overflow-hidden rounded-xl border border-border bg-surface-2/95 backdrop-blur-xl shadow-2xl shadow-black/40 animate-float-up",
+        className
+      )}
+    >
+      {children}
+    </div>
   );
 }
 

@@ -1,0 +1,47 @@
+# Keep build context small and secrets out of the image.
+# Version-controlled + host-only artifacts that must never enter a layer.
+
+# Dependencies (installed inside the image from the lockfile)
+node_modules
+**/node_modules
+
+# Build output (rebuilt in the image)
+.next
+out
+dist
+build
+
+# Git / CI / editor / OS
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Secrets — NEVER bake these into an image. Load via compose env_file / env.
+.env
+.env.*
+!.env.example
+
+# Docker artifacts (avoid recursive context + image bloat)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# Docs + agent tooling (not needed at runtime)
+docs
+.claude
+.cache
+coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma generated client (regenerated in the image via `prisma generate`)
+node_modules/.prisma
+node_modules/@prisma/client

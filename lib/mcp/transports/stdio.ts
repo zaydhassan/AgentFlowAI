@@ -11,9 +11,13 @@
 
 import "server-only";
 import { StdioClientTransport, getDefaultEnvironment } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { registerTransport, type McpTransportBuildContext, type McpTransportAdapter } from "./index";
+import type { McpTransportBuildContext, McpTransportAdapter } from "./index";
 
-const adapter: McpTransportAdapter = {
+// Exported as a value; the registry (./index) imports and registers this in its
+// own body. This module must NOT call `registerTransport` at its top level —
+// that re-introduces the index↔adapter circular import whose hoisted top-level
+// call hit the registry's temporal dead zone under Turbopack.
+export const stdioAdapter: McpTransportAdapter = {
   id: "stdio",
   build({ server }: McpTransportBuildContext) {
     if (!server.command) {
@@ -29,5 +33,3 @@ const adapter: McpTransportAdapter = {
     });
   },
 };
-
-registerTransport(adapter);

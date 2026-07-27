@@ -29,12 +29,7 @@ import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/layout/user-menu";
 import { GetStartedButton } from "@/components/marketing/get-started-button";
 import { cn } from "@/lib/utils";
-
-// ----------------------------------------------------------------------------
-// Navigation model — every href resolves to a REAL page or a landing anchor.
-// Nothing here is a dead/fake link. Solutions + Platform open mega-panels;
-// the rest are direct links.
-// ----------------------------------------------------------------------------
+import { isRouteActive } from "@/lib/nav";
 
 type MegaItem = { label: string; href: string; desc?: string; icon: string };
 type NavEntry =
@@ -67,25 +62,19 @@ const NAV: NavEntry[] = [
 ];
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  // Strip in-page anchors so /#features counts as the landing page.
-  const clean = href.split("#")[0] || "/";
-  if (clean === "/") return false; // anchors never mark "active" alone
-  return pathname === clean || pathname.startsWith(clean + "/");
+  if (href.startsWith("/#")) return false;
+  return isRouteActive(pathname, href);
 }
 
 function megaActive(pathname: string, items: MegaItem[]): boolean {
-  return items.some((i) => isActive(pathname, i.href) && !i.href.startsWith("/#"));
+  return items.some((i) => isActive(pathname, i.href));
 }
-
-// ----------------------------------------------------------------------------
 
 export function MarketingNav() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const signedIn = status === "authenticated";
 
-  // --- Scroll state: hide-on-down / show-on-up + "scrolled" styling. -------
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -95,24 +84,21 @@ export function MarketingNav() {
     const prev = lastY.current;
     lastY.current = y;
     setScrolled(y > 8);
-    // Only hide once past the hero region, and only when actively scrolling down.
+   
     if (y > 160 && y > prev + 4) setHidden(true);
     else if (y < prev - 4 || y <= 160) setHidden(false);
   });
 
-  // --- Desktop dropdown + mobile drawer. ------------------------------------
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [drawerMega, setDrawerMega] = useState<string | null>(null);
 
-  // Close menus on route change.
   useEffect(() => {
     setOpenMega(null);
     setDrawer(false);
     setDrawerMega(null);
   }, [pathname]);
 
-  // Esc closes the drawer.
   useEffect(() => {
     if (!drawer) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawer(false);
@@ -124,7 +110,7 @@ export function MarketingNav() {
     <motion.header
       className={cn(
         "nav-shell fixed top-0 inset-x-0 z-50",
-        // Default (top of page): lighter, taller. Scrolled: denser, stronger blur + shadow.
+      
         scrolled
           ? "h-14 border-b border-border/70 bg-bg/70 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
           : "h-16 border-b border-border/50 bg-bg/55 backdrop-blur-xl"
@@ -208,10 +194,6 @@ export function MarketingNav() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Direct nav link — animated underline + active indicator (shared layoutId).
-// ---------------------------------------------------------------------------
-
 function NavLink({ label, href, active }: { label: string; href: string; active: boolean }) {
   return (
     <Link
@@ -223,7 +205,7 @@ function NavLink({ label, href, active }: { label: string; href: string; active:
       )}
     >
       <span className="relative z-10">{label}</span>
-      {/* Hover background highlight. */}
+     
       <span className="absolute inset-0 rounded-lg bg-surface-2/0 transition-colors duration-200 group-hover:bg-surface-2/70" />
       {/* Animated underline. */}
       <span className="pointer-events-none absolute bottom-1 left-3 right-3 h-px overflow-hidden rounded-full">
@@ -240,10 +222,6 @@ function NavLink({ label, href, active }: { label: string; href: string; active:
   );
 }
 
-// ---------------------------------------------------------------------------
-// Mega-menu link — hover/focus opens a glass panel with rich items.
-// ---------------------------------------------------------------------------
-
 function MegaLink({
   label,
   items,
@@ -257,8 +235,7 @@ function MegaLink({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  // Open on hover (desktop), close when the pointer fully leaves the group.
-  // Click also toggles for keyboard/ touch accessibility.
+  
   return (
     <div
       className="relative"
@@ -320,10 +297,6 @@ function MegaLink({
   );
 }
 
-// ---------------------------------------------------------------------------
-// AI status badge — small, elegant, non-distracting.
-// ---------------------------------------------------------------------------
-
 function AIStatusBadge({ className }: { className?: string }) {
   return (
     <div
@@ -340,10 +313,6 @@ function AIStatusBadge({ className }: { className?: string }) {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Mobile slide-out drawer.
-// ---------------------------------------------------------------------------
 
 function MobileDrawer({
   open,

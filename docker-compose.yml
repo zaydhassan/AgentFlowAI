@@ -1,0 +1,154 @@
+# =============================================================================
+# AgentFlow AI — development compose.
+# One command: `docker compose up`  (bind-mounts the source, HMR via next dev)
+#
+# Services:
+#   db       PostgreSQL 16 (named volume pgdata)
+#   redis    Redis 7 (named volume redisdata)
+#   migrate  one-shot: `prisma migrate deploy` (runs once, then exits)
+#   web      Next.js dev server (UI + API); autostarts the BullMQ worker
+#            IN-PROCESS (QUEUE_WORKER_AUTOSTART=true) — no separate worker needed
+#   worker   (opt-in) dedicated BullMQ worker — run with `--profile worker`
+#
+# Secrets: create a `.env` (copy .env.example) at the repo root. Compose reads
+# it for ${VAR} interpolation AND injects it into containers via env_file.
+# Infrastructure connection vars below OVERRIDE .env so the services use the
+# internal Docker network hostnames (db / redis).
+# =============================================================================
+
+name: agentflow-ai-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agentflow
+      POSTGRES_PASSWORD: agentflow
+      POSTGRES_DB: agentflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentflow -d agentflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [agentflow-net]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks: [agentflow-net]
+
+  # One-shot schema migration. Uses the `deps` stage (has the Prisma CLI + the
+  # generated client). Exits 0 when done; web/worker wait for it.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    command: ["./node_modules/.bin/prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: postgresql://agentflow:agentflow@db:5432/agentflow
+    depends_on:
+      db: { condition: service_healthy }
+    restart: "no"
+    networks: [agentflow-net]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: development
+      # Internal Docker network — overrides any localhost value in .env.
+      DATABASE_URL: postgresql://agentflow:agentflow@db:5432/agentflow
+      REDIS_URL: redis://redis:6379
+      QUEUE_ENABLED: "true"
+      # Dev: the worker runs in-process inside the web container (mirrors local
+      # `npm run dev`). Use the `worker` profile for a dedicated worker instead.
+      QUEUE_WORKER_AUTOSTART: "true"
+      CACHE_ENABLED: "true"
+      RATE_LIMIT_ENABLED: "true"
+      AUTH_SECRET: ${AUTH_SECRET:-dev-only-change-me}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    volumes:
+      # Live source for HMR.
+      - ./:/app
+      # Keep the image-installed deps + build cache (don't shadow with host).
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [agentflow-net]
+
+  # Optional dedicated worker (dev). By default the web container runs the
+  # worker in-process (above). Run this only with: docker compose --profile worker up
+  worker:
+    profiles: [worker]
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: dev
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://agentflow:agentflow@db:5432/agentflow
+      REDIS_URL: redis://redis:6379
+      QUEUE_ENABLED: "true"
+      QUEUE_WORKER_AUTOSTART: "true"
+      CACHE_ENABLED: "true"
+      AUTH_SECRET: ${AUTH_SECRET:-dev-only-change-me}
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      redis: { condition: service_healthy }
+      db: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [agentflow-net]
+
+networks:
+  agentflow-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:

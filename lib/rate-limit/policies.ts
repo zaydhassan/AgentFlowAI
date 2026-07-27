@@ -64,6 +64,20 @@ export function policyForPath(path: string): LimitPolicy | null {
   if (!path.startsWith("/api/")) return null;
   // Exempt: provider webhooks + integration OAuth callbacks.
   if (path.includes("/webhook") || path.includes("/callback")) return null;
+  // Auth.js client-polled endpoints (session/csrf/providers) are fetched on
+  // every mount, navigation, and window-focus by useSession. Throttling them
+  // at the brute-force "auth" budget (5/60s) trips almost instantly and makes
+  // the client receive a 429 instead of a csrfToken/session → ClientFetchError.
+  // They are non-sensitive (session is the caller's own; csrf is a CSRF
+  // token), so exempt them. The "auth" budget still applies to user-initiated
+  // actions (signin/signout) below.
+  if (
+    path === "/api/auth/session" ||
+    path === "/api/auth/csrf" ||
+    path === "/api/auth/providers"
+  ) {
+    return null;
+  }
   if (path.startsWith("/api/auth/")) return POLICIES.auth;
   if (path === "/api/ai" || path.startsWith("/api/ai/")) return POLICIES.ai;
   if (path.startsWith("/api/workflows/")) {

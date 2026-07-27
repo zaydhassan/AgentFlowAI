@@ -4,6 +4,7 @@ import { MarketingPage } from "@/components/marketing/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { SecurityPillarCard } from "@/components/marketing/security-pillar-card";
 
 export const metadata: Metadata = {
   title: "Security — AgentFlow AI",
@@ -47,13 +48,7 @@ export default function SecurityPage() {
       <section className="mx-auto max-w-5xl px-5 lg:px-8 py-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pillars.map((p) => (
-            <div key={p.title} className="card-hover rounded-2xl border border-border bg-surface-2/40 p-6">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Icon name={p.icon} className="h-4 w-4" />
-              </div>
-              <h3 className="mt-4 text-base font-semibold">{p.title}</h3>
-              <p className="mt-1.5 text-sm text-fg-muted">{p.body}</p>
-            </div>
+            <SecurityPillarCard key={p.title} {...p} />
           ))}
         </div>
       </section>

@@ -10,9 +10,12 @@
 
 import "server-only";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { buildAuthHeaders, registerTransport, type McpTransportBuildContext, type McpTransportAdapter } from "./index";
+import { buildAuthHeaders, type McpTransportBuildContext, type McpTransportAdapter } from "./index";
 
-const adapter: McpTransportAdapter = {
+// Exported as a value; the registry (./index) imports and registers this in its
+// own body. Do NOT call `registerTransport` at the top level here — see the
+// note in ./index (index↔adapter circular import → registry TDZ under Turbopack).
+export const httpAdapter: McpTransportAdapter = {
   id: "http",
   build({ server }: McpTransportBuildContext) {
     if (!server.endpoint) {
@@ -26,5 +29,3 @@ const adapter: McpTransportAdapter = {
     });
   },
 };
-
-registerTransport(adapter);

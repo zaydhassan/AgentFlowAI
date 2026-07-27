@@ -2,7 +2,13 @@
 
 import { Icon } from "@/components/ui/icon";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { EmptyState, type EmptyStateSpec } from "@/components/dashboard/empty-state";
 import { cn } from "@/lib/utils";
+
+export interface StatSubrow {
+  label: string;
+  value: string;
+}
 
 interface StatCardProps {
   label: string;
@@ -14,6 +20,10 @@ interface StatCardProps {
   delta?: number; // percentage
   accent?: string; // hex
   spark?: number[];
+  /** Supporting info rendered under the metric (e.g. Today / Last 7 days). */
+  subrows?: StatSubrow[];
+  /** When set, the card renders an empty state instead of a metric. */
+  empty?: EmptyStateSpec;
 }
 
 export function StatCard({
@@ -26,23 +36,33 @@ export function StatCard({
   delta,
   accent = "#7c5cff",
   spark,
+  subrows,
+  empty,
 }: StatCardProps) {
+  // Empty state: same tile footprint, but a quiet prompt + CTA instead of a 0.
+  if (empty) {
+    return (
+      <div className="card-hover relative overflow-hidden rounded-xl border border-border bg-surface p-4">
+        <EmptyState compact {...empty} />
+      </div>
+    );
+  }
+
   const positive = (delta ?? 0) >= 0;
   return (
-    <div className="card-hover glass relative overflow-hidden rounded-xl p-4">
-      <div
-        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl"
-        style={{ background: accent }}
-      />
+    <div className="card-hover group relative overflow-hidden rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong">
       <div className="flex items-start justify-between">
-        <div className="grid h-9 w-9 place-items-center rounded-lg border border-border" style={{ color: accent }}>
+        <div
+          className="grid h-9 w-9 place-items-center rounded-lg border border-border transition-colors group-hover:border-border-strong"
+          style={{ color: accent }}
+        >
           <Icon name={icon} className="h-4 w-4" />
         </div>
         {delta !== undefined && (
           <div
             className={cn(
               "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-              positive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
+              positive ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
             )}
           >
             <Icon name={positive ? "TrendingUp" : "TrendingDown"} className="h-3 w-3" />
@@ -54,7 +74,19 @@ export function StatCard({
         <AnimatedCounter value={value} format={format} prefix={prefix} suffix={suffix} />
       </div>
       <div className="mt-0.5 text-xs text-fg-muted">{label}</div>
-      {spark && <Sparkline data={spark} color={accent} />}
+
+      {subrows && subrows.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 border-t border-border/60 pt-2">
+          {subrows.map((r) => (
+            <div key={r.label} className="flex items-center gap-1 text-[10px]">
+              <span className="text-fg-subtle">{r.label}</span>
+              <span className="font-medium text-fg-muted tabular-nums">{r.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {spark && spark.length > 1 && <Sparkline data={spark} color={accent} />}
     </div>
   );
 }
