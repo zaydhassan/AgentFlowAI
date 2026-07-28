@@ -127,31 +127,6 @@ npx tsc --noEmit # type-check
 
 ---
 
-## 🗂️ Project structure
-
-```
-app/
-  (app)/                 # authenticated app shell (sidebar + topbar + ⌘K)
-    dashboard/  workflows/  executions/  marketplace/
-    observability/  ai/  settings/
-  about/  changelog/  contact/  docs/  pricing/
-  privacy/  security/  terms/  login/  signup/
-  layout.tsx  page.tsx    # landing
-components/
-  ui/                    # design-system primitives
-  layout/                # sidebar, topbar, command palette, app shell
-  workflow/              # custom node, palette, inspector, copilot panel
-  dashboard/  auth/  marketing/  billing/
-lib/
-  nodes.ts               # the 60+ node marketplace definition
-  types.ts               # shared domain types
-  mock/                  # data, execution engine, AI — the swap-me seam
-actions/                 # server actions (auth, contact)
-prisma/                  # schema + migrations
-brand/                   # brand system (mark, social preview, showcase)
-public/                  # static assets
-```
-
 ---
 
 ## 🔐 Security
@@ -167,36 +142,3 @@ If you find a vulnerability, please email **zaydthirteen@gmail.com** rather
 than opening a public issue.
 
 ---
-
-## 🛣️ Roadmap
-
-AgentFlow AI is intentionally a **frontend-first, mocked-backend** deliverable.
-The mock layer (`lib/mock/*`) is the single seam where a real backend plugs in:
-
-- [ ] Real LLM calls (OpenAI / Anthropic / Gemini) behind `lib/mock/ai.ts`
-- [ ] FastAPI + Celery + Redis execution runtime
-- [ ] Real Postgres deploy (Neon / Supabase / Vercel Postgres)
-- [ ] Real Stripe Checkout + webhooks + customer portal
-- [ ] Real Google + GitHub OAuth
-- [ ] Webhooks for workflow triggers
-- [ ] Team & RBAC enforcement at the API layer
-- [ ] Docker / Helm chart for self-hosted deploys
-
----
-
-## 👤 Author
-
-Built by **[Zayd Hassan](https://github.com/zaydhassan)** — a portfolio
-flagship project.
-
-- GitHub: [@zaydhassan](https://github.com/zaydhassan)
-- Email: **zaydthirteen@gmail.com**
-- Project: [zaydhassan/AgentFlowAI](https://github.com/zaydhassan/AgentFlowAI)
-
----
-
-## 📄 License
-
-Released under the [MIT License](LICENSE).
-
-> © AgentFlow AI — _the AI-native automation platform._
