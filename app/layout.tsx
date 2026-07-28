@@ -58,7 +58,16 @@ export default function RootLayout({
       <head>
         <InlineScript html={themeBootScript} />
       </head>
-      <body className="min-h-full flex flex-col bg-bg text-fg">
+      <body
+        className="min-h-full flex flex-col bg-bg text-fg"
+        // Browser extensions (e.g. Bitdefender, password managers, VPN anti-
+        // tracking) inject attributes such as `fdprocessedid` onto interactive
+        // elements after SSR HTML arrives but before React hydrates, which
+        // triggers spurious hydration-mismatch warnings. This flag is the
+        // documented React escape hatch for third-party DOM mutation; it does
+        // not change rendered output.
+        suppressHydrationWarning
+      >
         <SessionProvider>
           <ThemeProvider>
             {children}

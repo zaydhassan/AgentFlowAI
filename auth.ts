@@ -40,6 +40,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const ownerMembership = dbUser.memberships.find((m) => m.role === "owner");
           const anyMembership = ownerMembership ?? dbUser.memberships[0];
           token.orgId = anyMembership?.orgId ?? null;
+          // Reflect profile edits (name/photo via /api/user/profile & /api/user/avatar)
+          // so useSession() consumers and the JWT stay in sync after an update.
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
         }
       }
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "brand" | "ai" | "success" | "warning" | "danger" | "info" | "neutral";
+export type Tone = "brand" | "ai" | "success" | "warning" | "danger" | "info" | "neutral";
 
 const tones: Record<Tone, string> = {
   brand: "bg-brand-soft text-brand border-brand/30",

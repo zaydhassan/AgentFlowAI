@@ -4,22 +4,26 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { teamMembers, auditLogs, orgInfo } from "@/lib/mock/data";
 import { cn, relativeTime } from "@/lib/utils";
+import { NotificationsSettings } from "@/components/notifications/notifications-settings";
+import { ProfileSettings } from "@/components/settings/profile-settings";
 
 const tabs = [
+  { id: "profile", label: "Profile", icon: "User" },
   { id: "general", label: "General", icon: "Settings" },
   { id: "team", label: "Team & RBAC", icon: "Users" },
   { id: "keys", label: "API Keys", icon: "KeyRound" },
   { id: "secrets", label: "Secrets", icon: "Lock" },
   { id: "env", label: "Environment", icon: "Terminal" },
+  { id: "notifications", label: "Notifications", icon: "Bell" },
   { id: "audit", label: "Audit Log", icon: "ShieldCheck" },
 ] as const;
 
-const roleTone = (r: string) => (r === "Owner" ? "brand" : r === "Admin" ? "ai" : r === "Editor" ? "info" : "neutral");
+const roleTone = (r: string): Tone => (r === "Owner" ? "brand" : r === "Admin" ? "ai" : r === "Editor" ? "info" : "neutral");
 
 const apiKeys = [
   { id: "k1", name: "Production", key: "af_live_2f8a••••4c01", created: "12 days ago", lastUsed: "2m ago", scope: "read/write" },
@@ -42,7 +46,7 @@ const envVars = [
 ];
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("general");
+  const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("profile");
 
   return (
     <div className="animate-float-up">
@@ -68,6 +72,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="min-w-0 flex-1">
+          {tab === "profile" && <ProfileSettings />}
+
           {tab === "general" && (
             <Card className="p-5">
               <CardHeader className="p-0"><CardTitle>General</CardTitle><CardDescription>Workspace identity & defaults</CardDescription></CardHeader>
@@ -110,7 +116,7 @@ export default function SettingsPage() {
                       <div className="truncate text-sm font-medium">{m.name}</div>
                       <div className="truncate text-[11px] text-fg-subtle">{m.email} · active {relativeTime(m.lastActive)}</div>
                     </div>
-                    <Badge tone={roleTone(m.role) as any}>{m.role}</Badge>
+                    <Badge tone={roleTone(m.role)}>{m.role}</Badge>
                     <button className="grid h-7 w-7 place-items-center rounded-lg text-fg-subtle hover:bg-surface-3 hover:text-fg"><Icon name="MoreHorizontal" className="h-4 w-4" /></button>
                   </div>
                 ))}
@@ -184,6 +190,10 @@ export default function SettingsPage() {
                 ))}
               </CardContent>
             </Card>
+          )}
+
+          {tab === "notifications" && (
+            <NotificationsSettings />
           )}
 
           {tab === "audit" && (

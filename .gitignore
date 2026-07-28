@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Local pgvector install staging (third-party Windows binary, not for commit)
 .pgvector-staging/
+
+# User-uploaded content (profile photos, etc.) — runtime-generated, not for commit
+/public/uploads/

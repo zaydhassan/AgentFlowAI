@@ -15,6 +15,7 @@ import {
 } from "@/lib/execution/engine";
 import { SSE_HEADERS } from "@/lib/execution/sse";
 import { resolveOrgId } from "@/lib/memory";
+import { notify, type NotificationEventKey } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,7 +49,23 @@ export async function POST(req: Request, { params }: Params) {
 
   // ── control posts (resume / stop an active run) ──
   if (control === "resume" && executionId) {
-    return NextResponse.json({ ok: resumeRun(executionId) });
+    const ok = resumeRun(executionId);
+    if (ok) {
+      // Notification Engine: emit a resume event (non-blocking, best-effort).
+      try {
+        const exec = await prisma.execution.findUnique({
+          where: { id: executionId },
+          select: { workflowId: true, workflow: { select: { name: true } } },
+        });
+        void notify("workflow.resumed", {
+          entityType: "execution",
+          entityId: executionId,
+          link: `/executions/${executionId}`,
+          data: { workflowId: id, workflowName: exec?.workflow?.name ?? "workflow", executionId },
+        }, { userId: user.id }).catch(() => { /* best-effort */ });
+      } catch { /* best-effort */ }
+    }
+    return NextResponse.json({ ok });
   }
   if (control === "stop" && executionId) {
     return NextResponse.json({ ok: stopRun(executionId) });
@@ -228,6 +245,31 @@ export async function POST(req: Request, { params }: Params) {
             where: { id },
             data: { lastRunAt: new Date(), status: finalStatus === "failed" ? "error" : "active" },
           });
+
+          // ── Notification Engine: emit a workflow event (non-blocking). ──
+          // The engine dedupes per (user, event, entity, day) and routes per the
+          // user's preferences. Never throws — wrapped so it can't break the run.
+          const wfEvent: NotificationEventKey | null =
+            finalStatus === "succeeded" ? "workflow.completed"
+            : finalStatus === "failed" ? "workflow.failed"
+            : finalStatus === "cancelled" ? "workflow.cancelled"
+            : null;
+          if (wfEvent) {
+            void notify(wfEvent, {
+              entityType: "execution",
+              entityId: execution.id,
+              link: `/executions/${execution.id}`,
+              data: {
+                workflowId: id,
+                workflowName: wf.name,
+                executionId: execution.id,
+                durationMs: totals?.durationMs ?? 0,
+                tokens: totals?.totalTokens ?? 0,
+                cost: totals?.totalCost ?? 0,
+                error: totals?.error ?? null,
+              },
+            }, { userId: user.id }).catch(() => { /* best-effort */ });
+          }
         } catch (dbErr) {
           console.error("[run] persistence error", dbErr);
         } finally {

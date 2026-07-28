@@ -73,6 +73,8 @@ export interface DashboardPayload {
   costByCategory: NamedSlice[];
   recentActivity: ActivityItem[];
   workflows: WorkflowHealthRow[];
+  /** Unread notification count (additive — drives the dashboard's notif panel). */
+  notifications: { unread: number };
   generatedAt: string;
 }
 
@@ -174,6 +176,7 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
     topWorkflows,
     wfRateGroups,
     stepRows,
+    unreadNotifications,
   ] = await Promise.all([
     prisma.execution.count({ where: { ownerId: userId } }),
     prisma.workflow.count({ where: { ownerId: userId, status: "active" } }),
@@ -213,6 +216,8 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
       where: { execution: { ownerId: userId, startedAt: { gte: monthStart, lte: monthEnd } } },
       select: { nodeName: true, tokensUsed: true },
     }),
+    // Additive: unread notification count for the dashboard's notification panel.
+    prisma.notification.count({ where: { userId, read: false } }),
   ]);
 
   // ── success / error rate over the 30d window ──
@@ -338,6 +343,7 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
     costByCategory,
     recentActivity,
     workflows,
+    notifications: { unread: unreadNotifications },
     generatedAt: now.toISOString(),
   };
 }

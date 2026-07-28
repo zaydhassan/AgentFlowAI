@@ -20,6 +20,7 @@ export function AppShell({
   user: ShellUser;
 }) {
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,11 +35,27 @@ export function AppShell({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Mobile sidebar drawer: lock body scroll while open and auto-close if the
+  // viewport grows back to desktop (lg = 1024px) so the two never overlap.
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("resize", onResize);
+    };
+  }, [sidebarOpen]);
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar user={user} />
+      <Sidebar user={user} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar user={user} onOpenCommand={() => setCmdOpen(true)} />
+        <Topbar user={user} onOpenCommand={() => setCmdOpen(true)} onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden">
           <div className="mx-auto w-full max-w-[1600px] px-4 py-6 lg:px-8 lg:py-8">{children}</div>
         </main>

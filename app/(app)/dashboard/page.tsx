@@ -575,7 +575,8 @@ function Hero({
   data: DashboardPayload | null;
 }) {
   const greeting = timeOfDayGreeting();
-  const firstName = name?.trim().split(/\s+/)[0] || null;
+  // Use the full display name (first + last), not just the first token.
+  const displayName = name?.trim() || null;
   const healthWord =
     health === "healthy" ? "healthy" : health === "degraded" ? "degraded" : health === "unhealthy" ? "down" : "starting up";
   const badgeTone: StatusTone =
@@ -594,7 +595,7 @@ function Hero({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-lg font-semibold tracking-tight text-fg sm:text-xl">
-            {greeting}{firstName ? `, ${firstName}` : ""} 👋
+            {greeting}{displayName ? `, ${displayName}` : ""} 👋
           </h1>
           <p className="mt-1 text-sm text-fg-muted">
             <span className="text-fg">Your AI workspace is {healthWord}.</span>

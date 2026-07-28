@@ -7,10 +7,8 @@ import { Icon } from "@/components/ui/icon";
 import { LogoMark } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { notifications as seedNotifications } from "@/lib/mock/data";
-import type { Notification } from "@/lib/types";
 import { UserMenu } from "@/components/layout/user-menu";
-import { useDropdown } from "@/lib/hooks/use-dropdown";
+import { NotificationsBell } from "@/components/notifications/notifications-bell";
 
 type ShellUser = {
   id: string;
@@ -19,15 +17,8 @@ type ShellUser = {
   image: string | null;
 };
 
-export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; user: ShellUser }) {
+export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: () => void; onOpenSidebar: () => void; user: ShellUser }) {
   const router = useRouter();
-  const {
-    open: notifOpen,
-    toggle: toggleNotif,
-    panelRef: notifPanelRef,
-    triggerRef: notifTriggerRef,
-  } = useDropdown<HTMLButtonElement>("topbar-notifications");
-  const [items, setItems] = useState<Notification[]>(seedNotifications);
   const [creating, setCreating] = useState(false);
 
   const newWorkflow = async () => {
@@ -46,11 +37,18 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
     }
   };
 
-  const unread = items.filter((n) => !n.read).length;
-  const markAll = () => setItems((arr) => arr.map((n) => ({ ...n, read: true })));
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-bg/80 backdrop-blur-xl px-4 lg:px-6">
+      {/* Mobile menu trigger — opens the slide-in sidebar drawer (lg+ hides it; the static rail is always visible there) */}
+      <button
+        type="button"
+        onClick={onOpenSidebar}
+        aria-label="Open menu"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface-2/60 text-fg-muted transition-colors hover:border-border-strong hover:text-fg lg:hidden"
+      >
+        <Icon name="Menu" className="h-4 w-4" />
+      </button>
+
       {/* Mobile logo */}
       <Link href="/" className="flex lg:hidden items-center gap-2">
         <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-brand to-ai">
@@ -82,106 +80,12 @@ export function Topbar({ onOpenCommand, user }: { onOpenCommand: () => void; use
           New Workflow
         </Button>
 
-        {/* Notifications */}
-        <div className="relative">
-          <button
-            ref={notifTriggerRef}
-            onClick={toggleNotif}
-            aria-haspopup="menu"
-            aria-expanded={notifOpen}
-            className="relative grid h-9 w-9 place-items-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-          >
-            <Icon name="Bell" className="h-4 w-4" />
-            {unread > 0 && (
-              <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[9px] font-semibold text-white">
-                {unread}
-              </span>
-            )}
-          </button>
-          {notifOpen && (
-            <Dropdown panelRef={notifPanelRef} className="w-80">
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-                <span className="text-sm font-semibold">Notifications</span>
-                <button onClick={markAll} className="text-xs text-brand hover:underline">
-                  Mark all read
-                </button>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {items.map((n) => (
-                  <div
-                    key={n.id}
-                    className={cn("flex gap-3 px-3 py-2.5 border-b border-border/60", !n.read && "bg-brand-soft/40")}
-                  >
-                    <span
-                      className={cn(
-                        "mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-lg",
-                        n.type === "success" && "bg-success/10 text-success",
-                        n.type === "error" && "bg-danger/10 text-danger",
-                        n.type === "warning" && "bg-warning/10 text-warning",
-                        n.type === "info" && "bg-info/10 text-info"
-                      )}
-                    >
-                      <Icon
-                        name={
-                          n.type === "success" ? "CheckCircle2" : n.type === "error" ? "AlertTriangle" : n.type === "warning" ? "AlertCircle" : "Info"
-                        }
-                        className="h-3.5 w-3.5"
-                      />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium truncate">{n.title}</div>
-                      <div className="text-[11px] text-fg-muted line-clamp-2">{n.body}</div>
-                      <div className="text-[10px] text-fg-subtle mt-0.5">{relativeTime(n.timestamp)}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Dropdown>
-          )}
-        </div>
+        {/* Notifications — real, DB-backed center (replaces the mock bell) */}
+        <NotificationsBell />
 
         {/* User — shared profile menu (same component as the marketing navbar) */}
         <UserMenu user={user} />
       </div>
     </header>
   );
-}
-
-function Dropdown({
-  children,
-  panelRef,
-  className,
-}: {
-  children: React.ReactNode;
-  panelRef: React.RefObject<HTMLDivElement | null>;
-  className?: string;
-}) {
-  // No overlay hack: outside-click + Escape + single-open coordination are handled
-  // by the useDropdown hook in the parent. This is just the presentational panel.
-  return (
-    <div
-      ref={panelRef}
-      className={cn(
-        "absolute right-0 top-11 z-50 overflow-hidden rounded-xl border border-border bg-surface-2/95 backdrop-blur-xl shadow-2xl shadow-black/40 animate-float-up",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-// local copy of relativeTime to avoid a circular import shape
-function relativeTime(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  const diff = Date.now() - d.getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.floor(h / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
