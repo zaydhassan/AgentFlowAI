@@ -82,10 +82,6 @@ API cost**.
 
 ## 📸 Screenshots
 
-> Drop your screenshots into `public/screenshots/` and replace the paths below.
-> The images render directly on GitHub.
-
-<!-- Add your screenshots here. Suggested sizes: 1280×800 or 1920×1080 -->
 
 | Landing page | Dashboard | Workflow builder |
 | :---: | :---: | :---: |
