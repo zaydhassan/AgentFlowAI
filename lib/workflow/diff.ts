@@ -1,0 +1,187 @@
+// Structural diff between two workflow graphs. Pure, dependency-free, safe to
+// import from both client and server. Only STRUCTURAL fields are compared —
+// transient runtime state (status, logs, durationMs, tokensUsed, cost, retries,
+// breakpoint) is execution state, not graph definition, so it's deliberately
+// ignored. A run that left a node "succeeded" must not show up as a graph diff.
+//
+// Used by the version compare API + the compare modal to render a visual diff.
+
+import type { Graph } from "@/lib/workflow/graph";
+import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
+
+export interface ConfigChange {
+  key: string;
+  from: unknown;
+  to: unknown;
+}
+
+export interface NodeChange {
+  id: string;
+  label: string;
+  type: string;
+  kind: "added" | "removed" | "changed";
+  fields: string[]; // top-level field paths that differ ("position", "label", "type", "config", "sticky"…)
+  config: ConfigChange[]; // per-key config diffs (kind=changed only)
+  from?: WorkflowNode;
+  to?: WorkflowNode;
+}
+
+export interface EdgeChange {
+  id: string;
+  kind: "added" | "removed";
+  source: string;
+  target: string;
+  label?: string;
+}
+
+export interface DiffCounts {
+  added: number;
+  removed: number;
+  changed: number;
+  moved: number;
+  edgesAdded: number;
+  edgesRemoved: number;
+}
+
+export interface GraphDiff {
+  nodes: NodeChange[];
+  edges: EdgeChange[];
+  counts: DiffCounts;
+  summary: string;
+  identical: boolean;
+}
+
+// Fields that are pure execution state and must never count as a graph change.
+const TRANSIENT = new Set(["status", "logs", "durationMs", "tokensUsed", "cost", "retries", "breakpoint"]);
+
+function nodeMap(nodes: WorkflowNode[]): Map<string, WorkflowNode> {
+  const m = new Map<string, WorkflowNode>();
+  for (const n of nodes) m.set(n.id, n);
+  return m;
+}
+
+function edgeKey(e: WorkflowEdge): string {
+  return `${e.source}->${e.target}`;
+}
+
+// Shallow diff of two config objects by top-level key. Nested values are
+// compared by JSON equality and surfaced as a single changed key (keeps the
+// UI readable — configs are flat key/value in the vast majority of node defs).
+function diffConfig(from: Record<string, unknown>, to: Record<string, unknown>): ConfigChange[] {
+  const keys = new Set([...Object.keys(from), ...Object.keys(to)]);
+  const out: ConfigChange[] = [];
+  for (const key of keys) {
+    const a = from[key];
+    const b = to[key];
+    const sa = JSON.stringify(a);
+    const sb = JSON.stringify(b);
+    if (sa === sb) continue;
+    out.push({ key, from: a, to: b });
+  }
+  return out;
+}
+
+function structuralData(d: WorkflowNode["data"]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(d)) {
+    if (TRANSIENT.has(k)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** Compute a structural diff between two normalized graphs (`from` → `to`). */
+export function diffGraphs(from: Graph, to: Graph): GraphDiff {
+  const fromNodes = nodeMap(from.nodes);
+  const toNodes = nodeMap(to.nodes);
+
+  const nodes: NodeChange[] = [];
+  let moved = 0;
+
+  for (const n of to.nodes) {
+    const prev = fromNodes.get(n.id);
+    if (!prev) {
+      nodes.push({ id: n.id, label: n.data.label || n.type, type: n.type, kind: "added", fields: [], config: [], to: n });
+      continue;
+    }
+    const fields: string[] = [];
+    if (prev.type !== n.type) fields.push("type");
+    if (prev.data.label !== n.data.label) fields.push("label");
+    if (prev.position.x !== n.position.x || prev.position.y !== n.position.y) fields.push("position");
+
+    const aData = structuralData(prev.data);
+    const bData = structuralData(n.data);
+    // Compare the structural payloads (config + canvas payloads) key by key.
+    const payloadKeys = new Set([...Object.keys(aData), ...Object.keys(bData)]);
+    let configChanges: ConfigChange[] = [];
+    for (const k of payloadKeys) {
+      if (k === "label") continue; // already handled
+      const sa = JSON.stringify(aData[k]);
+      const sb = JSON.stringify(bData[k]);
+      if (sa === sb) continue;
+      if (k === "config" && aData.config && bData.config && typeof aData.config === "object" && typeof bData.config === "object") {
+        configChanges = diffConfig(aData.config as Record<string, unknown>, bData.config as Record<string, unknown>);
+        fields.push("config");
+      } else {
+        fields.push(k);
+      }
+    }
+
+    if (fields.length) {
+      nodes.push({
+        id: n.id,
+        label: n.data.label || n.type,
+        type: n.type,
+        kind: "changed",
+        fields,
+        config: configChanges,
+        from: prev,
+        to: n,
+      });
+      if (fields.length === 1 && fields[0] === "position") moved++;
+    }
+  }
+
+  for (const n of from.nodes) {
+    if (!toNodes.has(n.id)) {
+      nodes.push({ id: n.id, label: n.data.label || n.type, type: n.type, kind: "removed", fields: [], config: [], from: n });
+    }
+  }
+
+  // Edges by source->target (id can be regenerated by the client, so we key on
+  // the connection, not the edge id — a re-wired edge shouldn't double-count).
+  const fromEdges = new Map<string, WorkflowEdge>();
+  for (const e of from.edges) fromEdges.set(edgeKey(e), e);
+  const toEdges = new Map<string, WorkflowEdge>();
+  for (const e of to.edges) toEdges.set(edgeKey(e), e);
+
+  const edges: EdgeChange[] = [];
+  for (const e of to.edges) {
+    if (!fromEdges.has(edgeKey(e))) edges.push({ id: e.id, kind: "added", source: e.source, target: e.target, ...(e.label ? { label: e.label } : {}) });
+  }
+  for (const e of from.edges) {
+    if (!toEdges.has(edgeKey(e))) edges.push({ id: e.id, kind: "removed", source: e.source, target: e.target, ...(e.label ? { label: e.label } : {}) });
+  }
+
+  const added = nodes.filter((n) => n.kind === "added").length;
+  const removed = nodes.filter((n) => n.kind === "removed").length;
+  const changed = nodes.filter((n) => n.kind === "changed").length;
+  const edgesAdded = edges.filter((e) => e.kind === "added").length;
+  const edgesRemoved = edges.filter((e) => e.kind === "removed").length;
+
+  const counts: DiffCounts = { added, removed, changed, moved, edgesAdded, edgesRemoved };
+  const identical = counts.added + counts.removed + counts.changed + counts.edgesAdded + counts.edgesRemoved === 0;
+
+  return { nodes, edges, counts, summary: summaryString(counts), identical };
+}
+
+/** Human-readable one-line summary, e.g. "+2 nodes · −1 edge · 3 changed". */
+export function summaryString(c: DiffCounts): string {
+  const parts: string[] = [];
+  if (c.added) parts.push(`+${c.added} node${c.added > 1 ? "s" : ""}`);
+  if (c.removed) parts.push(`−${c.removed} node${c.removed > 1 ? "s" : ""}`);
+  if (c.changed) parts.push(`${c.changed} changed`);
+  if (c.edgesAdded) parts.push(`+${c.edgesAdded} edge${c.edgesAdded > 1 ? "s" : ""}`);
+  if (c.edgesRemoved) parts.push(`−${c.edgesRemoved} edge${c.edgesRemoved > 1 ? "s" : ""}`);
+  return parts.length ? parts.join(" · ") : "No changes";
+}

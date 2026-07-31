@@ -29,7 +29,7 @@ export default async function WorkflowBuilderPage({ params }: { params: Promise<
     status: wf.status,
     version: wf.version,
     graph: normalizeGraph(wf.graph),
-    versions: wf.versions.map((v) => ({ id: v.id, version: v.version, message: v.message, createdAt: v.createdAt.toISOString() })),
+    versions: wf.versions.map((v) => ({ id: v.id, version: v.version, message: v.message, author: v.createdBy, createdAt: v.createdAt.toISOString() })),
   };
 
   return <Builder initial={initial} />;

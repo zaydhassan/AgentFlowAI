@@ -49,6 +49,14 @@ export async function GET(_req: Request, { params }: Params) {
         retries: s.retries,
         logs: s.logs as string[],
         reasoning: (s.reasoning as string[] | null) ?? null,
+        // Debugger inspection payload (nullable on older rows).
+        nodeType: s.nodeType,
+        config: s.config,
+        input: s.input,
+        output: s.output,
+        prompt: s.prompt as { system: string; user: string } | null,
+        memories: s.memories as { score: number; id: string; content: string; scope?: string }[] | null,
+        error: s.error,
       })),
     },
   });

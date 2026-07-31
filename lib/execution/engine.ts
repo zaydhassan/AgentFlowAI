@@ -58,6 +58,16 @@ export interface ExecutionEvent {
   cost?: number;
   retries?: number;
   error?: string;
+  // ── AI Workflow Debugger inspection payload (all optional). Carried on
+  //  node:success / node:fail so the run route can persist it to ExecutionStep
+  //  and the debugger can inspect node I/O, prompts, memories, and tool calls.
+  //  Existing consumers ignore unknown fields, so this is fully additive.
+  nodeType?: string;
+  config?: unknown; // the node's resolved config (tool/action args / prompt template)
+  input?: unknown; // upstream outputs consumed by this node (node "input")
+  output?: unknown; // this node's structured output (forwarded to downstream)
+  prompt?: { system: string; user: string }; // augmented prompt (AI nodes)
+  memories?: { score: number; id: string; content: string; scope?: string }[]; // retrieved memories (memory-enabled AI)
   // final summary, only on "complete"
   totals?: {
     durationMs: number;
@@ -74,6 +84,10 @@ export interface RunControls {
   // Returns "resume" to continue past the breakpoint, "stop" to abort.
   awaitResume: (nodeId: string) => Promise<"resume" | "stop">;
   stopped: () => boolean;
+  /** Step mode: when true, the loop pauses before EVERY node (step-by-step).
+   *  Set live by the run registry's stepRun(); cleared by resumeRun(). Optional
+   *  so existing callers that don't pass it are unaffected. */
+  stepMode?: () => boolean;
   /** Authenticated user id — required for real integration-action nodes
    *  (they resolve a connected account owned by this user). Optional so the
    *  engine stays usable for anonymous simulations; a gmail.* node without a
@@ -330,8 +344,11 @@ export async function* runWorkflow(
       break;
     }
 
-    // Breakpoint: pause before the node and wait for resume/stop.
-    if (controls.breakpoints.has(node.id)) {
+    // Breakpoint or step mode: pause before the node and wait for resume/stop.
+    // Step mode pauses before every node (step-by-step debugging); explicit
+    // breakpoints pause only at marked nodes. Both reuse the same pause/resume
+    // seam so the run route + debugger controls are unified.
+    if (controls.breakpoints.has(node.id) || controls.stepMode?.()) {
       yield { type: "node:paused", at: at(), nodeId: node.id, nodeName: node.data.label, status: "paused" };
       const decision = await controls.awaitResume(node.id);
       if (decision === "stop" || controls.stopped()) {
@@ -353,7 +370,7 @@ export async function* runWorkflow(
       if (!controls.userId) {
         const realError = "No user context — sign in to run memory-enabled AI nodes.";
         const elapsed0 = Date.now() - nodeStart;
-        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt: 0, error: realError, durationMs: elapsed0, tokensUsed: 0, cost: 0, retries: 0 };
+        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt: 0, error: realError, durationMs: elapsed0, tokensUsed: 0, cost: 0, retries: 0, nodeType: node.type };
         runStatus = "failed";
         runError = runError ?? `Node "${node.data.label || node.type}" failed`;
         results.push({ nodeId: node.id, nodeName: node.data.label || node.type, status: "failed", durationMs: elapsed0, tokensUsed: 0, cost: 0, retries: 0, logs: [realError], reasoning: null, error: realError });
@@ -446,7 +463,16 @@ export async function* runWorkflow(
       nodeOutputs.set(node.id, { text: response, memories: hits });
       totalTokens += tokensUsed;
       totalCost += cost;
-      yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0, durationMs: elapsed, tokensUsed, cost, retries: 0 };
+      yield {
+        type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0,
+        durationMs: elapsed, tokensUsed, cost, retries: 0,
+        nodeType: node.type,
+        config: cfg,
+        input: inputs,
+        output: { text: response, memories: hits },
+        prompt: { system: augmentedSystem, user: userPrompt },
+        memories: hits.map((h) => ({ score: h.score, id: h.memory.id, content: h.memory.content, scope: h.memory.scope })),
+      };
       results.push({
         nodeId: node.id,
         nodeName: node.data.label || node.type,
@@ -531,7 +557,7 @@ export async function* runWorkflow(
           maOutput = result?.output;
           totalTokens += maTokens;
           totalCost += maCost;
-          yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt, durationMs: elapsed, tokensUsed: maTokens, cost: maCost, retries: attempt };
+          yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt, durationMs: elapsed, tokensUsed: maTokens, cost: maCost, retries: attempt, nodeType: node.type, config: node.data.config ?? {}, input: inputs, output: maOutput };
           break;
         }
       }
@@ -575,7 +601,7 @@ export async function* runWorkflow(
       if (!controls.userId) {
         // No authenticated user → can't resolve a connected account.
         realError = "No user context — sign in to run Gmail nodes.";
-        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt: 0, error: realError, durationMs: 0, retries: 0 };
+        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt: 0, error: realError, durationMs: 0, retries: 0, nodeType: node.type, config: node.data.config ?? {} };
       } else {
         while (attempt <= 2) {
           if (controls.stopped()) { runStatus = "cancelled"; break; }
@@ -623,7 +649,7 @@ export async function* runWorkflow(
           }
           realStatus = "succeeded";
           realOutput = result?.output;
-          yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt, durationMs: elapsed, tokensUsed, cost, retries: attempt };
+          yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt, durationMs: elapsed, tokensUsed, cost, retries: attempt, nodeType: node.type, config: node.data.config ?? {}, input: inputs, output: realOutput };
           break;
         }
       }
@@ -723,11 +749,18 @@ export async function* runWorkflow(
         nodeStatus = "failed";
         nodeError = "Retry failed";
         stepLogs.push(nodeError);
-        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: nodeError, attempt, error: nodeError, durationMs: elapsedSoFar, tokensUsed, cost, retries: attempt };
+        yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: nodeError, attempt, error: nodeError, durationMs: elapsedSoFar, tokensUsed, cost, retries: attempt, nodeType: node.type, config: node.data.config ?? {}, input: upstreamOutputs(graph, node, nodeOutputs), output: synthOutput(node) };
         break;
       }
       nodeStatus = "succeeded";
-      yield { type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt, durationMs: elapsedSoFar, tokensUsed, cost, retries: attempt };
+      yield {
+        type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt,
+        durationMs: elapsedSoFar, tokensUsed, cost, retries: attempt,
+        nodeType: node.type,
+        config: node.data.config ?? {},
+        input: upstreamOutputs(graph, node, nodeOutputs),
+        output: synthOutput(node),
+      };
       break;
     }
 
@@ -789,12 +822,15 @@ interface RunHandle {
   resume: ((nodeId: string) => Promise<"resume" | "stop">) | null;
   resolvePause: ((decision: "resume" | "stop") => void) | null;
   stopFlag: boolean;
+  /** Step mode: when true the loop pauses before every node (step-by-step).
+   *  Set by stepRun(), cleared by resumeRun(). Read live by controls.stepMode. */
+  stepMode: boolean;
 }
 
 const runs = new Map<string, RunHandle>();
 
 export function registerRun(executionId: string): RunHandle {
-  const handle: RunHandle = { resume: null, resolvePause: null, stopFlag: false };
+  const handle: RunHandle = { resume: null, resolvePause: null, stopFlag: false, stepMode: false };
   handle.resume = (nodeId: string) =>
     new Promise<"resume" | "stop">((resolve) => {
       handle.resolvePause = resolve;
@@ -813,6 +849,30 @@ export function getRun(executionId: string): RunHandle | undefined {
 export function resumeRun(executionId: string): boolean {
   const h = runs.get(executionId);
   if (!h || !h.resolvePause) return false;
+  // Clearing step mode means "continue to the next breakpoint / end".
+  h.stepMode = false;
+  h.resolvePause("resume");
+  h.resolvePause = null;
+  return true;
+}
+
+/** Pause-before-next-node: arm step mode while a node is mid-execution. The
+ *  engine checks stepMode before each node, so the run halts at the next node
+ *  and emits node:paused. Unlike stepRun/resumeRun this does NOT resolve a
+ *  pending pause — it's used while the run is actively executing. */
+export function pauseRun(executionId: string): boolean {
+  const h = runs.get(executionId);
+  if (!h) return false;
+  h.stepMode = true;
+  return true;
+}
+
+/** Step-by-step: keep step mode on (pause before the next node) and resume
+ *  past the current pause so the engine executes exactly one more node. */
+export function stepRun(executionId: string): boolean {
+  const h = runs.get(executionId);
+  if (!h || !h.resolvePause) return false;
+  h.stepMode = true;
   h.resolvePause("resume");
   h.resolvePause = null;
   return true;

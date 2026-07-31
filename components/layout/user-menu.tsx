@@ -83,7 +83,7 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
   }
 
   const fallback = (
-    <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-[11px] font-semibold text-white">
+    <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-xs font-semibold text-white">
       {initials(user.name, user.email)}
     </div>
   );
@@ -91,8 +91,8 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
   if (!src || status === "error") return fallback;
 
   return (
-    <div className="relative h-7 w-7 shrink-0">
-      {/* Skeleton behind the image while it loads (same 7×7 box → no shift). */}
+    <div className="relative h-8 w-8 shrink-0">
+      {/* Skeleton behind the image while it loads (same 8×8 box → no shift). */}
       {status !== "loaded" && (
         <div
           className="absolute inset-0 rounded-full bg-surface-3 animate-pulse"
@@ -108,7 +108,7 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
         className={cn(
-          "h-7 w-7 rounded-full object-cover transition-opacity duration-200",
+          "h-8 w-8 rounded-full object-cover transition-opacity duration-200",
           status === "loaded" ? "opacity-100" : "opacity-0",
         )}
       />
@@ -136,7 +136,7 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
         onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-lg p-1 pr-2 transition-colors hover:bg-surface-2 focus-ring"
+        className="flex items-center gap-2 rounded-lg p-1.5 pr-2.5 transition-colors hover:bg-surface-2 hover:ring-1 hover:ring-border focus-ring"
       >
         <UserAvatar user={user} />
         <div className="hidden text-left leading-tight sm:block">
@@ -158,12 +158,15 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="absolute right-0 top-11 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-2/95 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl"
+            className="absolute right-0 top-full mt-1.5 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-2/95 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)] backdrop-blur-2xl"
           >
             {/* Identity header. */}
-            <div className="border-b border-border px-3.5 py-2.5">
-              <div className="text-sm font-medium truncate">{user.name ?? "Account"}</div>
-              <div className="text-[11px] text-fg-muted truncate">{user.email}</div>
+            <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-2.5">
+              <UserAvatar user={user} />
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{user.name ?? "Account"}</div>
+                <div className="text-[11px] text-fg-muted truncate">{user.email}</div>
+              </div>
             </div>
 
             <motion.div variants={container} initial="hidden" animate="show" className="p-1.5">

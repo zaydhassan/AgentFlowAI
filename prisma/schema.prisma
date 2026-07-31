@@ -302,6 +302,23 @@ model ExecutionStep {
   retries     Int      @default(0)
   logs        Json // string[]
   reasoning   Json? // string[]
+  // ── AI Workflow Debugger inspection payload (all optional; old rows stay valid).
+  // nodeType lets the timeline render branch-specific inspectors without a join.
+  nodeType String? // e.g. "ai.memory", "gmail.send", "mcp.tool"
+  // The node's resolved config (tool/action args) — the "call" for MCP +
+  // integration nodes, the prompt template for AI nodes. Lets a historical
+  // replay inspect a tool call without the live graph.
+  config Json?
+  // Upstream outputs consumed by this node (node "input").
+  input Json?
+  // This node's structured output, forwarded to downstream nodes.
+  output Json?
+  // Augmented prompt for AI nodes: { system, user }.
+  prompt Json?
+  // Retrieved memories for memory-enabled AI nodes: [{ score, id, content, scope }]
+  memories Json?
+  // Per-node error string (also surfaced in logs; dedicated column for clean querying).
+  error String?
 
   execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
 

@@ -22,6 +22,7 @@ import {
   motion,
   useMotionValueEvent,
   useScroll,
+  type Variants,
 } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { LogoMark } from "@/components/ui/logo";
@@ -70,6 +71,16 @@ function megaActive(pathname: string, items: MegaItem[]): boolean {
   return items.some((i) => isActive(pathname, i.href));
 }
 
+// Mobile drawer — cascade the nav list in on open.
+const drawerContainer: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0.08 } },
+};
+const drawerItem: Variants = {
+  hidden: { opacity: 0, x: 10 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 420, damping: 32 } },
+};
+
 export function MarketingNav() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -109,29 +120,36 @@ export function MarketingNav() {
   return (
     <motion.header
       className={cn(
-        "nav-shell fixed top-0 inset-x-0 z-50",
-      
+        "nav-shell nav-edge fixed top-0 inset-x-0 z-50",
+
         scrolled
-          ? "h-14 border-b border-border/70 bg-bg/70 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
-          : "h-16 border-b border-border/50 bg-bg/55 backdrop-blur-xl"
+          ? "h-16 border-b border-border/70 bg-bg/70 shadow-[0_1px_0_0_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+          : "h-[72px] border-b border-border/50 bg-bg/65 backdrop-blur-xl"
       )}
       initial={false}
       animate={{ y: hidden ? "-115%" : "0%" }}
       transition={{ type: "spring", stiffness: 380, damping: 38, mass: 0.6 }}
     >
       <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-5 lg:px-8">
-        {/* Logo — kept exactly as-is. */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 focus-ring rounded-lg" aria-label="AgentFlow AI home">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-6px_rgba(124,92,255,0.8)]">
-            <LogoMark className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-semibold tracking-tight">
+        {/* Logo — premium flagship tile + wordmark. */}
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 rounded-lg focus-ring" aria-label="AgentFlow AI home">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-brand via-brand-2 to-ai shadow-[0_8px_24px_-10px_rgba(124,92,255,0.65)] ring-1 ring-inset ring-white/10"
+          >
+            {/* Top sheen — a soft light-from-above highlight inside the tile. */}
+            <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 to-transparent" />
+            <LogoMark className="relative h-[18px] w-[18px] text-white" />
+          </motion.div>
+          <span className="text-[15px] font-semibold tracking-[-0.01em]">
             AgentFlow<span className="text-brand"> AI</span>
           </span>
         </Link>
 
         {/* Desktop nav. */}
-        <nav aria-label="Primary" className="ml-2 hidden lg:flex items-center gap-1">
+        <nav aria-label="Primary" className="ml-3 hidden lg:flex items-center gap-1">
           {NAV.map((entry) =>
             entry.kind === "link" ? (
               <NavLink
@@ -154,8 +172,8 @@ export function MarketingNav() {
         </nav>
 
         {/* Right cluster: AI status + CTA + auth + mobile trigger. */}
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <AIStatusBadge className="hidden sm:flex" />
+        <div className="ml-auto flex items-center gap-2.5 sm:gap-3.5">
+          <AIStatusBadge className="flex" />
 
           {signedIn ? (
             <UserMenu user={session?.user ?? {}} />
@@ -200,24 +218,36 @@ function NavLink({ label, href, active }: { label: string; href: string; active:
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 items-center rounded-lg px-3 text-sm transition-colors duration-200 focus-ring",
+        "group relative flex h-9 items-center rounded-lg px-3.5 text-sm transition-colors duration-200 focus-ring",
         active ? "text-fg" : "text-fg-muted hover:text-fg"
       )}
     >
-      <span className="relative z-10">{label}</span>
-     
-      <span className="absolute inset-0 rounded-lg bg-surface-2/0 transition-colors duration-200 group-hover:bg-surface-2/70" />
-      {/* Animated underline. */}
-      <span className="pointer-events-none absolute bottom-1 left-3 right-3 h-px overflow-hidden rounded-full">
+      {/* Hover wash (non-active only — active uses the sliding pill below). */}
+      {!active && (
+        <span className="absolute inset-0 rounded-lg bg-surface-2/0 transition-colors duration-200 group-hover:bg-surface-2/70" />
+      )}
+      {/* Sliding active pill — shared layoutId animates it between links. */}
+      {active && (
         <motion.span
-          className="block h-full origin-left bg-gradient-to-r from-brand to-ai"
+          layoutId="nav-active-pill"
+          className="nav-active-pill pointer-events-none absolute inset-0 rounded-lg"
           initial={false}
-          animate={{ scaleX: active ? 1 : 0 }}
-          whileHover={{ scaleX: 1 }}
-          style={{ opacity: active ? 1 : 0.0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          transition={{ type: "spring", stiffness: 420, damping: 32 }}
         />
-      </span>
+      )}
+      {/* Hover underline accent for non-active links. */}
+      {!active && (
+        <span className="pointer-events-none absolute bottom-1 left-3.5 right-3.5 h-px overflow-hidden rounded-full">
+          <motion.span
+            className="block h-full origin-left bg-gradient-to-r from-brand to-ai"
+            initial={false}
+            animate={{ scaleX: 0 }}
+            whileHover={{ scaleX: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          />
+        </span>
+      )}
+      <span className="relative z-10">{label}</span>
     </Link>
   );
 }
@@ -244,18 +274,18 @@ function MegaLink({
     >
       <button
         type="button"
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => onOpenChange(!open)}
         className={cn(
-          "group flex h-9 items-center gap-1 rounded-lg px-3 text-sm transition-colors duration-200 focus-ring",
+          "group flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-sm transition-colors duration-200 focus-ring",
           active || open ? "text-fg" : "text-fg-muted hover:text-fg"
         )}
       >
         {label}
         <Icon
           name="ChevronDown"
-          className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")}
+          className={cn("h-4 w-4 text-fg-subtle transition-transform duration-200", open && "rotate-180")}
         />
       </button>
 
@@ -267,7 +297,7 @@ function MegaLink({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="absolute left-1/2 top-11 z-50 w-[24rem] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface-2/90 backdrop-blur-2xl shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]"
+            className="absolute left-1/2 top-full mt-1.5 z-50 w-[24rem] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface-2/90 backdrop-blur-2xl shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]"
           >
             <div className="grid grid-cols-1 gap-1 p-2">
               {items.map((item) => (
@@ -300,15 +330,20 @@ function MegaLink({
 function AIStatusBadge({ className }: { className?: string }) {
   return (
     <div
+      role="status"
+      aria-label="All systems operational"
+      title="AI engine online — 99.98% uptime"
       className={cn(
-        "flex items-center gap-2 rounded-full border border-border bg-surface-2/60 px-2.5 py-1 text-xs",
+        "group flex items-center gap-2 rounded-full border border-border bg-surface-2/60 px-2.5 py-1 text-xs transition-colors duration-200 hover:border-border-strong hover:bg-surface-3/70",
         className
       )}
-      title="AI engine online — 99.98% uptime"
     >
-      <span className="status-dot relative inline-block h-1.5 w-1.5 rounded-full bg-success" />
-      <span className="text-fg-muted">
-        <span className="text-fg">AI</span> Ready
+      <span className="status-dot relative inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
+      <span className="hidden lg:inline text-fg-muted">
+        <span className="text-fg">All Systems</span> Operational
+      </span>
+      <span className="hidden sm:inline lg:hidden text-fg-muted">
+        <span className="text-fg">Operational</span>
       </span>
     </div>
   );
@@ -351,10 +386,11 @@ function MobileDrawer({
           >
             <div className="flex h-14 items-center justify-between border-b border-border px-5">
               <div className="flex items-center gap-2.5">
-                <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai">
-                  <LogoMark className="h-3.5 w-3.5 text-white" />
+                <div className="relative grid h-8 w-8 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-brand via-brand-2 to-ai ring-1 ring-inset ring-white/10">
+                  <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 to-transparent" />
+                  <LogoMark className="relative h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-semibold">
+                <span className="text-sm font-semibold tracking-[-0.01em]">
                   AgentFlow<span className="text-brand"> AI</span>
                 </span>
               </div>
@@ -369,22 +405,29 @@ function MobileDrawer({
             </div>
 
             <nav aria-label="Mobile" className="flex-1 overflow-y-auto px-3 py-4">
-              {NAV.map((entry) =>
-                entry.kind === "link" ? (
-                  <Link
-                    key={entry.label}
-                    href={entry.href}
-                    onClick={onClose}
-                    aria-current={isActive(pathname, entry.href) ? "page" : undefined}
-                    className={cn(
-                      "block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-2",
-                      isActive(pathname, entry.href) ? "text-fg" : "text-fg-muted"
-                    )}
-                  >
-                    {entry.label}
-                  </Link>
-                ) : (
-                  <div key={entry.label} className="py-0.5">
+              <motion.div variants={drawerContainer} initial="hidden" animate="show">
+                {NAV.map((entry) =>
+                  entry.kind === "link" ? (
+                    <motion.div key={entry.label} variants={drawerItem}>
+                      <Link
+                        href={entry.href}
+                        onClick={onClose}
+                        aria-current={isActive(pathname, entry.href) ? "page" : undefined}
+                        className={cn(
+                          "relative block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-2",
+                          isActive(pathname, entry.href)
+                            ? "bg-surface-2 text-fg"
+                            : "text-fg-muted"
+                        )}
+                      >
+                        {isActive(pathname, entry.href) && (
+                          <span aria-hidden className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-gradient-to-b from-brand to-ai" />
+                        )}
+                        {entry.label}
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <motion.div key={entry.label} variants={drawerItem} className="py-0.5">
                     <button
                       type="button"
                       onClick={() =>
@@ -426,9 +469,10 @@ function MobileDrawer({
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  </motion.div>
                 )
               )}
+              </motion.div>
             </nav>
 
             <div className="border-t border-border p-4 space-y-2">

@@ -8,12 +8,15 @@ import {
   runWorkflow,
   registerRun,
   resumeRun,
+  stepRun,
+  pauseRun,
   stopRun,
   unregisterRun,
   type ExecutionEvent,
   type EngineGraph,
 } from "@/lib/execution/engine";
 import { SSE_HEADERS } from "@/lib/execution/sse";
+import { executionBus } from "@/lib/execution/event-bus";
 import { resolveOrgId } from "@/lib/memory";
 import { notify, type NotificationEventKey } from "@/lib/notifications";
 
@@ -35,6 +38,14 @@ interface StepAccum {
   logs: string[];
   reasoning: string[];
   error?: string;
+  // ── Debugger inspection payload (persisted to ExecutionStep). Populated
+  //  from the optional fields the engine carries on node:success/node:fail.
+  nodeType?: string;
+  config?: unknown;
+  input?: unknown;
+  output?: unknown;
+  prompt?: { system: string; user: string };
+  memories?: { score: number; id: string; content: string; scope?: string }[];
 }
 
 export async function POST(req: Request, { params }: Params) {
@@ -69,6 +80,14 @@ export async function POST(req: Request, { params }: Params) {
   }
   if (control === "stop" && executionId) {
     return NextResponse.json({ ok: stopRun(executionId) });
+  }
+  // ── step post (advance one node in step-by-step debugging) ──
+  if (control === "step" && executionId) {
+    return NextResponse.json({ ok: stepRun(executionId) });
+  }
+  // ── pause post (arm pause-before-next-node while a node is executing) ──
+  if (control === "pause" && executionId) {
+    return NextResponse.json({ ok: pauseRun(executionId) });
   }
 
   // ── start a run ──
@@ -142,6 +161,18 @@ export async function POST(req: Request, { params }: Params) {
 
       let totals: ExecutionEvent["totals"] | undefined;
 
+      // Copy the optional debugger inspection payload from an event onto its
+      // accumulated step. Only node:success/node:fail carry these fields; other
+      // event types leave them untouched (the first terminal event wins).
+      const captureInspection = (s: StepAccum, ev: ExecutionEvent) => {
+        if (ev.nodeType) s.nodeType = ev.nodeType;
+        if (ev.config !== undefined) s.config = ev.config;
+        if (ev.input !== undefined) s.input = ev.input;
+        if (ev.output !== undefined) s.output = ev.output;
+        if (ev.prompt) s.prompt = ev.prompt;
+        if (ev.memories) s.memories = ev.memories;
+      };
+
       // Announce the execution id first so the client can control the run.
       send({ type: "execution", executionId: execution.id, workflowId: id, name: wf.name });
       send({ type: "started", at: 0 });
@@ -150,6 +181,7 @@ export async function POST(req: Request, { params }: Params) {
         breakpoints,
         awaitResume: handle.resume!,
         stopped: () => handle.stopFlag,
+        stepMode: () => handle.stepMode,
         userId: user.id,
         workflowId: id,
         orgId,
@@ -158,6 +190,8 @@ export async function POST(req: Request, { params }: Params) {
       try {
         for await (const ev of gen) {
           send(ev);
+          // Fan out to any second-client live subscribers (debugger stream route).
+          executionBus.publish(execution.id, ev);
           switch (ev.type) {
             case "node:start":
               ensure(ev);
@@ -178,6 +212,7 @@ export async function POST(req: Request, { params }: Params) {
               s.tokensUsed = ev.tokensUsed ?? s.tokensUsed;
               s.cost = ev.cost ?? s.cost;
               s.retries = ev.retries ?? s.retries;
+              captureInspection(s, ev);
               break;
             }
             case "node:fail": {
@@ -189,6 +224,7 @@ export async function POST(req: Request, { params }: Params) {
               s.retries = ev.retries ?? s.retries;
               if (ev.error) s.error = ev.error;
               if (ev.log && !s.logs.includes(ev.log)) s.logs.push(ev.log);
+              captureInspection(s, ev);
               break;
             }
             case "complete":
@@ -226,6 +262,13 @@ export async function POST(req: Request, { params }: Params) {
                 retries: s.retries,
                 logs: s.logs,
                 reasoning: s.reasoning.length ? s.reasoning : undefined,
+                nodeType: s.nodeType,
+                config: s.config as never,
+                input: s.input as never,
+                output: s.output as never,
+                prompt: s.prompt as never,
+                memories: s.memories as never,
+                error: s.error,
               })),
             });
           }

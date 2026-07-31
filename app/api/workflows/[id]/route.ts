@@ -52,6 +52,7 @@ export async function GET(_req: Request, { params }: Params) {
             id: v.id,
             version: v.version,
             message: v.message,
+            author: v.createdBy,
             createdAt: v.createdAt.toISOString(),
           })),
         },

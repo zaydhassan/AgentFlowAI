@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string; v: string }> };
 
-// GET — one version's graph.
+// GET — one version's graph + author/message/timestamp.
 export async function GET(_req: Request, { params }: Params) {
   const u = await apiUser();
   if ("error" in u) return u.error;
@@ -28,11 +28,22 @@ export async function GET(_req: Request, { params }: Params) {
   if (!ver) return NextResponse.json({ error: "Version not found." }, { status: 404 });
 
   return NextResponse.json({
-    version: { id: ver.id, version: ver.version, message: ver.message, createdAt: ver.createdAt.toISOString(), graph: normalizeGraph(ver.graph) },
+    version: {
+      id: ver.id,
+      version: ver.version,
+      message: ver.message,
+      author: ver.createdBy,
+      createdAt: ver.createdAt.toISOString(),
+      graph: normalizeGraph(ver.graph),
+    },
   });
 }
 
-// POST ?action=restore — copy a version's graph back onto the workflow (auto-save, no version bump).
+// POST ?action=restore — Git-style rollback. Instead of silently overwriting
+// the working graph (lossy), this writes the target version's graph as a NEW
+// head version (message "Restored from v{N}"), bumps Workflow.version, and sets
+// the working graph to it. Every prior version is preserved and the rollback is
+// itself a reversible, visible entry in history.
 export async function POST(req: Request, { params }: Params) {
   const u = await apiUser();
   if ("error" in u) return u.error;
@@ -49,13 +60,33 @@ export async function POST(req: Request, { params }: Params) {
 
   const wf = await prisma.workflow.findUnique({
     where: { id },
-    select: { ownerId: true, versions: { where: { version }, take: 1 } },
+    select: { ownerId: true, version: true, versions: { where: { version }, take: 1 } },
   });
   if (!wf || wf.ownerId !== user.id) return NextResponse.json({ error: "Not found." }, { status: 404 });
   const ver = wf.versions[0];
   if (!ver) return NextResponse.json({ error: "Version not found." }, { status: 404 });
 
   const graph = normalizeGraph(ver.graph);
-  await prisma.workflow.update({ where: { id }, data: { graph: graph as object } });
-  return NextResponse.json({ ok: true, graph, restoredFrom: ver.version });
+  const nextVersion = wf.version + 1;
+  const message = `Restored from v${ver.version}`;
+
+  const [head] = await prisma.$transaction([
+    prisma.workflowVersion.create({
+      data: {
+        workflowId: id,
+        version: nextVersion,
+        graph: graph as object,
+        message,
+        createdBy: user.email ?? user.id,
+      },
+    }),
+    prisma.workflow.update({ where: { id }, data: { version: nextVersion, graph: graph as object } }),
+  ]);
+
+  return NextResponse.json({
+    ok: true,
+    graph,
+    restoredFrom: ver.version,
+    version: { id: head.id, version: head.version, message: head.message, author: head.createdBy, createdAt: head.createdAt.toISOString() },
+  });
 }

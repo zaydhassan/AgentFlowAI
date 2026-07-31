@@ -31,8 +31,11 @@ import { GroupNode } from "@/components/workflow/group-node";
 import { CustomEdge } from "@/components/workflow/custom-edge";
 import { Inspector } from "@/components/workflow/inspector";
 import { CopilotPanel } from "@/components/workflow/copilot-panel";
-import { ExecutionDock, type DockStep, type DockStatus } from "@/components/workflow/execution-dock";
+import { ExecutionDock, type DockStep, type DockStatus, type DockTotals, type DockMemory } from "@/components/workflow/execution-dock";
 import { VersionHistory, type VersionEntry } from "@/components/workflow/version-history";
+import { VersionCompareModal } from "@/components/workflow/version-compare-modal";
+import { CostOptimizer } from "@/components/workflow/cost-optimizer";
+import { SimulationModal } from "@/components/workflow/simulation-modal";
 import { NodeSearch } from "@/components/workflow/node-search";
 import { ContextMenu, type ContextAction } from "@/components/workflow/context-menu";
 import { Button } from "@/components/ui/button";
@@ -134,6 +137,12 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     panelRef: versionPanelRef,
     triggerRef: versionTriggerRef,
   } = useDropdown<HTMLButtonElement>("builder-version-menu");
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareFrom, setCompareFrom] = useState<number | undefined>(undefined);
+  const [compareTo, setCompareTo] = useState<number | undefined>(undefined);
+  const [optimizerOpen, setOptimizerOpen] = useState(false);
+  const [simulateOpen, setSimulateOpen] = useState(false);
+  const [simulateGraph, setSimulateGraph] = useState<Graph | null>(null);
   const [ctx, setCtx] = useState<{ x: number; y: number; nodeId: string | null } | null>(null);
   const [diagnoseSignal, setDiagnoseSignal] = useState(0);
 
@@ -141,8 +150,12 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   const [runStatus, setRunStatus] = useState<DockStatus>("idle");
   const [runLog, setRunLog] = useState<string[]>([]);
   const [steps, setSteps] = useState<DockStep[]>([]);
+  const [totals, setTotals] = useState<DockTotals | null>(null);
+  const [replayingId, setReplayingId] = useState<string | null>(null);
+  const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
   const executionId = useRef<string | null>(null);
   const sseHandle = useRef<{ abort: () => void } | null>(null);
+  const replayHandle = useRef<{ abort: () => void } | null>(null);
   const stepsRef = useRef<Map<string, DockStep>>(new Map());
 
   // history
@@ -302,6 +315,9 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     stepsRef.current.clear();
     setSteps([]);
     setRunLog([]);
+    setTotals(null);
+    setReplayingId(null);
+    setCurrentExecutionId(null);
     setRunStatus("running");
     resetNodeStatuses();
     setDockOpen(true);
@@ -311,10 +327,11 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
 
     sseHandle.current = streamSSE(`/api/workflows/${workflowId}/run`, { graph, breakpoints }, {
       onMessage: (data) => {
-        const ev = data as { type: string; nodeId?: string; nodeName?: string; status?: string; log?: string; reasoning?: string; attempt?: number; durationMs?: number; tokensUsed?: number; cost?: number; retries?: number; error?: string; totals?: { status: string; durationMs: number; totalTokens: number }; executionId?: string };
+        const ev = data as { type: string; nodeId?: string; nodeName?: string; status?: string; log?: string; reasoning?: string; attempt?: number; durationMs?: number; tokensUsed?: number; cost?: number; retries?: number; error?: string; nodeType?: string; config?: unknown; input?: unknown; output?: unknown; prompt?: { system: string; user: string }; memories?: DockMemory[]; totals?: { status: string; durationMs: number; totalTokens: number; totalCost: number; retried: number; error?: string }; executionId?: string };
         switch (ev.type) {
           case "execution":
             executionId.current = ev.executionId ?? null;
+            setCurrentExecutionId(ev.executionId ?? null);
             setRunLog((l) => [...l, `› starting execution · ${graph.nodes.length} nodes`]);
             break;
           case "node:start":
@@ -342,13 +359,13 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
             patchNode(ev.nodeId!, { status: "retrying", retries: ev.attempt ?? 0 });
             break;
           case "node:success":
-            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "succeeded", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0 });
+            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "succeeded", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, nodeType: ev.nodeType, config: ev.config, input: ev.input, output: ev.output, prompt: ev.prompt, memories: ev.memories });
             setSteps(Array.from(stepsRef.current.values()));
             patchNode(ev.nodeId!, { status: "succeeded", durationMs: ev.durationMs, tokensUsed: ev.tokensUsed });
             setRfEdges((eds) => eds.map((e) => (e.source === ev.nodeId ? { ...e, animated: false, data: { ...e.data, status: "succeeded" } } : e)));
             break;
           case "node:fail":
-            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "failed", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, error: ev.error });
+            stepsRef.current.set(ev.nodeId!, { ...(stepsRef.current.get(ev.nodeId!)!), status: "failed", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, error: ev.error, nodeType: ev.nodeType, config: ev.config, input: ev.input, output: ev.output, prompt: ev.prompt, memories: ev.memories });
             setSteps(Array.from(stepsRef.current.values()));
             patchNode(ev.nodeId!, { status: "failed", durationMs: ev.durationMs, error: ev.error, logs: [...((getNode(ev.nodeId!)?.data as { logs?: string[] })?.logs ?? []), ev.error ?? "failed"] });
             setRfEdges((eds) => eds.map((e) => (e.source === ev.nodeId ? { ...e, animated: false, data: { ...e.data, status: "failed" } } : e)));
@@ -362,6 +379,7 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
           case "complete": {
             const status = (ev.totals?.status as DockStatus) ?? "succeeded";
             setRunStatus(status);
+            if (ev.totals) setTotals({ durationMs: ev.totals.durationMs, totalTokens: ev.totals.totalTokens, totalCost: ev.totals.totalCost, retried: ev.totals.retried, status: ev.totals.status as DockTotals["status"], ...(ev.totals.error ? { error: ev.totals.error } : {}) });
             setRunLog((l) => [...l, status === "succeeded" ? "✓ execution complete" : status === "failed" ? "✗ execution failed" : "› execution stopped"]);
             setVersion((v) => v); // unchanged; run doesn't bump version
             break;
@@ -382,6 +400,53 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     patchNode(nodeId, { status: "running", logs: ["retry triggered"], retries: ((getNode(nodeId)?.data as { retries?: number })?.retries ?? 0) + 1 });
     setTimeout(() => patchNode(nodeId, { status: "succeeded", logs: ["Completed"], durationMs: 800 }), 900);
   }, [patchNode, getNode]);
+
+  // ── step-by-step: advance one node, then pause before the next ──
+  const stepRunCb = useCallback(() => {
+    if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=step&executionId=${executionId.current}`, { method: "POST" });
+    setRunStatus("running");
+  }, [workflowId]);
+
+  // ── pause: arm pause-before-next-node while a node is executing ──
+  const pauseRunCb = useCallback(() => {
+    if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=pause&executionId=${executionId.current}`, { method: "POST" });
+  }, [workflowId]);
+
+  // ── replay / retry individual node (real server re-execution) ──
+  // Streams the replay endpoint and updates the step's inspection payload +
+  // status in place, so the Debug tab shows the new I/O live.
+  const replayNode = useCallback((nodeId: string) => {
+    const eid = currentExecutionId;
+    if (!eid) return;
+    replayHandle.current?.abort();
+    setReplayingId(nodeId);
+    replayHandle.current = streamSSE(`/api/workflows/${workflowId}/executions/${eid}/nodes/${nodeId}/replay`, {}, {
+      onMessage: (data) => {
+        const ev = data as { type: string; nodeId?: string; nodeName?: string; status?: string; log?: string; durationMs?: number; tokensUsed?: number; cost?: number; retries?: number; error?: string; nodeType?: string; config?: unknown; input?: unknown; output?: unknown; prompt?: { system: string; user: string }; memories?: DockMemory[] };
+        const prev = stepsRef.current.get(nodeId);
+        switch (ev.type) {
+          case "node:start":
+            stepsRef.current.set(nodeId, { nodeId, nodeName: prev?.nodeName ?? ev.nodeName ?? nodeId, status: "running", durationMs: 0, tokensUsed: 0, cost: 0, retries: 0, logs: [], nodeType: ev.nodeType });
+            setSteps(Array.from(stepsRef.current.values()));
+            break;
+          case "node:log": {
+            const s = stepsRef.current.get(nodeId);
+            if (s) { s.logs.push(ev.log!); setSteps(Array.from(stepsRef.current.values())); }
+            break;
+          }
+          case "node:success":
+            stepsRef.current.set(nodeId, { ...(stepsRef.current.get(nodeId)!), status: "succeeded", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, nodeType: ev.nodeType, config: ev.config, input: ev.input, output: ev.output, prompt: ev.prompt, memories: ev.memories, logs: [...(stepsRef.current.get(nodeId)?.logs ?? []), "Completed"] });
+            setSteps(Array.from(stepsRef.current.values()));
+            break;
+          case "node:fail":
+            stepsRef.current.set(nodeId, { ...(stepsRef.current.get(nodeId)!), status: "failed", durationMs: ev.durationMs ?? 0, tokensUsed: ev.tokensUsed ?? 0, cost: ev.cost ?? 0, retries: ev.retries ?? 0, error: ev.error, nodeType: ev.nodeType, config: ev.config, input: ev.input, output: ev.output, prompt: ev.prompt, memories: ev.memories, logs: [...(stepsRef.current.get(nodeId)?.logs ?? []), ev.error ?? "failed"] });
+            setSteps(Array.from(stepsRef.current.values()));
+            break;
+        }
+      },
+      onClose: () => setReplayingId(null),
+    });
+  }, [workflowId, currentExecutionId]);
 
   // ── NL generate apply ──
   const handleGenerate = useCallback((gen: { nodes: WorkflowNode[]; edges: { id: string; source: string; target: string }[] }) => {
@@ -459,6 +524,12 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setRfEdges(g.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, type: "custom", animated: e.animated, data: {}, style: EDGE_STYLE, markerEnd: EDGE_MARKER })));
     setTimeout(() => fitView({ padding: 0.2, duration: 400 }), 50);
   }, [snapshot, setRfNodes, setRfEdges, fitView]);
+
+  const openCompare = useCallback((from?: number, to?: number) => {
+    setCompareFrom(from);
+    setCompareTo(to);
+    setCompareOpen(true);
+  }, []);
 
   // ── context menu ──
   const onPaneContextMenu = useCallback((e: MouseEvent | React.MouseEvent) => {
@@ -587,6 +658,9 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
           {/* Top-right controls */}
           <Panel position="top-right">
             <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setOptimizerOpen(true)} title="AI Cost Optimizer (preflight estimate)">
+                <Icon name="Calculator" className="h-3.5 w-3.5" /> Cost
+              </Button>
               <div className="relative">
                 <Button
                   ref={versionTriggerRef}
@@ -600,11 +674,26 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
                 </Button>
                 {versionMenuOpen && (
                   <div ref={versionPanelRef} className="absolute right-0 top-9 z-20">
-                    <VersionHistory workflowId={workflowId} versions={versions} currentVersion={version} onRestored={(g) => { restoreVersion(g); closeVersionMenu(); }} />
+                    <VersionHistory
+                      workflowId={workflowId}
+                      versions={versions}
+                      currentVersion={version}
+                      onCompare={openCompare}
+                      onSaved={(v) => { setVersion(v.version); setVersions((vs) => [v, ...vs.filter((x) => x.id !== v.id)]); }}
+                      onRestored={(g, head) => { restoreVersion(g); setVersion(head.version); setVersions((vs) => [head, ...vs.filter((x) => x.id !== head.id)]); closeVersionMenu(); }}
+                    />
                   </div>
                 )}
               </div>
               <Button variant="secondary" size="sm" onClick={() => setCopilotOpen((o) => !o)}><Icon name="Sparkles" className="h-3.5 w-3.5" /> Copilot</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => { setSimulateGraph(graphForApi()); setSimulateOpen(true); }}
+                title="Simulate (dry run — no external calls, no DB writes, no credits)"
+              >
+                <Icon name="FlaskConical" className="h-3.5 w-3.5" /> Simulate
+              </Button>
               <Button size="sm" variant={runStatus === "running" ? "danger" : "ai"} onClick={runWorkflow} className="min-w-[96px]">
                 {runStatus === "running" ? <><Icon name="Square" className="h-3.5 w-3.5" /> Stop</> : <><Icon name="Play" className="h-3.5 w-3.5" /> Run</>}
               </Button>
@@ -620,11 +709,17 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
                 status={runStatus}
                 log={runLog}
                 steps={steps}
+                totals={totals}
+                workflowId={workflowId}
+                executionId={currentExecutionId}
+                replayingId={replayingId}
                 onRun={runWorkflow}
-                onPause={() => {}}
+                onPause={pauseRunCb}
                 onResume={resumeRun}
+                onStep={stepRunCb}
                 onStop={stopRun}
                 onRetryNode={retryNode}
+                onReplayNode={replayNode}
                 onDiagnose={(nodeId) => { setSelectedId(nodeId); setCopilotOpen(true); setDiagnoseSignal((s) => s + 1); }}
               />
             </div>
@@ -633,6 +728,15 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
 
         {searchOpen && <NodeSearch onClose={() => setSearchOpen(false)} onPick={(t) => insertNode(t)} />}
         {ctx && <ContextMenu x={ctx.x} y={ctx.y} actions={ctxActions} onClose={() => setCtx(null)} />}
+        {compareOpen && (
+          <VersionCompareModal workflowId={workflowId} versions={versions} initialFrom={compareFrom} initialTo={compareTo} onClose={() => setCompareOpen(false)} />
+        )}
+        {optimizerOpen && (
+          <CostOptimizer workflowId={workflowId} onClose={() => setOptimizerOpen(false)} />
+        )}
+        {simulateOpen && simulateGraph && (
+          <SimulationModal workflowId={workflowId} graph={simulateGraph} onClose={() => setSimulateOpen(false)} />
+        )}
       </div>
 
       {/* Right inspector / copilot */}
