@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Prisma + bcryptjs are server-only and need to be externalized by Turbopack.
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  // Server-only packages that import Node builtins (crypto, net, stream, …)
+  // and must be externalized so Turbopack/webpack don't try to bundle them.
+  // Missing entries here surface as "Module not found: Can't resolve 'crypto'"
+  // (webpack) or a misleading "MODULE_UNPARSABLE / file not found" on the
+  // instrumentation hook (Turbopack). bullmq + ioredis are pulled in via
+  // lib/queue -> instrumentation.ts.
+  serverExternalPackages: ["@prisma/client", "bcryptjs", "bullmq", "ioredis"],
   // Remote avatar hosts. OAuth providers store profile image URLs on the
   // user record; these allow `next/image` to optimize them. The top-nav
   // avatar currently uses a plain <img> (so it isn't gated by this list),
