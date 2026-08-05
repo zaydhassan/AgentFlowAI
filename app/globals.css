@@ -501,3 +501,319 @@ html.light .nav-edge::after {
   color: var(--color-fg-muted);
   font-style: normal;
 }
+
+/* ============================================================
+   Premium landing — hero, background FX, premium buttons,
+   trust logos, feature cards, live preview.
+   All classes use existing design tokens (brand/ai/brand-2/
+   surfaces). No new theme colors are introduced.
+   ============================================================ */
+
+/* Animated multi-stop gradient text for highlighted words. */
+.text-anim-gradient {
+  background: linear-gradient(110deg, #7c5cff, #22d3ee, #5b8bff, #7c5cff);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 6s linear infinite;
+}
+@keyframes gradient-pan {
+  to {
+    background-position: 250% center;
+  }
+}
+
+/* Soft solid premium surface (NOT glass) — subtle top-to-bottom gradient
+   over the base surface, with a hairline border. Used by feature cards and
+   the live-preview shell where glassmorphism would feel busy. */
+.surface-premium {
+  background:
+    linear-gradient(180deg, var(--color-surface-2), var(--color-surface));
+  border: 1px solid var(--color-border);
+}
+
+/* Premium button sheen — a light sweep that crosses the button on hover.
+   Layered on top of the existing Button variants via className. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 75%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+.btn-shine:hover::before {
+  transform: translateX(130%);
+}
+
+/* Aurora blobs — large, soft, slowly drifting color fields. */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  will-change: transform;
+}
+.aurora-1 {
+  background: radial-gradient(circle at center, rgba(124, 92, 255, 0.45), transparent 70%);
+  animation: aurora-drift-1 18s ease-in-out infinite;
+}
+.aurora-2 {
+  background: radial-gradient(circle at center, rgba(34, 211, 238, 0.35), transparent 70%);
+  animation: aurora-drift-2 22s ease-in-out infinite;
+}
+.aurora-3 {
+  background: radial-gradient(circle at center, rgba(91, 139, 255, 0.32), transparent 70%);
+  animation: aurora-drift-3 26s ease-in-out infinite;
+}
+@keyframes aurora-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.1); }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-50px, 40px) scale(0.95); }
+}
+@keyframes aurora-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 50px) scale(1.08); }
+}
+
+/* Orbital rings — faint concentric ellipses that rotate very slowly. */
+.orbital-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: spin-slow 60s linear infinite;
+}
+.orbital-ring::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-ai);
+  box-shadow: 0 0 12px 2px rgba(34, 211, 238, 0.6);
+  transform: translateX(-50%);
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* Moving light ray — a thin diagonal gradient bar that drifts across. */
+.light-ray {
+  position: absolute;
+  width: 140%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(124, 92, 255, 0.25),
+    rgba(34, 211, 238, 0.25),
+    transparent
+  );
+  pointer-events: none;
+  animation: ray-drift 12s ease-in-out infinite;
+}
+@keyframes ray-drift {
+  0%, 100% { transform: translateX(-20%) translateY(0); opacity: 0.4; }
+  50% { transform: translateX(10%) translateY(-10px); opacity: 0.7; }
+}
+
+/* Glowing workflow node ring (pulsing box-shadow using brand/ai tokens). */
+.node-glow {
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    0 8px 30px -12px rgba(124, 92, 255, 0.5);
+}
+
+/* Trust logo wordmark — grayscale by default, brand-color + lift on hover. */
+.trust-logo {
+  color: var(--color-fg-subtle);
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+.trust-logo:hover {
+  color: var(--color-fg);
+  transform: translateY(-2px);
+}
+.trust-logo svg {
+  transition: color 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+}
+.trust-logo:hover svg {
+  color: var(--color-brand);
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.6));
+}
+
+/* Infinite logo marquee — duplicated track translates -50% for a seamless
+   loop. Each logo carries its own trailing margin (no flex gap) so -50%
+   equals exactly one copy. Pauses on hover. */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Metric capability cards — solid premium surface (no glass), soft per-card
+   radial glow, hover lift + brighter border + scaling value + glowing icon. */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface-2), var(--color-surface));
+  border-radius: 0.75rem;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.metric-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(80% 70% at 50% 0%, var(--glow, var(--color-brand)), transparent 70%);
+  opacity: 0.08;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.metric-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 18px 50px -20px var(--glow, rgba(124, 92, 255, 0.5));
+}
+.metric-card:hover::before {
+  opacity: 0.18;
+}
+.metric-icon {
+  transition: box-shadow 0.35s ease;
+}
+.metric-card:hover .metric-icon {
+  box-shadow: 0 0 22px -2px var(--glow, rgba(124, 92, 255, 0.6));
+}
+.metric-value {
+  transition: transform 0.3s ease;
+}
+.metric-card:hover .metric-value {
+  transform: scale(1.05);
+}
+.metric-divider {
+  transform: scaleX(0.3);
+  transform-origin: left;
+  opacity: 0.5;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+}
+.metric-card:hover .metric-divider {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+/* Light-theme toning for the metric glow. */
+html.light .metric-card:hover {
+  box-shadow: 0 18px 50px -20px rgba(10, 12, 20, 0.16);
+}
+
+/* Feature card premium hover — lift + soft brand border glow + animated
+   top sheen. Combines with .surface-premium. */
+.feature-card {
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease, box-shadow 0.35s ease;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, rgba(124, 92, 255, 0), rgba(34, 211, 238, 0), rgba(124, 92, 255, 0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 24px 60px -24px rgba(124, 92, 255, 0.35);
+}
+.feature-card:hover::before {
+  opacity: 1;
+  background: linear-gradient(120deg, rgba(124, 92, 255, 0.5), rgba(34, 211, 238, 0.5), rgba(124, 92, 255, 0.5));
+}
+
+/* Small glowing icon tile used inside feature cards. */
+.feature-icon {
+  position: relative;
+  transition: transform 0.35s ease;
+}
+.feature-card:hover .feature-icon {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+/* Streaming log line entry. */
+.log-line {
+  animation: log-in 0.35s ease both;
+}
+@keyframes log-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Thin animated gradient bar used for memory-usage / progress. */
+.progress-anim {
+  background: linear-gradient(90deg, var(--color-brand), var(--color-ai));
+  background-size: 200% 100%;
+  animation: gradient-pan 4s linear infinite;
+}
+
+/* Flowing dashed stroke for the hero workflow connectors. */
+.wf-edge {
+  stroke-dasharray: 6 5;
+  animation: wf-dash 0.7s linear infinite;
+}
+@keyframes wf-dash {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* Light-theme toning for the FX above — keeps glows/grids subtle on light. */
+html.light {
+  .aurora-1 { background: radial-gradient(circle at center, rgba(124, 92, 255, 0.22), transparent 70%); }
+  .aurora-2 { background: radial-gradient(circle at center, rgba(34, 211, 238, 0.18), transparent 70%); }
+  .aurora-3 { background: radial-gradient(circle at center, rgba(91, 139, 255, 0.16), transparent 70%); }
+  .orbital-ring { border-color: rgba(10, 12, 20, 0.06); }
+  .node-glow { box-shadow: 0 0 0 1px var(--color-border), 0 8px 26px -12px rgba(124, 92, 255, 0.25); }
+  .feature-card:hover { box-shadow: 0 24px 60px -24px rgba(10, 12, 20, 0.18); }
+}

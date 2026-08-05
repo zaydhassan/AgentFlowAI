@@ -130,8 +130,10 @@ export function MarketingNav() {
       animate={{ y: hidden ? "-115%" : "0%" }}
       transition={{ type: "spring", stiffness: 380, damping: 38, mass: 0.6 }}
     >
-      <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-5 lg:px-8">
-        {/* Logo — premium flagship tile + wordmark. */}
+      <div className="relative flex h-full items-center gap-6 px-5 lg:px-8">
+        {/* Logo — premium flagship tile + wordmark. Sits flush to the
+            viewport's left edge (the bar spans full width, no max-width
+            centering), so the brand leads the page from the far left. */}
         <Link href="/" className="group flex shrink-0 items-center gap-2.5 rounded-lg focus-ring" aria-label="AgentFlow AI home">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -148,8 +150,10 @@ export function MarketingNav() {
           </span>
         </Link>
 
-        {/* Desktop nav. */}
-        <nav aria-label="Primary" className="ml-3 hidden lg:flex items-center gap-1">
+        {/* Desktop nav. Centered in the viewport on xl+ (absolute, half-width
+            translate); on lg it sits right after the brand to avoid colliding
+            with the right-side cluster on narrower desktop widths. */}
+        <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 xl:absolute xl:left-1/2 xl:top-1/2 xl:-translate-x-1/2 xl:-translate-y-1/2">
           {NAV.map((entry) =>
             entry.kind === "link" ? (
               <NavLink
