@@ -324,7 +324,4 @@ npx tsc --noEmit # type-check
 - Sign-in events are written to the **AuditLog**.
 - See [`/security`](app/security/page.tsx) for the full policy.
 
-If you find a vulnerability, please email **zaydthirteen@gmail.com** rather
-than opening a public issue.
-
 ---
