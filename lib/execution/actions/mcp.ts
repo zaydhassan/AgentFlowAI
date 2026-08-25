@@ -1,21 +1,3 @@
-// =============================================================================
-// MCP execution action — drains the engine's real-action seam for mcp.* nodes
-// =============================================================================
-// The engine already drains runAction() generically (lib/execution/engine.ts,
-// unchanged). registry.ts routes `mcp.tool` / `mcp.resource` here. This module
-// resolves the selected tool/resource (allow-list + ownership checked), obtains
-// a pooled connection, calls the SDK client, and records the invocation via the
-// audit module (McpInvocation row + Memory Engine mirror). It yields `node:log`
-// events the engine streams to the execution dock, and returns an ActionResult
-// the engine uses for success/failure + retry classification.
-//
-// Non-retryable (retryable:false): no tool/resource selected, malformed
-// selector, ownership/not-found, disabled server, allow-list violation,
-// invalid arguments JSON, tool-level isError. Retryable (retryable:true):
-// transport/connect/timeout errors — the engine's retry wrapper may re-attempt.
-//
-// Server-only.
-
 import "server-only";
 import { resolveOrgId } from "@/lib/memory";
 import {
@@ -44,13 +26,12 @@ export async function* runMcpAction(args: {
   const isResource = args.nodeType === "mcp.resource";
   const selectorKey = isResource ? "resource" : "tool";
 
-  // 1. Resolve the selector + arguments from node config.
   const selector = args.config[selectorKey];
   if (typeof selector !== "string" || !selector) {
     return nonRetryable(`No ${selectorKey} selected`);
   }
   const [serverId, ...rest] = selector.split("::");
-  const namePart = rest.join("::"); // tool name (mcp.tool) or resource uri (mcp.resource)
+  const namePart = rest.join("::");
   if (!serverId || !namePart) {
     return nonRetryable(`Malformed ${selectorKey} selector "${selector}"`);
   }
@@ -81,7 +62,6 @@ export async function* runMcpAction(args: {
   const orgId = await resolveOrgId(args.userId).catch(() => null);
   const start = Date.now();
 
-  // 2. Connect (ownership-checked). Disabled/missing servers are non-retryable.
   let conn;
   try {
     if (args.stopped()) return nonRetryable("cancelled");
@@ -93,7 +73,6 @@ export async function* runMcpAction(args: {
     return { status: "failed", error: msg, retryable };
   }
 
-  // 3. Allow-list enforcement (security boundary).
   if (!isAllowed(namePart, conn.server.allowList, conn.server.denyList)) {
     const msg = `${selectorKey} "${namePart}" is not on the allow-list for server "${conn.server.name}"`;
     await recordFailure(audit, { serverId, ownerId: args.userId, orgId, toolName: namePart, callArgs, msg, start });
@@ -139,9 +118,7 @@ export async function* runMcpAction(args: {
       };
     }
 
-    // mcp.tool
     yield log(`MCP invoke ${selector} on "${conn.server.name}"`);
-    // resolveTool re-checks allow-list + ownership and gives us the descriptor.
     const { toolName, descriptor } = await resolveTool({ tool: selector }, args.userId, orgId);
     if (descriptor.description) yield log(`tool: ${descriptor.description.slice(0, 160)}`);
     if (args.stopped()) return nonRetryable("cancelled");
@@ -211,8 +188,6 @@ export async function* runMcpAction(args: {
     return { status: "failed", error: msg, retryable };
   }
 }
-
-// ─────────────────────────── audit helper ───────────────────────────────────
 
 async function recordFailure(
   auditMod: typeof audit,

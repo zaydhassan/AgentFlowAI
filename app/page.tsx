@@ -1,11 +1,3 @@
-// Server component landing page. Checks auth state so the primary CTA
-// routes signed-in users to /dashboard directly and anonymous users to
-// /signup (deep-link friendly). The animated wrappers live in
-// components/marketing/motion.tsx (client components) so this file can stay
-// a server component and use `await auth()`.
-//
-// Navbar, auth, routing, theme system, colors, and business logic are
-// untouched — only the hero and sections below the navbar were upgraded.
 import Link from "next/link";
 import { FadeIn, HeroFade, BlurReveal } from "@/components/marketing/motion";
 import { MarketingNav } from "@/components/marketing/nav";
@@ -20,12 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { NODE_LIBRARY, CATEGORY_META } from "@/lib/nodes";
+import { PLAN_META } from "@/lib/payments/plan-meta";
 import { auth } from "@/auth";
 
 const plans = [
   { name: "Free", price: "$0", period: "forever", features: ["3 active workflows", "1,000 credits / mo", "Community templates", "Email support"], cta: "Start free" },
-  { name: "Pro", price: "$29", period: "/ mo", features: ["25 active workflows", "150k credits / mo", "AI Copilot + self-heal", "Priority support"], cta: "Start Pro", featured: true },
-  { name: "Business", price: "$99", period: "/ mo", features: ["Unlimited workflows", "1M credits / mo", "RBAC + audit logs", "SSO ready"], cta: "Start Business" },
+  { name: PLAN_META.pro.label, price: `$${PLAN_META.pro.priceAmount.monthly}`, period: "/ mo", features: ["25 active workflows", "150k credits / mo", "AI Copilot + self-heal", "Priority support"], cta: "Start Pro", featured: true },
+  { name: PLAN_META.business.label, price: `$${PLAN_META.business.priceAmount.monthly}`, period: "/ mo", features: ["Unlimited workflows", "1M credits / mo", "RBAC + audit logs", "SSO ready"], cta: "Start Business" },
   { name: "Enterprise", price: "Custom", period: "", features: ["Self-hosted option", "Dedicated support", "SLA + uptime", "Custom nodes"], cta: "Contact sales" },
 ];
 
@@ -37,12 +30,10 @@ export default async function LandingPage() {
     <div className="min-h-screen">
       <MarketingNav />
 
-      {/* ============================ HERO ============================ */}
       <section className="relative overflow-hidden pt-32 pb-24 lg:pt-40 lg:pb-32">
         <HeroBackground />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-12 xl:gap-16 items-center">
-          {/* Left — headline, copy, CTAs */}
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-left lg:self-start">
             <HeroFade y={12} duration={0.5}>
               <Badge
                 tone="brand"
@@ -86,7 +77,6 @@ export default async function LandingPage() {
               </div>
             </HeroFade>
 
-            {/* Sequential checkmarks */}
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs text-fg-subtle">
               {[
                 { icon: "CreditCard", text: "No credit card" },
@@ -102,24 +92,20 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* Right — floating workflow canvas */}
           <HeroFade y={24} duration={0.8} delay={0.3} className="relative">
             <HeroWorkflow />
           </HeroFade>
         </div>
       </section>
 
-      {/* ============================ TRUST ============================ */}
       <TrustLogos />
 
-      {/* ============================ CAPABILITIES ============================ */}
       <section className="border-b border-border bg-bg-soft/30">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-14">
           <Metrics />
         </div>
       </section>
 
-      {/* ============================ FEATURES ============================ */}
       <section id="features" className="relative mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
         <BlurReveal className="max-w-2xl">
           <Badge tone="ai" className="mb-4">Platform</Badge>
@@ -134,7 +120,6 @@ export default async function LandingPage() {
         <FeatureCards />
       </section>
 
-      {/* ====================== LIVE PRODUCT PREVIEW ====================== */}
       <section className="relative overflow-hidden border-y border-border">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
           <BlurReveal className="mx-auto max-w-2xl text-center">
@@ -153,7 +138,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================ AI ENGINE ============================ */}
       <section id="ai" className="relative mesh-bg border-b border-border">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
           <div className="grid grid-cols-1 gap-14 lg:grid-cols-2 lg:gap-16 lg:items-center">
@@ -202,7 +186,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================ NODE LIBRARY ============================ */}
       <section id="nodes" className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
         <BlurReveal className="max-w-2xl">
           <Badge tone="brand" className="mb-4">Node Library</Badge>
@@ -231,7 +214,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================ PRICING ============================ */}
       <section id="pricing" className="border-t border-border bg-bg-soft/40">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
           <BlurReveal className="text-center max-w-2xl mx-auto">
@@ -266,7 +248,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ============================ CTA ============================ */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
         <BlurReveal className="relative overflow-hidden rounded-3xl border border-border mesh-bg p-12 text-center lg:p-20">
           <div className="relative">

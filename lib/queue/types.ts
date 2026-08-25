@@ -1,12 +1,3 @@
-// =============================================================================
-// Queue — provider-agnostic background-job contract
-// =============================================================================
-// Any job backend (BullMQ/Redis, a no-op fallback, a future SQS/Beanstalk
-// adapter) implements `QueueProvider` and plugs in via `getQueue()` in
-// ./index. The rest of the app depends only on this interface + the helpers,
-// never on BullMQ directly. Pure types (no server-only) so client-safe modules
-// may reference the shapes.
-
 /** Per-job options. BullMQ-backed, but named generically here. */
 export interface JobOptions {
   /** BullMQ priority — LOWER number = HIGHER priority (1 runs before 10). Default 0. */

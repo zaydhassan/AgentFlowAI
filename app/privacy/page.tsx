@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingPage } from "@/components/marketing/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — AgentFlow AI",
@@ -56,7 +57,7 @@ const sections = [
   {
     h: "Your rights",
     body: [
-      "Depending on your jurisdiction, you may have rights to access, correct, export, or delete your personal data. Email privacy@agentflow.ai to exercise these rights.",
+      `Depending on your jurisdiction, you may have rights to access, correct, export, or delete your personal data. Email ${site.legal.privacy} to exercise these rights.`,
     ],
   },
   {
@@ -104,7 +105,7 @@ export default function PrivacyPage() {
 
         <div className="mt-12 rounded-2xl border border-border bg-surface-2/40 p-6 text-sm text-fg-muted">
           Questions about this policy? Email{" "}
-          <a href="mailto:privacy@agentflow.ai" className="text-brand hover:underline">privacy@agentflow.ai</a>{" "}
+          <a href={`mailto:${site.legal.privacy}`} className="text-brand hover:underline">{site.legal.privacy}</a>{" "}
           or use our <a href="/contact" className="text-brand hover:underline">contact page</a>.
         </div>
       </section>

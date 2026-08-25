@@ -1,4 +1,3 @@
-// Streaming Copilot chat. SSE token stream.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { copilotChat } from "@/lib/ai/provider";

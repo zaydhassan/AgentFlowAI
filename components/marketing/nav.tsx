@@ -1,18 +1,5 @@
 "use client";
 
-// AgentFlow AI — world-class marketing navbar.
-//
-// Behaviour:
-//  - Sticky; shrinks slightly, gains blur + shadow once scrolled.
-//  - Hides on scroll-down, reappears on scroll-up (spring-animated).
-//  - Desktop links: Solutions + Platform dropdown mega-panels, then
-//    Templates / Developers / Pricing / Enterprise direct links.
-//  - AI status badge (top-right), magnetic "Get Started" CTA, shared UserMenu.
-//  - Hover: animated underline + soft highlight; active page indicator
-//    slides between links (framer-motion layoutId).
-//  - Mobile: slide-out drawer from the right with accordion sub-links.
-//  - ARIA labels, keyboard focus rings, Esc-to-close drawer/dropdown.
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -71,7 +58,6 @@ function megaActive(pathname: string, items: MegaItem[]): boolean {
   return items.some((i) => isActive(pathname, i.href));
 }
 
-// Mobile drawer — cascade the nav list in on open.
 const drawerContainer: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.04, delayChildren: 0.08 } },
@@ -105,6 +91,9 @@ export function MarketingNav() {
   const [drawerMega, setDrawerMega] = useState<string | null>(null);
 
   useEffect(() => {
+    // Close any open menu/drawer when the route changes. Driven by `pathname`
+    // (router state), so the effect is the correct sync point.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenMega(null);
     setDrawer(false);
     setDrawerMega(null);

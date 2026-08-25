@@ -1,15 +1,3 @@
-// =============================================================================
-// Preferences — cached user notification preferences.
-// =============================================================================
-// Per the brief's performance requirement ("Cache user preferences"), lookups
-// are memoized per user with a short TTL so the emit path (which runs on every
-// event) never hits the DB on a hot path. The cache is in-process (the queue
-// worker and the web process each keep their own — a stale read here only means
-// a notification might use a slightly-old opt-in for up to the TTL, which is
-// acceptable and self-corrects). Invalidated on write.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "@/lib/notifications/repository";
 import type {
@@ -44,8 +32,6 @@ export function invalidatePreferences(userId: string): void {
 export function __resetPreferencesCacheForTests(): void {
   _cache.clear();
 }
-
-// ─────────────────────────── routing helpers ─────────────────────────────────
 
 /**
  * Is email enabled for this event's category, given the user's preferences?

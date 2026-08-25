@@ -1,10 +1,3 @@
-// POST /api/payments/webhook/razorpay — receives Razorpay events, verifies the
-// X-Razorpay-Signature (HMAC-SHA256 of the raw body with RAZORPAY_WEBHOOK_SECRET),
-// and dispatches to the active provider. Idempotent at the data layer (unique-key
-// upserts) with an event-dedup fast path keyed on `<type>:<entityId>`.
-//
-// Must read the raw body for signature verification — we use request.text().
-
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/payments/repository";
 import { getPaymentProvider } from "@/lib/payments";

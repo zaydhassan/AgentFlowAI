@@ -1,10 +1,3 @@
-// Prisma layer for integration accounts. The ONLY place tokens are encrypted
-// (before write) and decrypted (on read). All other code consumes either the
-// client-safe IntegrationAccount (no tokens) or the server-only
-// StoredIntegrationAccount (decrypted plaintext, in-memory only).
-//
-// Server-only. Mirrors the provider-aware pattern of lib/payments/repository.ts.
-
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -31,8 +24,6 @@ interface CreateAccountInput {
   /** When reconnecting an existing account, its id (preserves history/watermark). */
   existingId?: string;
 }
-
-// ─────────────────────────── mappers ──────────────────────────────────────
 
 function metaOf(row: AccountRow): { name: string | null; picture: string | null } {
   if (row && row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)) {
@@ -86,8 +77,6 @@ function toClient(row: NonNullable<AccountRow>): IntegrationAccount {
     picture,
   };
 }
-
-// ─────────────────────────── public API ────────────────────────────────────
 
 export const repository = {
   /** Create or update (reconnect) an account, encrypting tokens. Returns safe shape. */

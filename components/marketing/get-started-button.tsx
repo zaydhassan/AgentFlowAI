@@ -1,15 +1,5 @@
 "use client";
 
-// Premium primary CTA for the marketing navbar.
-//
-// - Gradient hairline border ring (cta-ring) wrapping a dark glass fill,
-//   so the action reads as luxurious rather than a flat button.
-// - Soft animated glow halo behind it (cta-glow), brightening on hover.
-// - Magnetic interaction: the whole button drifts toward the cursor using
-//   spring-physics motion values, then snaps back on leave. GPU-only
-//   transforms so it stays at 60 FPS.
-// - Exposes a normal Next <Link>, so routing/prefetch is unchanged.
-
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
@@ -38,7 +28,6 @@ export function GetStartedButton({
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    // Distance of the cursor from the element center, normalized.
     const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
     const dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
     // Pull strength — subtle, ~22% of the normalized distance.

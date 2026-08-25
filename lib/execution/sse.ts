@@ -1,10 +1,3 @@
-// SSE encoding helpers for the execution engine + AI layer.
-// Both stream async generators as `text/event-stream` responses.
-//
-// Event shape sent to the client: `data: <json>\n\n`.
-// A terminal `event: done\ndata: <json>\n\n` is emitted so the client can close
-// cleanly. Server modules — Date.now() is fine here.
-
 import "server-only";
 import type { ExecutionEvent } from "./engine";
 
@@ -62,7 +55,6 @@ export function sseStream<T>(
   return new Response(stream, { headers: SSE_HEADERS });
 }
 
-// Convenience for AI token streams (string chunks → { token } events).
 export function sseTokenStream(gen: AsyncGenerator<string, unknown, unknown>): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({

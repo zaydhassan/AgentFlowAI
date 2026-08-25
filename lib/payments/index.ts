@@ -1,12 +1,8 @@
-// Payments facade + factory. The rest of the app imports only from
-// "@/lib/payments" and never references a specific provider. The active
-// provider is selected by PAYMENT_PROVIDER (default "razorpay"); Stripe remains
-// available behind the same interface when PAYMENT_PROVIDER=stripe.
-
 import "server-only";
 import type { PaymentProvider, ProviderId } from "@/lib/payments/types";
 import { RazorpayProvider } from "@/lib/payments/providers/razorpay";
 import { StripeProvider, getStripe, appUrl as stripeAppUrl, trialDays as stripeTrialDays } from "@/lib/payments/providers/stripe";
+import { requireEnv } from "@/lib/env";
 
 export type {
   PaymentProvider,
@@ -25,7 +21,7 @@ export type {
   CardSnapshot,
 } from "@/lib/payments/types";
 
-export { PLAN_META, PAID_PLANS, INTERVALS, chargeCurrency, planAmountMinor, cycleAmountMinor, intervalFromPeriod } from "@/lib/payments/plans";
+export { PLAN_META, PLAN_CREDIT_LIMIT, PAID_PLANS, INTERVALS, chargeCurrency, planAmountMinor, cycleAmountMinor, intervalFromPeriod } from "@/lib/payments/plans";
 
 // Re-export the Stripe helpers for the retained StripeProvider's webhook route
 // and any diagnostics (the Stripe webhook route delegates to the provider, which
@@ -37,9 +33,9 @@ const providers: Record<ProviderId, PaymentProvider> = {
   stripe: new StripeProvider(),
 };
 
-/** The configured provider id. Defaults to razorpay. */
+/** The configured provider id. Defaults to razorpay in dev; required in prod. */
 export function activeProviderId(): ProviderId {
-  const v = (process.env.PAYMENT_PROVIDER ?? "razorpay").toLowerCase();
+  const v = requireEnv("PAYMENT_PROVIDER", "razorpay").toLowerCase();
   return v === "stripe" ? "stripe" : "razorpay";
 }
 

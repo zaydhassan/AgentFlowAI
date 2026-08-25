@@ -1,10 +1,3 @@
-// =============================================================================
-// Structured Logging — types
-// =============================================================================
-// Pure types — runtime-agnostic. The Logger contract every backend module
-// programs against. The same logger (getLogger / the default export) is used
-// app-wide so request/execution/AI/error context flows consistently.
-
 /** Severity, lowest → highest. Numeric weights gate emission (see LOG_LEVELS). */
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 

@@ -1,10 +1,5 @@
 "use client";
 
-// Cinematic hero background — subtle only.
-// Grid + soft radials render as plain JSX (SSR-safe). Particles use
-// framer-motion transform-only loops (no rerenders) with deterministic
-// positions so there is no hydration mismatch.
-
 import { motion } from "framer-motion";
 
 // Deterministic particle field (no Math.random at render).

@@ -1,23 +1,3 @@
-// =============================================================================
-// MemoryEmbeddingWorker — example worker
-// =============================================================================
-// Consumes the `memory-embedding` queue. Each job carries { memoryId, content };
-// the worker generates the embedding via the Memory Engine's embedding provider
-// and attaches it to the memory row. This is the "enqueue embedding generation
-// instead of blocking requests" path: lib/memory/repository.insertMemory()
-// enqueues here (non-blocking) when the queue is up, and falls back to a
-// synchronous embed when it is down — see lib/queue/index.ts enqueueEmbedding().
-//
-// Idempotent: repository.attachEmbedding() is ON CONFLICT DO NOTHING on the
-// unique `memoryId`, so retries / duplicate jobs never double-insert.
-//
-// The Memory Engine itself is NOT modified beyond swapping the synchronous
-// embedding call for this enqueue. recall/manage are untouched; a memory whose
-// embedding is still pending simply isn't returned by vector search until this
-// worker attaches its vector (hybrid/FTS still find it).
-//
-// Server-only.
-
 import "server-only";
 import { getEmbeddingProvider, repository } from "@/lib/memory";
 import { getQueue, MEMORY_EMBEDDING_QUEUE, type JobHandler } from "@/lib/queue";

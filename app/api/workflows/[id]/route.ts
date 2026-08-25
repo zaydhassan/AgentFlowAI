@@ -1,8 +1,8 @@
-// Single workflow: fetch / auto-save / delete.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
 import { normalizeGraph } from "@/lib/workflow/graph";
+import { WORKFLOW_NAME_MAX, WORKFLOW_DESCRIPTION_MAX, WORKFLOW_TAGS_MAX } from "@/lib/workflow/limits";
 import { cached, cacheDel, cacheInvalidate } from "@/lib/cache";
 
 export const runtime = "nodejs";
@@ -85,18 +85,17 @@ export async function PATCH(req: Request, { params }: Params) {
     body = {};
   }
 
-  // Ownership check before write.
   const existing = await prisma.workflow.findUnique({ where: { id }, select: { ownerId: true } });
   if (!existing || existing.ownerId !== user.id) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
   const data: Record<string, unknown> = {};
-  if (typeof body.name === "string") data.name = body.name.trim().slice(0, 120) || "Untitled workflow";
-  if (typeof body.description === "string") data.description = body.description.slice(0, 2000);
+  if (typeof body.name === "string") data.name = body.name.trim().slice(0, WORKFLOW_NAME_MAX) || "Untitled workflow";
+  if (typeof body.description === "string") data.description = body.description.slice(0, WORKFLOW_DESCRIPTION_MAX);
   if (body.status === "active" || body.status === "draft" || body.status === "paused" || body.status === "error") data.status = body.status;
   if (typeof body.category === "string") data.category = body.category;
-  if (Array.isArray(body.tags)) data.tags = body.tags.slice(0, 20);
+  if (Array.isArray(body.tags)) data.tags = body.tags.slice(0, WORKFLOW_TAGS_MAX);
   if (body.graph !== undefined) data.graph = normalizeGraph(body.graph) as object;
 
   const wf = await prisma.workflow.update({ where: { id }, data });
@@ -124,7 +123,6 @@ export async function DELETE(_req: Request, { params }: Params) {
   }
 
   await prisma.workflow.delete({ where: { id } });
-  // Invalidate both projections on delete.
   await cacheDel(`workflow:${id}`);
   await cacheInvalidate(`workflows:list:${user.id}`);
   return NextResponse.json({ ok: true });

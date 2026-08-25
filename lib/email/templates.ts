@@ -1,5 +1,3 @@
-// HTML email templates. Inline-styled, dark-mode friendly, no external assets.
-
 import { appUrl } from "@/lib/resend";
 
 const STYLES = `

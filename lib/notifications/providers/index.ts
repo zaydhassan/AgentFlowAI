@@ -1,17 +1,3 @@
-// =============================================================================
-// Notification providers — provider-agnostic factory.
-// =============================================================================
-// The engine resolves a provider by channel via getProvider(channel). Today
-// only "email" is implemented (EmailProvider). Adding a provider later requires
-// ONLY:
-//   1. a new file in this folder (e.g. slack.ts exporting SlackProvider), and
-//   2. one line in the `providers` map below.
-// Nothing else in the engine changes — that is the entire provider-abstraction
-// contract. Future providers: gmail (resend-style), resend, ses, sendgrid,
-// slack, discord, push, sms.
-//
-// Server-only.
-
 import "server-only";
 import type {
   NotificationChannel,
@@ -34,7 +20,6 @@ function resolve(channel: NotificationChannel): NotificationProvider | null {
     case "email":
       p = getEmailProvider();
       break;
-    // ── Future providers — wire here when implemented ──
     // case "slack": p = getSlackProvider(); break;
     // case "discord": p = getDiscordProvider(); break;
     // case "push": p = getPushProvider(); break;

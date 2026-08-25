@@ -1,7 +1,3 @@
-// Edge-safe Auth.js v5 configuration. Imported by proxy.ts and auth.ts.
-// IMPORTANT: this file must NOT import the Prisma adapter or anything
-// node-only — it runs at the edge in the proxy.
-
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -10,7 +6,6 @@ import { LoginSchema } from "@/lib/validation/auth";
 import { verifyPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/db";
 
-// Routes that don't require auth. Everything else is protected.
 const PUBLIC_ROUTES = new Set<string>([
   "/",
   "/pricing",
@@ -31,12 +26,9 @@ const PUBLIC_ROUTES = new Set<string>([
 ]);
 
 function isPublic(pathname: string): boolean {
-  // Public API routes
   if (pathname.startsWith("/api/auth")) return true;
   if (pathname.startsWith("/api/payments/webhook")) return true;
-  // /login/error and /signup/error are public
   if (pathname === "/login/error" || pathname === "/signup/error") return true;
-  // The whole documentation tree is public (/docs + every article under it).
   if (pathname === "/docs" || pathname.startsWith("/docs/")) return true;
   return PUBLIC_ROUTES.has(pathname);
 }
@@ -114,7 +106,6 @@ export const authConfig = {
     // pages.signIn. Returning true lets the request through.
     authorized: ({ auth, request }) => {
       const { pathname } = request.nextUrl;
-      // Always allow the Auth.js API and the Stripe webhook through.
       if (pathname.startsWith("/api/auth")) return true;
       if (pathname.startsWith("/api/payments/webhook")) return true;
       // Always allow Next internals and static files (the matcher handles most).
@@ -122,7 +113,6 @@ export const authConfig = {
       if (pathname.startsWith("/favicon")) return true;
 
       if (isPublic(pathname)) {
-        // If a logged-in user is hitting a public auth page, send them home.
         if (
           auth?.user &&
           (pathname === "/login" || pathname === "/signup" || pathname === "/")
@@ -132,7 +122,6 @@ export const authConfig = {
         }
         return true;
       }
-      // Everything else (the (app) group) requires a session.
       return Boolean(auth?.user);
     },
   },

@@ -1,24 +1,3 @@
-// =============================================================================
-// Error Monitoring — SentryProvider (server / @sentry/node)
-// =============================================================================
-// Concrete MonitoringProvider backed by `@sentry/node`. Lazy-imports the SDK so
-// the module is cheap to load and so the bundle never pays for Sentry when the
-// DSN is unset (the factory returns a NoopProvider in that case, but importing
-// this module directly would still work — init() loads the SDK on demand).
-//
-// Key design points:
-//   • GlobalHandlers integration is DISABLED — our provider-agnostic
-//     initMonitoring() (in index.ts) owns uncaughtException/unhandledRejection
-//     capture, so Sentry's own handlers would double-capture. We filter that
-//     integration out at init.
-//   • `beforeSend` runs `scrubSensitive` over the ENTIRE outgoing event — the
-//     single sanitization chokepoint the spec requires ("before sending
-//     events"). Covers request bodies, headers, extra, breadcrumbs, contexts.
-//   • Release/environment/version/gitSha are resolved once at init and stamped
-//     as SDK config + tags, so every event carries them automatically.
-//
-// Server-only (Node runtime). The browser uses the separate client facade.
-
 import "server-only";
 import type * as SentryNode from "@sentry/node";
 import type {

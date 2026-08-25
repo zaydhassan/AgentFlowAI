@@ -1,10 +1,3 @@
-// GET /api/mcp/resources — all allow-filtered resources across the workspace.
-// Drives the inspector `mcp.resource` dropdown.
-//
-// "Cache MCP tool discovery": the response is edge-cached here (per-user, 60s
-// TTL). lib/mcp (the MCP runtime) is NOT modified — the cache sits at the HTTP
-// boundary, mirroring the tools route. See app/api/mcp/tools/route.ts.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { listWorkspaceResources } from "@/lib/mcp";

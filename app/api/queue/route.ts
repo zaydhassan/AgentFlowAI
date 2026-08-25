@@ -1,9 +1,3 @@
-// /api/queue — queue observability + worker control.
-//   GET  → per-queue metrics (waiting / active / completed / failed / delayed / paused)
-//   POST → (re)start the memory-embedding worker (idempotent; dev/test convenience).
-//
-// Auth-guarded like every other API route. Does NOT touch any protected engine.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { queueSnapshot } from "@/lib/queue";
@@ -12,7 +6,6 @@ import { startMemoryEmbeddingWorker } from "@/lib/queue/workers/memory-embedding
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// GET /api/queue → { queues: { [name]: { provider, active, metrics: {...} } } }
 export async function GET() {
   const u = await apiUser();
   if ("error" in u) return u.error;

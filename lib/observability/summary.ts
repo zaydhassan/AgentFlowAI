@@ -1,16 +1,3 @@
-// Server-only aggregation for the AI Observability page.
-//
-// One owner-scoped pass over the real Execution / ExecutionStep / Workflow /
-// WorkflowVersion / AuditLog tables, plus an optional fold-in of the existing
-// MCP observability summary. All queries run in parallel; KPIs, the 14-day
-// trend, the AI-node distribution, in-flight runs (SSE targets), recent runs,
-// prompt versions, and audit entries are all derived here so the page never
-// touches `@/lib/mock/data`.
-//
-// Prisma has no percentile aggregate, so p50/p99 are nearest-rank over the
-// last 1000 finished executions (capped). The 14d trend is JS-bucketed from a
-// capped rowset. This matches the product's current single-process scale.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { observabilitySummary } from "@/lib/mcp";
@@ -136,7 +123,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     observabilitySummary(userId).catch(() => undefined),
   ]);
 
-  // ── KPIs ──
   const durations = durationRows.map((r) => r.durationMs).sort((a, b) => a - b);
   const buckets = new Map<string, { count: number; cost: number; tokens: number; retried: number }>();
   for (const g of statusGroups) {
@@ -165,7 +151,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     executions30d: finishedCount,
   };
 
-  // ── 14d trend (zero-filled, oldest→newest) ──
   const dayKey = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const trend: DailyTrendPoint[] = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(Date.now() - (13 - i) * DAY);
@@ -182,7 +167,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     point.tokens += e.totalTokens;
   }
 
-  // ── AI node distribution ──
   let fallbackIdx = 0;
   const aiNodeDistribution: AiNodeSlice[] = aiNodeGroups
     .map((g) => {
@@ -198,7 +182,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     })
     .sort((a, b) => b.value - a.value);
 
-  // ── In-flight runs (SSE targets) ──
   const inFlight: InFlightRun[] = inFlightRows.map((e) => ({
     executionId: e.id,
     workflowId: e.workflowId,
@@ -207,7 +190,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     trigger: e.trigger,
   }));
 
-  // ── Recent executions ──
   const recent: RecentExecutionRow[] = recentRows.map((e) => ({
     id: e.id,
     workflowId: e.workflowId,
@@ -224,7 +206,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     stepCount: e._count.steps,
   }));
 
-  // ── Prompt versions ──
   const promptVersions: PromptVersionRow[] = versionRows.map((v) => ({
     id: v.id,
     workflowId: v.workflowId,
@@ -235,7 +216,6 @@ export async function getObservabilitySummary(userId: string): Promise<Observabi
     createdAt: v.createdAt.toISOString(),
   }));
 
-  // ── Audit logs ──
   const auditLogs: AuditLogRow[] = auditRows.map((a) => {
     const md = (a.metadata ?? null) as Record<string, unknown> | null;
     const target =

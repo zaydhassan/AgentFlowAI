@@ -58,7 +58,11 @@ export function SimulationModal({
     }
   }, [workflowId, graph]);
 
-  useEffect(() => { void run(); }, [run]);
+  // Run the simulation on mount/when the graph changes; `run` is the async fetch.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void run();
+  }, [run]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);

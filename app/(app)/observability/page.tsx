@@ -1,17 +1,10 @@
 "use client";
 
-// AI Observability — real + real-time.
-//
-// Pulls an aggregated, owner-scoped snapshot from GET /api/observability
-// (polled 10s + on focus) and animates in-flight runs via the existing
-// per-execution SSE stream. See lib/observability/use-observability.ts. All
-// data is live; nothing here is mocked.
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { ExecutionsAreaChart, CostBarChart, DonutChart } from "@/components/dashboard/charts";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -20,7 +13,7 @@ import { useObservability, type LiveRunState } from "@/lib/observability/use-obs
 import type { InFlightRun, RecentExecutionRow } from "@/lib/observability/types";
 import { cn, formatCurrency, formatDuration, formatNumber, relativeTime } from "@/lib/utils";
 
-const tone = (s: string) =>
+const tone = (s: string): Tone =>
   s === "succeeded" ? "success" : s === "failed" ? "danger" : s === "running" ? "brand" : s === "paused" ? "warning" : "neutral";
 
 export default function ObservabilityPage() {
@@ -83,7 +76,6 @@ export default function ObservabilityPage() {
         actions={<Badge tone="success"><span className="dot dot-live bg-success mr-1.5" /> live</Badge>}
       />
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-6">
         <StatCard label="p50 Latency" value={k?.p50LatencyMs ?? 0} icon="Gauge" suffix="ms" accent="#7c5cff" empty={k?.p50LatencyMs == null ? emptySpec : undefined} />
         <StatCard label="p99 Latency" value={k?.p99LatencyMs ?? 0} icon="Gauge" suffix="ms" accent="#fb7185" empty={k?.p99LatencyMs == null ? emptySpec : undefined} />
@@ -102,7 +94,6 @@ export default function ObservabilityPage() {
         />
       </div>
 
-      {/* Trend + AI node distribution */}
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader><CardTitle>Execution Success vs Failure</CardTitle><CardDescription>14-day trend</CardDescription></CardHeader>
@@ -138,7 +129,6 @@ export default function ObservabilityPage() {
         </Card>
       </div>
 
-      {/* Cost trend + prompt versions */}
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader><CardTitle>Cost Trend</CardTitle><CardDescription>Daily LLM spend (USD)</CardDescription></CardHeader>
@@ -174,7 +164,6 @@ export default function ObservabilityPage() {
         </Card>
       </div>
 
-      {/* Live + recent executions / audit log */}
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
@@ -186,12 +175,10 @@ export default function ObservabilityPage() {
               <div className="py-8 text-center text-xs text-fg-subtle">No executions yet.</div>
             ) : (
               <>
-                {/* Live (in-flight) */}
                 {summary!.inFlight.map((run) => (
                   <LiveRunRow key={run.executionId} run={run} state={live[run.executionId]} />
                 ))}
 
-                {/* Recent (finished) */}
                 {summary!.recent.map((e) => (
                   <RecentRow key={e.id} e={e} />
                 ))}
@@ -283,7 +270,7 @@ function RecentRow({ e }: { e: RecentExecutionRow }) {
             {e.totalCost ? ` · ${formatCurrency(e.totalCost)}` : ""}
           </div>
         </div>
-        <Badge tone={tone(e.status) as any}>{e.status}</Badge>
+        <Badge tone={tone(e.status)}>{e.status}</Badge>
       </div>
       {e.error && <div className="mt-1 truncate pl-6 text-[10px] text-danger">{e.error}</div>}
     </Link>

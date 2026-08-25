@@ -1,6 +1,3 @@
-// Shared shell for public marketing pages (about, contact, legal, docs, …).
-// Provides the fixed marketing navbar, a content region offset to clear it,
-// and the shared footer — one consistent frame across every public page.
 import { MarketingNav } from "@/components/marketing/nav";
 import { Footer } from "@/components/marketing/footer";
 

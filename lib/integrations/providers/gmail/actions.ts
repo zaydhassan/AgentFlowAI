@@ -1,13 +1,3 @@
-// Gmail action executors. Each is an async generator that yields `{ log }`
-// lines while running (streamed to the engine as `node:log` SSE events) and
-// RETURNS the final ActionResult. The GmailProvider.runAction dispatches to
-// these by action id. All calls hit the Gmail REST API with a bearer access
-// token via fetch — no SDK. Server-only.
-//
-// Message-id resolution: action nodes that operate on a message accept a
-// `messageId` config field; if blank, the id is derived from the first upstream
-// node's output (so `gmail.search` → `gmail.label.add` chains without config).
-
 import "server-only";
 import type {
   ActionContext,
@@ -16,8 +6,6 @@ import type {
 } from "../../types";
 import { GMAIL_API_BASE } from "./scopes";
 import { base64UrlDecode, base64UrlEncode } from "./oauth";
-
-// ─────────────────────────── error type ─────────────────────────────────────
 
 export class GmailApiError extends Error {
   status: number;
@@ -31,8 +19,6 @@ export class GmailApiError extends Error {
   }
 }
 
-// ─────────────────────────── fetch helper ───────────────────────────────────
-
 interface GmailFetchOpts {
   method?: string;
   body?: unknown;
@@ -40,7 +26,7 @@ interface GmailFetchOpts {
   signal?: { stopped: () => boolean };
 }
 
-async function gmailFetch(path: string, accessToken: string, opts: GmailFetchOpts = {}): Promise<any> {
+async function gmailFetch<T = Record<string, unknown>>(path: string, accessToken: string, opts: GmailFetchOpts = {}): Promise<T> {
   const url = new URL(`${GMAIL_API_BASE}${path}`);
   if (opts.query) {
     for (const [k, v] of Object.entries(opts.query)) {
@@ -62,35 +48,47 @@ async function gmailFetch(path: string, accessToken: string, opts: GmailFetchOpt
   });
 
   // 204 → no body (e.g. some trashes). Treat as empty success.
-  if (res.status === 204) return {};
+  if (res.status === 204) return {} as T;
 
   const text = await res.text();
-  let json: any = {};
+  let json: Record<string, unknown> = {};
   if (text) {
     try {
-      json = JSON.parse(text);
+      json = JSON.parse(text) as Record<string, unknown>;
     } catch {
       json = { raw: text };
     }
   }
   if (!res.ok) {
-    const msg =
-      json?.error?.message ||
-      json?.error?.errors?.[0]?.message ||
-      `Gmail API ${res.status} ${res.statusText}`;
-    const invalidGrant = res.status === 401 || json?.error?.status === "UNAUTHENTICATED";
+    const err = json.error as GmailErrorBody | undefined;
+    const msg = err?.message || err?.errors?.[0]?.message || `Gmail API ${res.status} ${res.statusText}`;
+    const invalidGrant = res.status === 401 || err?.status === "UNAUTHENTICATED";
     throw new GmailApiError(msg, res.status, invalidGrant);
   }
-  return json;
+  return json as T;
 }
-
-// ─────────────────────────── header / body parsing ─────────────────────────
 
 interface GmailHeader { name: string; value: string }
 interface GmailPart {
   mimeType?: string;
   body?: { data?: string; attachmentId?: string; size?: number };
   parts?: GmailPart[];
+}
+
+/** Raw Gmail message shape — only the fields this integration reads. */
+interface GmailMessageRaw {
+  id: string;
+  threadId?: string;
+  labelIds?: string[];
+  snippet?: string;
+  payload?: { headers?: GmailHeader[]; parts?: GmailPart[]; body?: { data?: string } };
+}
+
+/** Gmail API error body (from `{ "error": { ... } }`). */
+interface GmailErrorBody {
+  message?: string;
+  status?: string;
+  errors?: { message?: string }[];
 }
 
 function headerValue(headers: GmailHeader[] | undefined, name: string): string | null {
@@ -133,8 +131,6 @@ function extractBody(payload: { parts?: GmailPart[]; body?: { data?: string }; m
   return { text, html };
 }
 
-// ─────────────────────────── RFC822 builder ─────────────────────────────────
-
 function buildRfc822(headers: Record<string, string | undefined>, body: string, html?: string): string {
   const lines: string[] = [];
   for (const [k, v] of Object.entries(headers)) {
@@ -173,8 +169,6 @@ function buildRfc822(headers: Record<string, string | undefined>, body: string, 
   return lines.join("\r\n") + content;
 }
 
-// ─────────────────────────── message-id resolution ─────────────────────────
-
 function asString(v: unknown): string | undefined {
   return typeof v === "string" && v.trim() ? v.trim() : undefined;
 }
@@ -189,7 +183,8 @@ function pickId(ctx: ActionContext, configKey: string): string {
     const items = Array.isArray(inp) ? inp : [inp];
     for (const it of items) {
       if (!it || typeof it !== "object") continue;
-      const id = asString((it as any).id) ?? asString((it as any).messageId) ?? asString((it as any).threadId);
+      const rec = it as Record<string, unknown>;
+      const id = asString(rec.id) ?? asString(rec.messageId) ?? asString(rec.threadId);
       if (id) return id;
     }
   }
@@ -198,25 +193,25 @@ function pickId(ctx: ActionContext, configKey: string): string {
   );
 }
 
-// ─────────────────────────── label name → id resolution ────────────────────
-
 interface GmailLabel { id: string; name: string; type?: string }
+interface GmailLabelList { labels?: GmailLabel[] }
+interface GmailIdResult { id: string; threadId?: string }
+interface GmailMessageList { messages?: { id: string; threadId?: string }[] }
+interface GmailDraftResult { id: string; message?: { threadId?: string } }
 
 async function resolveLabelId(accessToken: string, name: string, signal: { stopped: () => boolean }): Promise<string> {
-  const res = await gmailFetch("/labels", accessToken, { signal });
+  const res = await gmailFetch<GmailLabelList>("/labels", accessToken, { signal });
   const labels: GmailLabel[] = res.labels ?? [];
   const found = labels.find((l) => l.name.toLowerCase() === name.toLowerCase());
   if (found) return found.id;
   // Gmail lets you create user labels on the fly via /labels POST.
-  const created = await gmailFetch("/labels", accessToken, {
+  const created = await gmailFetch<GmailIdResult>("/labels", accessToken, {
     method: "POST",
     body: { name },
     signal,
   });
   return created.id;
 }
-
-// ─────────────────────────── message shaping ────────────────────────────────
 
 interface ShapedMessage {
   id: string;
@@ -233,7 +228,7 @@ interface ShapedMessage {
   html?: string | null;
 }
 
-function shapeMessageHeaders(msg: any): ShapedMessage {
+function shapeMessageHeaders(msg: GmailMessageRaw): ShapedMessage {
   const headers: GmailHeader[] = msg.payload?.headers ?? [];
   const labelIds: string[] = msg.labelIds ?? [];
   return {
@@ -250,8 +245,6 @@ function shapeMessageHeaders(msg: any): ShapedMessage {
   };
 }
 
-// ─────────────────────────── action implementations ────────────────────────
-
 type ActionGen = AsyncGenerator<ActionLogEvent, ActionResult, unknown>;
 
 function log(line: string): ActionLogEvent {
@@ -267,7 +260,6 @@ function configNum(ctx: ActionContext, key: string, fallback: number): number {
   return typeof v === "number" && Number.isFinite(v) ? v : fallback;
 }
 
-// --- send ------------------------------------------------------------------
 async function* sendEmail(ctx: ActionContext, accessToken: string): ActionGen {
   const to = configStr(ctx, "to");
   const subject = configStr(ctx, "subject");
@@ -288,7 +280,7 @@ async function* sendEmail(ctx: ActionContext, accessToken: string): ActionGen {
     ctx.config.html ? body : undefined, // plain-only for now; html toggle reserved
   );
   yield log("Uploading to Gmail…");
-  const msg = await gmailFetch("/messages/send", accessToken, {
+  const msg = await gmailFetch<GmailIdResult>("/messages/send", accessToken, {
     method: "POST",
     body: { raw: base64UrlEncode(raw), threadId: configStr(ctx, "threadId") || undefined },
     signal: ctx.signal,
@@ -300,13 +292,12 @@ async function* sendEmail(ctx: ActionContext, accessToken: string): ActionGen {
   };
 }
 
-// --- reply -----------------------------------------------------------------
 async function* replyEmail(ctx: ActionContext, accessToken: string): ActionGen {
   const messageId = pickId(ctx, "messageId");
   const body = configStr(ctx, "body");
   if (!body) return { status: "failed", error: '"Body" is required to reply.' };
   yield log(`Fetching original message ${messageId}`);
-  const orig = await gmailFetch(`/messages/${messageId}`, accessToken, {
+  const orig = await gmailFetch<GmailMessageRaw>(`/messages/${messageId}`, accessToken, {
     query: { format: "metadata" },
     signal: ctx.signal,
   });
@@ -331,7 +322,7 @@ async function* replyEmail(ctx: ActionContext, accessToken: string): ActionGen {
     },
     body,
   );
-  const msg = await gmailFetch("/messages/send", accessToken, {
+  const msg = await gmailFetch<GmailIdResult>("/messages/send", accessToken, {
     method: "POST",
     body: { raw: base64UrlEncode(raw), threadId: orig.threadId },
     signal: ctx.signal,
@@ -343,13 +334,12 @@ async function* replyEmail(ctx: ActionContext, accessToken: string): ActionGen {
   };
 }
 
-// --- forward ---------------------------------------------------------------
 async function* forwardEmail(ctx: ActionContext, accessToken: string): ActionGen {
   const messageId = pickId(ctx, "messageId");
   const to = configStr(ctx, "to");
   if (!to) return { status: "failed", error: '"To" is required to forward.' };
   yield log(`Fetching original message ${messageId}`);
-  const orig = await gmailFetch(`/messages/${messageId}`, accessToken, {
+  const orig = await gmailFetch<GmailMessageRaw>(`/messages/${messageId}`, accessToken, {
     query: { format: "full" },
     signal: ctx.signal,
   });
@@ -380,7 +370,7 @@ async function* forwardEmail(ctx: ActionContext, accessToken: string): ActionGen
     },
     body,
   );
-  const msg = await gmailFetch("/messages/send", accessToken, {
+  const msg = await gmailFetch<GmailIdResult>("/messages/send", accessToken, {
     method: "POST",
     body: { raw: base64UrlEncode(raw), threadId: orig.threadId },
     signal: ctx.signal,
@@ -389,14 +379,13 @@ async function* forwardEmail(ctx: ActionContext, accessToken: string): ActionGen
   return { status: "succeeded", output: { id: msg.id, threadId: orig.threadId, messageId, to, subject } };
 }
 
-// --- search + newEmail share listing ---------------------------------------
 async function listMessages(
   accessToken: string,
   query: string,
   maxResults: number,
   signal: { stopped: () => boolean },
 ): Promise<{ id: string; threadId?: string }[]> {
-  const list = await gmailFetch("/messages", accessToken, {
+  const list = await gmailFetch<GmailMessageList>("/messages", accessToken, {
     query: { q: query, maxResults },
     signal,
   });
@@ -411,7 +400,7 @@ async function fetchMany(
 ): Promise<ShapedMessage[]> {
   const out: ShapedMessage[] = [];
   for (const { id } of ids) {
-    const msg = await gmailFetch(`/messages/${id}`, accessToken, {
+    const msg = await gmailFetch<GmailMessageRaw>(`/messages/${id}`, accessToken, {
       query: { format: withBody ? "full" : "metadata", metadataHeaders: ["From", "To", "Cc", "Subject", "Date"] },
       signal,
     });
@@ -426,7 +415,6 @@ async function fetchMany(
   return out;
 }
 
-// --- search ----------------------------------------------------------------
 async function* searchEmails(ctx: ActionContext, accessToken: string): ActionGen {
   const query = configStr(ctx, "query") || "is:unread";
   const maxResults = configNum(ctx, "maxResults", 25);
@@ -442,11 +430,10 @@ async function* searchEmails(ctx: ActionContext, accessToken: string): ActionGen
   return { status: "succeeded", output: { messages, count: messages.length, query } };
 }
 
-// --- read ------------------------------------------------------------------
 async function* readEmail(ctx: ActionContext, accessToken: string): ActionGen {
   const messageId = pickId(ctx, "messageId");
   yield log(`Reading message ${messageId}`);
-  const msg = await gmailFetch(`/messages/${messageId}`, accessToken, {
+  const msg = await gmailFetch<GmailMessageRaw>(`/messages/${messageId}`, accessToken, {
     query: { format: "full" },
     signal: ctx.signal,
   });
@@ -458,7 +445,6 @@ async function* readEmail(ctx: ActionContext, accessToken: string): ActionGen {
   return { status: "succeeded", output: shaped };
 }
 
-// --- draft -----------------------------------------------------------------
 async function* createDraft(ctx: ActionContext, accessToken: string): ActionGen {
   const to = configStr(ctx, "to");
   const subject = configStr(ctx, "subject");
@@ -466,7 +452,7 @@ async function* createDraft(ctx: ActionContext, accessToken: string): ActionGen 
   if (!to) return { status: "failed", error: '"To" is required to create a draft.' };
   yield log(`Composing draft to ${to}`);
   const raw = buildRfc822({ To: to, Subject: subject }, body);
-  const draft = await gmailFetch("/drafts", accessToken, {
+  const draft = await gmailFetch<GmailDraftResult>("/drafts", accessToken, {
     method: "POST",
     body: { message: { raw: base64UrlEncode(raw) } },
     signal: ctx.signal,
@@ -475,7 +461,6 @@ async function* createDraft(ctx: ActionContext, accessToken: string): ActionGen 
   return { status: "succeeded", output: { id: draft.id, threadId: draft.message?.threadId, to, subject } };
 }
 
-// --- modify (label add/remove, archive, markRead) --------------------------
 async function* modifyLabels(
   ctx: ActionContext,
   accessToken: string,
@@ -520,7 +505,6 @@ async function* markReadEmail(ctx: ActionContext, accessToken: string): ActionGe
   return { status: "succeeded", output: { id: messageId, read: true } };
 }
 
-// --- delete (trash) --------------------------------------------------------
 async function* deleteEmail(ctx: ActionContext, accessToken: string): ActionGen {
   const messageId = pickId(ctx, "messageId");
   yield log(`Moving message ${messageId} to Trash`);
@@ -529,7 +513,6 @@ async function* deleteEmail(ctx: ActionContext, accessToken: string): ActionGen 
   return { status: "succeeded", output: { id: messageId, trashed: true } };
 }
 
-// --- newEmail (polling trigger) -------------------------------------------
 async function* newEmailTrigger(ctx: ActionContext, accessToken: string): ActionGen {
   const baseQuery = configStr(ctx, "query") || "is:unread";
   const maxResults = configNum(ctx, "maxResults", 10);
@@ -546,7 +529,7 @@ async function* newEmailTrigger(ctx: ActionContext, accessToken: string): Action
   const messages = await fetchMany(accessToken, ids, ctx.signal, false);
   // Advance the watermark to the newest internalDate we saw (or now).
   const newest = messages.reduce((max, m) => {
-    const t = Date.parse((m as any).date ?? "") || 0;
+    const t = Date.parse(m.date ?? "") || 0;
     return t > max ? t : max;
   }, Date.now());
   return {
@@ -555,10 +538,7 @@ async function* newEmailTrigger(ctx: ActionContext, accessToken: string): Action
   };
 }
 
-// ─────────────────────────── dispatch ──────────────────────────────────────
-
 export async function* runGmailAction(ctx: ActionContext, accessToken: string): ActionGen {
-  // Stop check helper used across awaits.
   const guard = async <T>(fn: () => ActionGen | Promise<ActionGen>): Promise<ActionGen> =>
     (await (fn() as Promise<ActionGen>)) as ActionGen;
   void guard; // reserved for future cooperative-cancel wiring
@@ -580,7 +560,6 @@ export async function* runGmailAction(ctx: ActionContext, accessToken: string): 
       default:
         return { status: "failed", error: `Unknown Gmail action: ${ctx.actionId}` };
     }
-    // Drain the action generator, re-yielding its logs.
     let result: ActionResult | undefined;
     while (true) {
       if (ctx.signal.stopped()) return { status: "failed", error: "Cancelled" };

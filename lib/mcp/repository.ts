@@ -1,15 +1,3 @@
-// =============================================================================
-// MCP repository — the ONLY place credentials/env are encrypted/decrypted
-// =============================================================================
-// Prisma layer for McpServer / McpCapability / McpToolCache / McpInvocation.
-// Reuses the canonical AES-256-GCM crypto from lib/integrations/crypto.ts (no
-// new key/env var). Credentials + the stdio env blob are encrypted before write
-// and decrypted on read into the server-only StoredMcpServer (in-memory only,
-// never serialized to a response) — exactly the rule lib/integrations/repository
-// follows for OAuth tokens.
-//
-// Server-only.
-
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -39,8 +27,6 @@ import type {
 // The payload shape of a McpServer query with capabilities included — using
 // Prisma's GetPayload keeps it in sync with the generated types.
 type ServerRow = Prisma.McpServerGetPayload<{ include: { capabilities: true } }>;
-
-// ─────────────────────────── helpers ────────────────────────────────────────
 
 /**
  * Prisma nullable-Json fields require the `Prisma.JsonNull` sentinel to store a
@@ -118,8 +104,6 @@ function capsOf(row: { capabilities: { kind: string; supported: boolean }[] }): 
   return row.capabilities.map((c) => ({ kind: c.kind as McpCapabilityKind, supported: c.supported }));
 }
 
-// ─────────────────────────── mappers ────────────────────────────────────────
-
 /** Decrypt credentials + env into the server-only in-memory shape. */
 function toStored(row: NonNullable<ServerRow>): StoredMcpServer {
   return {
@@ -171,11 +155,7 @@ function toClient(row: NonNullable<ServerRow>): McpServer {
   };
 }
 
-// ─────────────────────────── public API ─────────────────────────────────────
-
 export const repository = {
-  // ───────────── servers ─────────────
-
   /** List a workspace's servers in the client-safe shape (with capabilities). */
   async listServers(ownerId: string, orgId?: string | null): Promise<McpServer[]> {
     const where: Prisma.McpServerWhereInput = orgId
@@ -294,8 +274,6 @@ export const repository = {
     if (!existing || existing.ownerId !== ownerId) return;
     await prisma.mcpServer.update({ where: { id }, data: { lastDiscoveredAt: when } });
   },
-
-  // ───────────── discovery cache ─────────────
 
   /** Replace a server's capability rows (called on (re)connect). */
   async upsertCapabilities(
@@ -479,8 +457,6 @@ export const repository = {
       }));
   },
 
-  // ───────────── invocations / audit ─────────────
-
   async recordInvocation(input: RecordInvocationInput): Promise<McpInvocationRow> {
     const row = await prisma.mcpInvocation.create({
       data: {
@@ -594,8 +570,6 @@ export const repository = {
     };
   },
 };
-
-// ─────────────────────────── invocation mapper ──────────────────────────────
 
 // The exact payload shape of a McpInvocation findMany/create with the server
 // name included — using Prisma's GetPayload guarantees this matches the

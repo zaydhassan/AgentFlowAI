@@ -1,10 +1,5 @@
 "use client";
 
-// Client-safe integrations helper. The only thing the browser needs to do is
-// kick off a connect/reconnect flow (the server returns the Google consent URL
-// + sets the state cookie, and we just redirect). Re-exports the client-safe
-// types for components.
-
 import type { IntegrationAccount, IntegrationProviderId, IntegrationProviderInfo } from "./types";
 
 export type { IntegrationAccount, IntegrationProviderId, IntegrationProviderInfo };

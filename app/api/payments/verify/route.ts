@@ -1,11 +1,3 @@
-// POST /api/payments/verify — verify a Razorpay client-side payment on the
-// backend (HMAC-SHA256 of `order_id|payment_id`), then activate the subscription
-// and cancel the prior subscription on an upgrade/downgrade.
-//
-// Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, razorpay_subscription_id }
-// Stripe never calls this (its client redirects to the hosted Checkout); the
-// route returns 400 when the active provider isn't Razorpay.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { repository } from "@/lib/payments/repository";

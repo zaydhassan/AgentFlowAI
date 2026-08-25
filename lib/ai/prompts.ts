@@ -1,7 +1,3 @@
-// System prompts + graph→context serializer for the AI layer. Shared by the
-// real LLM path and the deterministic fallback so both reason over the same
-// description of the user's workflow.
-
 import "server-only";
 import { getNodeDef } from "@/lib/nodes";
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";

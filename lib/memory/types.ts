@@ -1,14 +1,3 @@
-// Pure types for the Long-Term AI Memory engine. No runtime, no server-only —
-// safe to import from client and server. Mirrors the lib/payments/types.ts +
-// lib/integrations/types.ts pattern: the client-safe shapes (Memory,
-// MemoryCollection, MemoryHit) NEVER include the embedding vector; the server
-// shapes (StoredMemory) are server-only and carry plaintext vectors in-memory.
-//
-// The memory engine is provider-agnostic: the swappable seam is
-// EmbeddingProvider (OpenAI today; Voyage/Cohere/local later). The vector store
-// is PostgreSQL + pgvector (fixed by design — no Pinecone); access lives in
-// repository.ts via prisma.$queryRaw.
-
 /** The six memory types from the brief, modelled as retrieval/write scopes. */
 export type MemoryScope =
   | "short_term"
@@ -31,7 +20,6 @@ export type EventKind =
 
 export type EmbeddingProviderId = "openai"; // | "voyage" | "cohere" | "local" later
 
-// ─────────────────────────── client-safe shapes ────────────────────────────
 // These are the ONLY shapes returned to the browser. No vector, ever.
 
 export interface Memory {
@@ -73,8 +61,6 @@ export interface MemoryHit {
   /** Rank within the result set (1-based). */
   rank: number;
 }
-
-// ─────────────────────────── request / result types ────────────────────────
 
 export interface RetrievalFilters {
   /** Filter by minimum importance. */
@@ -142,8 +128,6 @@ export interface ManageResult {
   expired: number;
   promoted: number;
 }
-
-// ─────────────────────────── provider interfaces ───────────────────────────
 
 export interface EmbeddingVector {
   vector: number[];

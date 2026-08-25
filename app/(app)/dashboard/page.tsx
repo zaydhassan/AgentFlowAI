@@ -17,6 +17,7 @@ import type { CheckResult, HealthStatus } from "@/lib/health/types";
 import { useDropdown } from "@/lib/hooks/use-dropdown";
 import { formatNumber, formatCurrency, relativeTime, cn } from "@/lib/utils";
 import { rowsToCSV, downloadCSV } from "@/lib/export";
+import { UserAvatar, type UserMenuUser } from "@/components/layout/user-menu";
 
 // Health probe name → friendly label. Probe names come from lib/health/checks.ts.
 const HEALTH_ROWS: { key: string; label: string }[] = [
@@ -100,7 +101,6 @@ export default function DashboardPage() {
   const s = data.stats;
   const trend = data.executionTrend;
 
-  // ── derived supporting info for the metric cards ──
   const todayExec = trend.at(-1)?.executions ?? 0;
   const last7 = trend.slice(-7).reduce((a, d) => a + d.executions, 0);
   const execSpark = trend.map((d) => d.executions);
@@ -115,7 +115,6 @@ export default function DashboardPage() {
     usedPct < 100 ? Math.round(s.creditsRemaining / (1 - usedPct / 100)) : s.creditsRemaining;
   const remainingPct = Math.max(0, 100 - usedPct);
 
-  // ── empty-state predicates ──
   const executionsEmpty = trend.every((d) => d.executions === 0);
   const tokenUsageEmpty = data.tokenBreakdown.length === 0;
   const costEmpty = s.monthlyCost === 0;
@@ -134,7 +133,12 @@ export default function DashboardPage() {
   return (
     <div className="animate-float-up space-y-4">
       <Hero
-        name={session?.user?.name ?? null}
+        user={{
+          name: session?.user?.name ?? null,
+          email: session?.user?.email ?? null,
+          image: session?.user?.image ?? null,
+        }}
+        role={session?.user?.role ?? null}
         health={health?.status ?? null}
         todayExec={todayExec}
         activeWorkflows={s.activeWorkflows}
@@ -158,7 +162,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard
           label="Total Executions"
@@ -241,7 +244,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <DashCard className="xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -310,7 +312,6 @@ export default function DashboardPage() {
         </DashCard>
       </div>
 
-      {/* Second row */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <DashCard className="xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -376,7 +377,6 @@ export default function DashboardPage() {
         </DashCard>
       </div>
 
-      {/* Third row: tokens trend + workflow health */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <DashCard className="xl:col-span-2">
           <CardHeader>
@@ -453,7 +453,6 @@ export default function DashboardPage() {
         </DashCard>
       </div>
 
-      {/* Recent activity + workspace status */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <DashCard className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -553,10 +552,9 @@ export default function DashboardPage() {
   );
 }
 
-// ─────────────────────────── Hero ───────────────────────────────────────────
-
 function Hero({
-  name,
+  user,
+  role,
   health,
   todayExec,
   activeWorkflows,
@@ -565,7 +563,8 @@ function Hero({
   onRefresh,
   data,
 }: {
-  name: string | null;
+  user: UserMenuUser;
+  role: string | null;
   health: HealthStatus | null;
   todayExec: number;
   activeWorkflows: number;
@@ -576,7 +575,7 @@ function Hero({
 }) {
   const greeting = timeOfDayGreeting();
   // Use the full display name (first + last), not just the first token.
-  const displayName = name?.trim() || null;
+  const displayName = user.name?.trim() || null;
   const healthWord =
     health === "healthy" ? "healthy" : health === "degraded" ? "degraded" : health === "unhealthy" ? "down" : "starting up";
   const badgeTone: StatusTone =
@@ -589,19 +588,43 @@ function Hero({
         : health === "unhealthy"
           ? "Systems down"
           : "Checking systems…";
+  const isAdmin = role === "admin";
 
   return (
-    <section className="rounded-xl border border-border bg-surface p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight text-fg sm:text-xl">
-            {greeting}{displayName ? `, ${displayName}` : ""} 👋
-          </h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            <span className="text-fg">Your AI workspace is {healthWord}.</span>
-            <span className="mx-1.5 text-fg-subtle">·</span>
-            {formatNumber(todayExec)} executions today · {activeWorkflows} active workflow{activeWorkflows === 1 ? "" : "s"} · {runningAgents} running.
-          </p>
+    <section className="relative overflow-hidden rounded-xl border border-border bg-surface p-4 sm:p-5">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand/10 blur-3xl"
+      />
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <div className="shrink-0 rounded-full ring-2 ring-border">
+            <UserAvatar user={user} size="lg" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold tracking-tight text-fg sm:text-xl">
+                {greeting}{displayName ? `, ${displayName}` : ""} 👋
+              </h1>
+              {isAdmin && (
+                <Badge tone="neutral" className="shrink-0">
+                  <Icon name="ShieldCheck" className="mr-1 h-3 w-3" />
+                  Admin
+                </Badge>
+              )}
+            </div>
+            <p className="mt-1 truncate text-sm text-fg-muted">
+              <span className="text-fg">Your AI workspace is {healthWord}.</span>
+              <span className="mx-1.5 text-fg-subtle">·</span>
+              {formatNumber(todayExec)} today · {activeWorkflows} active · {runningAgents} running.
+            </p>
+            {user.email && (
+              <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-fg-subtle">
+                <Icon name="Mail" className="h-3 w-3" />
+                {user.email}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge tone={badgeTone} className="hidden sm:inline-flex">
@@ -622,8 +645,6 @@ function Hero({
     </section>
   );
 }
-
-// ─────────────────────────── Export dropdown ─────────────────────────────────
 
 function ExportMenu({ data, disabled }: { data: DashboardPayload | null; disabled: boolean }) {
   const { open, close, toggle, panelRef, triggerRef } = useDropdown<HTMLButtonElement>("dashboard-export");
@@ -675,8 +696,6 @@ function ExportMenu({ data, disabled }: { data: DashboardPayload | null; disable
     </div>
   );
 }
-
-// ─────────────────────────── helpers ─────────────────────────────────────────
 
 function timeOfDayGreeting(): string {
   const h = new Date().getHours();
@@ -746,8 +765,6 @@ function StatusRow({ label, value, tone }: { label: string; value: string; tone:
 function DashCard({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <Card className={cn("bg-surface backdrop-blur-none", className)} {...props} />;
 }
-
-// ─────────────────────────── export builders ──────────────────────────────────
 
 function exportCSV(data: DashboardPayload) {
   const sections = [
@@ -878,8 +895,6 @@ function exportPDF(data: DashboardPayload) {
   win.document.write(html);
   win.document.close();
 }
-
-// ─────────────────────────── skeleton ────────────────────────────────────────
 
 function HeroSkeleton() {
   return (

@@ -1,26 +1,3 @@
-// =============================================================================
-// MCP connection manager — in-process persistent connection pool
-// =============================================================================
-// Holds long-lived McpSdkClient instances keyed by serverId so repeated
-// invocations reuse one transport/handshake (connection pooling + persistent
-// connections, per the performance requirements). Workspace isolation is
-// enforced before any pool entry is returned: getConnection always re-runs
-// repository.getServerOwned(userId, serverId) — a user can never obtain a
-// connection to a server they don't own.
-//
-// Refresh-on-reconnect: when a cached transport is found closed (the SDK fires
-// onclose, or a ping fails), getConnection re-establishes it and invokes the
-// registered reconnect handler, which discovery.ts wires to discovery.refresh
-// so cached tool/resource metadata is re-synced. This keeps the connection
-// manager decoupled from discovery (no import cycle): discovery registers the
-// handler; the manager just calls it.
-//
-// Single-process in-memory Map — consistent with the existing run registries
-// (lib/agents/runtime.ts, lib/execution/engine.ts). Acceptable for the
-// single-process dev server; documented as a caveat in docs/mcp-support.md.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "./repository";
 import { McpSdkClient } from "./sdk-client";

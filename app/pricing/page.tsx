@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { PricingCheckoutButton } from "@/components/billing/billing-actions";
+import { PLAN_META } from "@/lib/payments/plan-meta";
 import { cn } from "@/lib/utils";
 
 const plans = [
@@ -23,20 +24,20 @@ const plans = [
   },
   {
     id: "pro" as const,
-    name: "Pro",
-    price: { monthly: 29, yearly: 24 },
+    name: PLAN_META.pro.label,
+    price: PLAN_META.pro.priceAmount,
     period: "/ mo",
-    tagline: "For makers & small teams",
+    tagline: PLAN_META.pro.tagline,
     features: ["25 active workflows", "150,000 credits / month", "AI Copilot + self-healing", "Priority support", "3 workspace members", "Version history"],
     cta: "Start Pro",
     featured: true,
   },
   {
     id: "business" as const,
-    name: "Business",
-    price: { monthly: 99, yearly: 82 },
+    name: PLAN_META.business.label,
+    price: PLAN_META.business.priceAmount,
     period: "/ mo",
-    tagline: "For scaling teams",
+    tagline: PLAN_META.business.tagline,
     features: ["Unlimited workflows", "1,000,000 credits / month", "RBAC + audit logs", "SSO ready", "10 workspace members", "Secrets manager", "Usage analytics"],
     cta: "Start Business",
     featured: false,

@@ -1,11 +1,3 @@
-// =============================================================================
-// Rate Limiting — named policies, route→policy map, headers, observability
-// =============================================================================
-// Pure JS + process.env reads — NO Node-only APIs, NO ioredis. Safe to import
-// from both the Node facade (lib/rate-limit/index) AND the Edge middleware
-// entry (lib/rate-limit/edge). This is the shared, runtime-agnostic core the
-// two facades build on.
-
 import type { Algorithm, LimitPolicy, RateLimitSnapshot } from "./types";
 
 /** Parse a positive number env var with a fallback. */
@@ -62,7 +54,6 @@ export function getPolicy(name: string): LimitPolicy | undefined {
  */
 export function policyForPath(path: string): LimitPolicy | null {
   if (!path.startsWith("/api/")) return null;
-  // Exempt: provider webhooks + integration OAuth callbacks.
   if (path.includes("/webhook") || path.includes("/callback")) return null;
   // Auth.js client-polled endpoints (session/csrf/providers) are fetched on
   // every mount, navigation, and window-focus by useSession. Throttling them
@@ -119,7 +110,6 @@ export function rateLimitHeaders(r: {
   };
 }
 
-// ─────────────────────────── observability ─────────────────────────────────
 // Module-level counters. In a Node process these are shared across requests
 // (the authoritative aggregate). In the Edge runtime each isolate keeps its
 // own counters — the snapshot is per-isolate; the per-request X-RateLimit-*

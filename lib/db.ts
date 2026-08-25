@@ -1,6 +1,3 @@
-// Prisma singleton — prevents hot-reload connection storms in dev.
-// Always import { prisma } from "@/lib/db" rather than instantiating directly.
-
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };

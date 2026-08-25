@@ -1,19 +1,3 @@
-// Integration provider abstraction — provider-agnostic domain types + the
-// IntegrationProvider interface. The rest of the app imports only from
-// "@/lib/integrations" and never calls a specific provider (Gmail today;
-// Slack/Notion/GitHub/Google Drive later) directly. Concrete providers live in
-// lib/integrations/providers/* and are selected by the factory in
-// lib/integrations/index.ts.
-//
-// This file is PURE TYPES (no runtime, no secrets) so it can be imported from
-// both server and client code. The client helper in lib/integrations/client.ts
-// re-exports only the client-safe subset. Types are erased at runtime, so
-// holding an interface that references token-bearing shapes here does NOT leak
-// secrets — only the server-side provider implementations ever hold plaintext
-// tokens, and the API layer never returns token fields (see IntegrationAccount
-// vs StoredIntegrationAccount).
-
-// The set of implemented providers. Add ("slack" | "notion" | ...) as they ship.
 export type IntegrationProviderId = "gmail";
 
 export type AccountStatus = "active" | "expired" | "revoked" | "error";
@@ -150,7 +134,6 @@ export interface OAuthCallbackResult {
   error?: string;
 }
 
-// ─────────────────────────── action execution ───────────────────────────────
 // Providers execute actions as ASYNC GENERATORS that stream log lines while
 // running and RETURN the final ActionResult. The execution engine drains the
 // generator, yielding each log as a `node:log` SSE event, then reads the

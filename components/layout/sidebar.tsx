@@ -91,7 +91,7 @@ function SidebarContent({
   activeHref,
   onNavigate,
 }: {
-  activeHref: string;
+  activeHref: string | null;
   onNavigate?: () => void;
 }) {
   return (

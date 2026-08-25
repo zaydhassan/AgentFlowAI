@@ -1,15 +1,3 @@
-// Lightweight subsequence fuzzy matcher with scoring — no deps, client-safe.
-//
-// Used by the command palette to rank results the way Linear/Cursor/VS Code
-// do: exact substring beats subsequence; prefix and word-start matches beat
-// mid-word; contiguous runs beat scattered; shorter targets edge out longer
-// ones on ties. Returns a numeric score (higher = better) or `null` when the
-// query can't be matched as a subsequence of the target.
-//
-// Example: fuzzyMatch("gmail", "Gmail Integration") > fuzzyMatch("gm", "Programs")
-// because the first is a prefix-of-token substring and the second is a sparse
-// subsequence.
-
 /**
  * Score how well `query` matches `target`. `null` = no match.
  */

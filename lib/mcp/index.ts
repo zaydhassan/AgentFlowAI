@@ -1,12 +1,3 @@
-// =============================================================================
-// MCP facade — the single import surface for the rest of the app
-// =============================================================================
-// Mirrors lib/integrations/index.ts + lib/payments/index.ts: one server-only
-// entry point. API routes and the execution engine import only from
-// "@/lib/mcp" and never touch the SDK, the connection pool, or credentials.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "./repository";
 import { connectionManager, healthCheck, closeConnection } from "./connection-manager";
@@ -61,8 +52,6 @@ export { discover } from "./discovery";
 export { toolRegistry } from "./tool-registry";
 export { audit } from "./audit";
 
-// ─────────────────────────── servers ────────────────────────────────────────
-
 export async function listServers(userId: string, orgId?: string | null): Promise<McpServer[]> {
   return repository.listServers(userId, orgId ?? (await resolveOrgId(userId)));
 }
@@ -101,8 +90,6 @@ export async function discoverServer(userId: string, id: string) {
   return discover(id, userId);
 }
 
-// ─────────────────────────── workspace tools/resources ──────────────────────
-
 export async function listWorkspaceTools(userId: string, orgId?: string | null): Promise<McpToolSummary[]> {
   return repository.listWorkspaceTools(userId, orgId ?? (await resolveOrgId(userId)));
 }
@@ -110,8 +97,6 @@ export async function listWorkspaceTools(userId: string, orgId?: string | null):
 export async function listWorkspaceResources(userId: string, orgId?: string | null): Promise<McpToolSummary[]> {
   return repository.listWorkspaceResources(userId, orgId ?? (await resolveOrgId(userId)));
 }
-
-// ─────────────────────────── invocations / observability ────────────────────
 
 export async function listInvocations(
   userId: string,
@@ -129,7 +114,6 @@ export async function observabilitySummary(
 // Short alias for the API route + browser client (`observability()`).
 export { observabilitySummary as observability };
 
-// ─────────────────────────── streaming invoke ───────────────────────────────
 // Used by POST /api/mcp/invoke (SSE). Streams progress notifications as they
 // arrive, then a terminal result/error event. The SDK's onProgress callback
 // can't yield into the generator directly, so progress is bridged through a
@@ -160,7 +144,6 @@ export async function* invokeToolStream(
   const timeoutMs = args.timeoutMs && args.timeoutMs > 0 ? args.timeoutMs : 30_000;
   const start = Date.now();
 
-  // Resolve tool + connect (ownership + allow-list checked).
   let serverName = "(unknown)";
   try {
     yield { type: "log", log: `MCP invoke ${args.serverId}::${args.toolName}` };
@@ -217,7 +200,6 @@ export async function* invokeToolStream(
     if (resultError) throw resultError;
     const result = resultValue!;
 
-    // Audit + memory.
     const inv = await audit.recordInvocation({
       serverId: args.serverId,
       ownerId: userId,

@@ -1,8 +1,3 @@
-// =============================================================================
-// Billing email templates — events: billing.{payment_successful,payment_failed,
-// credits_below_threshold,subscription_renewed,trial_ending}. Lazy-loaded by
-// the template registry in ./index.ts.
-
 import {
   badge, divider, emailLayout, esc, row, textBody, SUBJECT_PREFIX,
 } from "./components";
@@ -91,7 +86,7 @@ function finish(ctx: TemplateContext, title: string, bodyHtml: string, ctaLabel:
       unsubscribeToken: ctx.unsubscribeToken,
       year: new Date().getUTCFullYear(),
     }),
-    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel }),
+    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel, appUrl: ctx.appUrl }),
   };
 }
 

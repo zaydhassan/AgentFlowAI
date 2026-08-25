@@ -1,13 +1,3 @@
-// Real-action registry: maps workflow node types to integration actions and
-// delegates to the integrations facade (lib/integrations), which resolves the
-// connected account, refreshes its token, and runs the provider action as a
-// streaming async generator. The execution engine queries `resolveAction` to
-// decide whether a node takes the REAL execution path (live API calls + real
-// logs) or the SIMULATED path (everything else, unchanged).
-//
-// Server-only — pulls the server-only integrations facade. The engine is only
-// imported by the nodejs-runtime run route, so this never reaches the edge/client.
-
 import "server-only";
 import { runIntegrationAction } from "@/lib/integrations";
 import { runMcpAction } from "./mcp";

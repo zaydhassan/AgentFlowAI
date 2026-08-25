@@ -1,13 +1,3 @@
-// POST /api/payments/subscription — in-app subscription lifecycle.
-// Body: { action: "cancel" | "pause" | "resume" }
-//   cancel → cancel_at_cycle_end (access continues until the period ends; final)
-//   pause  → pause the active subscription
-//   resume → un-pause a paused subscription
-//
-// Security: apiUser (401 anonymous) + ownership guard — the subscription's
-// provider customer id MUST match the caller's. The webhook is the source of
-// truth; we ask the provider to change state and optimistically mirror locally.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

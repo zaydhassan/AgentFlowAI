@@ -1,7 +1,3 @@
-// POST /api/integrations/accounts/[id]/reconnect — re-initiate OAuth for an
-// existing (e.g. revoked) account. Returns { authUrl } + sets a fresh state
-// cookie (same as /connect, but bound to the existing account id).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { reconnectStart, OAUTH_STATE_COOKIE } from "@/lib/integrations";

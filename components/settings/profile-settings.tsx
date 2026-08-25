@@ -1,15 +1,5 @@
 "use client";
 
-// Settings → Profile tab. Three cards: profile photo, profile info (name +
-// email read-only), and password. All backed by the real /api/user/* routes.
-//
-// Display values are seeded from the session and kept in local state, which is
-// updated from each API response so the card reflects the change immediately
-// (the session token refreshes asynchronously via useSession().update). The
-// topbar avatar/name are server-rendered from the layout, so we also call
-// router.refresh() after each successful mutation to re-render those surfaces
-// without a full page reload.
-
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -34,13 +24,14 @@ export function ProfileSettings() {
   const { data: session, update } = useSession();
   const router = useRouter();
 
-  // Local display state — seeded from the session, refreshed from API responses.
   const [name, setName] = useState(session?.user?.name ?? "");
   const [imageUrl, setImageUrl] = useState(session?.user?.image ?? null);
 
-  // Keep the form in sync if the session hydrates after mount.
   useEffect(() => {
-    if (session?.user?.name !== undefined) setName(session.user.name);
+    // Re-sync the editable form fields when the session loads/updates from the
+    // auth provider — an external system sync, not a render cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (session?.user?.name !== undefined) setName(session.user.name ?? "");
     if (session?.user?.image !== undefined) setImageUrl(session.user.image);
   }, [session?.user?.name, session?.user?.image]);
 
@@ -55,7 +46,6 @@ export function ProfileSettings() {
   const [confirm, setConfirm] = useState("");
   const [savingPw, setSavingPw] = useState(false);
 
-  // Whether the user already has a password (OAuth-only users do not).
   useEffect(() => {
     fetch("/api/user/password", { cache: "no-store" })
       .then((r) => r.json())

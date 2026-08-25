@@ -1,8 +1,3 @@
-// /settings/integrations — manage connected integration accounts (Gmail today;
-// Slack/Notion/etc. later reuse the same provider-agnostic surface). Server
-// component fetches the providers summary + the user's accounts (client-safe
-// shapes — no tokens) and hands them to the client manager.
-
 import { requireUser } from "@/lib/auth/session";
 import { listAccounts, listProviders, encryptionConfigured } from "@/lib/integrations";
 import { PageHeader } from "@/components/layout/page-header";

@@ -1,12 +1,3 @@
-// POST /api/payments/checkout — start a checkout for a plan/interval via the
-// active provider. Returns a CheckoutSession:
-//   - Razorpay: { provider, razorpayKeyId, razorpayOrderId, razorpaySubscriptionId, amount, currency, ... }
-//     The client opens checkout.js with the public key_id + order_id, then POSTs
-//     the result to /api/payments/verify.
-//   - Stripe: { provider, url } — the client redirects to the hosted Checkout.
-//
-// Authenticated users only (401 anonymous, 500 on session-lookup failure).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

@@ -1,19 +1,3 @@
-// Workflow Simulation Mode — a pure, side-effect-free dry run.
-//
-// Reuses the execution engine's DETERMINISTIC graph-analysis helpers
-// (topoOrder, nodeDurationMs, nodeTokens, nodeFailsOn) so the estimate matches
-// what a real run would account — but NEVER calls runWorkflow, the integration
-// action registry, the LLM provider, the multi-agent runtime, or the memory
-// engine. Simulation therefore:
-//   • never calls external APIs   • never sends emails
-//   • never executes MCP tools      • never modifies the database
-//   • never charges credits
-// It is a static analysis of the graph: one plausible execution path, the
-// conditional branches taken/skipped, and the nodes that might fail.
-//
-// Server-only (imports the execution engine, which is server-only). `Date.now`
-// is not used — the estimate is fully deterministic from the graph.
-
 import "server-only";
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
 import { getNodeDef } from "@/lib/nodes";
@@ -122,7 +106,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     };
   }
 
-  // Outgoing + incoming edges per node.
   const out = new Map<string, WorkflowEdge[]>();
   for (const e of edges) {
     if (!out.has(e.source)) out.set(e.source, []);
@@ -134,7 +117,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     inEdges.get(e.target)!.push(e);
   }
 
-  // ── branch decisions: which outgoing edge each branch node "takes" ──
   const takenEdgeIds = new Set<string>();
   const branchInfo = new Map<string, { taken: WorkflowEdge; alts: WorkflowEdge[] }>();
   for (const n of nodes) {
@@ -150,7 +132,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     }
   }
 
-  // ── reachability from roots, flowing only along taken edges ──
   const roots = nodes.filter((n) => (inEdges.get(n.id) ?? []).length === 0);
   const reachable = new Set<string>();
   const stack = roots.map((r) => r.id);
@@ -172,7 +153,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     for (const e of alts) if (byId.has(e.target)) branchAltTargets.add(e.target);
   }
 
-  // ── per-node classification + aggregates ──
   const order = topoOrder(nodes, edges);
   const path: SimPathNode[] = [];
   const failures: SimFailure[] = [];
@@ -196,7 +176,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
       continue;
     }
 
-    // Reachable node — it WILL execute. Detect potential failure risk.
     let reason: string | undefined;
     let severity: "retryable" | "hard" | undefined;
     if (!def) {
@@ -249,7 +228,6 @@ export function simulateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     }
   }
 
-  // ── branch summary ──
   const branches: SimBranch[] = [];
   for (const n of order) {
     const bi = branchInfo.get(n.id);

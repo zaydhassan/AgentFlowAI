@@ -1,5 +1,3 @@
-// POST /api/mcp/servers/[id]/test — (re)connect + ping; records health + status.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { testServer } from "@/lib/mcp";

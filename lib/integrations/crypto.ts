@@ -1,11 +1,3 @@
-// AES-256-GCM encryption for OAuth tokens at rest. The IntegrationAccount
-// accessToken/refreshToken columns hold the JSON ciphertext produced here —
-// never plaintext. The key comes from INTEGRATIONS_ENCRYPTION_KEY (32 bytes).
-//
-// Server-only: the key and the decrypt path must never reach the client. The
-// repository is the only caller; it encrypts before write and decrypts on read
-// into the in-memory StoredIntegrationAccount (never serialized to a response).
-
 import "server-only";
 import crypto from "node:crypto";
 

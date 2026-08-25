@@ -1,25 +1,18 @@
 "use client";
 
-// Executions list — real + (near) real-time.
-//
-// Polls GET /api/executions (10s + on focus) for the owner-scoped run list and
-// status counts. Nothing here is mocked. Live step animation lives on the
-// detail page; this list just reflects that a run is running and flips it to a
-// terminal status within ~10s. See lib/executions/use-executions.ts.
-
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { useExecutions } from "@/lib/executions/use-executions";
 import { cn, formatDuration, formatCurrency, relativeTime } from "@/lib/utils";
 
-const tone = (s: string) =>
+const tone = (s: string): Tone =>
   s === "succeeded"
     ? "success"
     : s === "failed"
@@ -164,7 +157,7 @@ export default function ExecutionsPage() {
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <Badge tone={tone(e.status) as any}>{e.status}</Badge>
+                  <Badge tone={tone(e.status)}>{e.status}</Badge>
                 </div>
                 <div className="col-span-2 text-fg-muted">{e.trigger}</div>
                 <div className="col-span-1 text-fg-muted">{e.retried > 0 ? <span className="text-warning">↻{e.retried}</span> : "—"}</div>

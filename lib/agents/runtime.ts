@@ -1,28 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — the orchestration engine
-// ============================================================
-// Wires the registered agents into a LangGraph StateGraph (via graph-builder)
-// and runs it, streaming AgentEvents for observability:
-//   • agent timeline, latency, token usage  — TraceCollector.timeline
-//   • reasoning path                          — TraceCollector.reasoningPath
-//   • execution graph                         — TraceCollector.snapshot.graph
-//   • retries, failures                       — per-agent + run totals
-//
-// Supported (per the brief):
-//   • Conditional routing    — reviewer → executor | planner
-//   • Parallel execution     — planner fans out to research/memory/reasoning
-//   • Retries                — per-node wrapper (2 retries, backoff)
-//   • Human approval checkpoints — interruptBefore:["reviewer"] + resume
-//   • Loop prevention        — iterations counter + recursionLimit
-//   • Timeouts               — wall-clock + per-LLM AbortSignal
-//
-// Workspace isolation + tool permissions are enforced at the gateway layer
-// (lib/agents/memory.ts); the runtime constructs a per-agent memory gateway
-// bound to that agent's declared tools and the run's workspace scope.
-//
-// Server-only. In-memory run registry (single-process dev server) mirrors the
-// execution engine's pattern.
-
 import "server-only";
 import { MemorySaver } from "@langchain/langgraph";
 import type { LangGraphRunnableConfig } from "@langchain/langgraph";
@@ -48,7 +23,6 @@ import type {
 } from "./types";
 import type { MemoryScope } from "@/lib/memory/types";
 
-// ─────────────────────────── async event queue ──────────────────────────────
 // The tracer pushes AgentEvents here (via its sink); the generator drains until
 // null. driveGraph closes the queue after pushing the terminal event, which is
 // how the generator knows the run ended.
@@ -83,8 +57,6 @@ class AsyncQueue<T> {
     }
   }
 }
-
-// ─────────────────────────── run registry ───────────────────────────────────
 
 interface CompiledGraph {
   stream: (input: unknown, config: unknown) => Promise<AsyncIterable<unknown>>;
@@ -121,8 +93,6 @@ export function stopAgentRun(runId: string): boolean {
 function unregisterRun(runId: string): void {
   runs.delete(runId);
 }
-
-// ─────────────────────────── context seed ───────────────────────────────────
 
 interface RuntimeContextSeed {
   runId: string;
@@ -199,8 +169,6 @@ function buildAgentContext(
   };
 }
 
-// ─────────────────────────── node wrapper ───────────────────────────────────
-
 function wrapAgent(def: AgentDefinition, seed: RuntimeContextSeed, handle: RunHandle): NodeFn {
   return async (state: GraphState, config?: unknown): Promise<Partial<GraphState>> => {
     if (seed.stopped()) throw new CancelledError();
@@ -237,8 +205,6 @@ function aggregatorNode(seed: RuntimeContextSeed): NodeFn {
     return {};
   };
 }
-
-// ─────────────────────────── public API ─────────────────────────────────────
 
 export function startAgentRun(opts: AgentRunOptions): AsyncGenerator<AgentEvent> {
   return (async function* (): AsyncGenerator<AgentEvent> {
@@ -300,7 +266,6 @@ export function startAgentRun(opts: AgentRunOptions): AsyncGenerator<AgentEvent>
 
     tracer.emit({ type: "run:start", at: 0, runId, nodeName: opts.nodeId ?? undefined });
 
-    // Drive the graph; on completion push the terminal event + close the queue.
     void driveGraph(handle, {
       objective: opts.objective,
       input: opts.input,
@@ -373,8 +338,6 @@ export function resumeAgentRun(
   })();
 }
 
-// ─────────────────────────── graph driver ───────────────────────────────────
-
 async function driveGraph(
   handle: RunHandle,
   args: { objective: string; input: unknown; timeoutMs: number; approval?: RunHandle["approval"] },
@@ -439,7 +402,6 @@ async function driveGraph(
     return completeEvent(handle, "failed", streamErr);
   }
 
-  // Distinguish "paused at approval" from "done".
   const snap = await safeGetState(handle.compiled, config);
   const nextNodes = snap?.next ?? [];
   const pausedAtReview = nextNodes.includes("reviewer");
@@ -505,8 +467,6 @@ function extractPlanFromState(snap: { values?: GraphState } | null): ExecutionPl
   return snap?.values?.plan ?? undefined;
 }
 
-// ─────────────────────────── helpers ────────────────────────────────────────
-
 class CancelledError extends Error {
   constructor() {
     super("run cancelled");
@@ -531,8 +491,6 @@ function stringifyInput(input: unknown): string {
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
-
-// ─────────────────────────── result assembly ────────────────────────────────
 
 export async function runAgentsToCompletion(opts: AgentRunOptions): Promise<AgentRunResult> {
   let result: AgentRunResult | null = null;

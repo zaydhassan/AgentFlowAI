@@ -1,15 +1,3 @@
-// Shared navigation active-state helpers.
-//
-// The cardinal rule: exactly ONE nav item may be active at a time. Naive
-// `pathname.startsWith(href)` matching breaks that whenever one item's href is
-// a prefix of another's — e.g. on `/ai/rag` both `/ai` (AI Copilot) and
-// `/ai/rag` (RAG Sources) would match. `pickActiveHref` fixes it by selecting
-// the MOST SPECIFIC (longest) matching href, so only the deepest match wins.
-//
-// Use `isRouteActive` for a single boolean "does this route match the path"
-// (prefix-aware), and `pickActiveHref` to choose the single winner across a set
-// of candidates. Sidebars should derive `active = item.href === pickActiveHref(...)`.
-
 /**
  * Does `href` match the current `pathname`?
  *

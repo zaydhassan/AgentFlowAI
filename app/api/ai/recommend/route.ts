@@ -1,4 +1,3 @@
-// Next-node recommendations given the selected node + graph. JSON.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { recommendNodes } from "@/lib/ai/provider";
@@ -24,6 +23,12 @@ export async function POST(req: Request) {
   const graph = normalizeGraph(body.graph) as { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
   const selectedType = typeof body.selectedType === "string" ? body.selectedType : null;
 
-  const { nodes } = await recommendNodes(selectedType, graph);
-  return NextResponse.json({ nodes });
+  try {
+    const { nodes } = await recommendNodes(selectedType, graph);
+    return NextResponse.json({ nodes });
+  } catch (err) {
+    console.error("[ai/recommend] error", err);
+    const message = err instanceof Error ? err.message : "recommend failed";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

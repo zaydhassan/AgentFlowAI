@@ -1,9 +1,3 @@
-// app/global-error.tsx — top-level client error boundary.
-// This is a Next.js convention (additive: no previous boundary existed).
-// It catches errors that escape the root layout itself, so it must render
-// its own <html>/<body>. We capture the error to the monitoring provider
-// (browser SDK) before rendering the fallback UI. "use client" is required.
-
 "use client";
 
 import { useEffect } from "react";

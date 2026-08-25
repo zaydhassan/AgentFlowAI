@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { getNodeDef, validateNodeConfig } from "@/lib/nodes";
 import { cn, formatDuration } from "@/lib/utils";
 import type { WorkflowNode, ConfigField, NodeStatus } from "@/lib/types";
@@ -50,7 +50,7 @@ export function Inspector({
 
   const def = getNodeDef(node.type);
   const status: NodeStatus = node.data.status ?? "idle";
-  const tone = status === "succeeded" ? "success" : status === "failed" ? "danger" : status === "running" ? "brand" : status === "retrying" ? "warning" : "neutral";
+  const tone: Tone = status === "succeeded" ? "success" : status === "failed" ? "danger" : status === "running" ? "brand" : status === "retrying" ? "warning" : "neutral";
   const errors = def ? validateNodeConfig(node.type, node.data.config ?? {}) : [];
 
   return (
@@ -67,7 +67,7 @@ export function Inspector({
           />
           <div className="text-[10px] text-fg-subtle">{node.type}</div>
         </div>
-        <Badge tone={tone as any}>{status}</Badge>
+        <Badge tone={tone}>{status}</Badge>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -214,6 +214,8 @@ function AccountSelect({ field, value, onChange }: { field: ConfigField; value: 
   useEffect(() => {
     const provider = field.provider ?? "";
     let cancelled = false;
+    // Re-flag loading when the provider changes; the fetch below populates state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch(`/api/integrations/accounts?provider=${encodeURIComponent(provider)}`, { cache: "no-store" })
       .then(async (r) => {
@@ -271,7 +273,6 @@ function AccountSelect({ field, value, onChange }: { field: ConfigField; value: 
   );
 }
 
-// ─────────────────────────── MCP selectors ─────────────────────────────────
 // Self-contained dropdowns mirroring AccountSelect. Each fetches the workspace's
 // discovered MCP tools/resources (allow-list filtered server-side) and stores the
 // composite id "<serverId>::<name>" in node config. No cascading; no sibling-

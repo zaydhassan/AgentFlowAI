@@ -1,10 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — public facade
-// ============================================================
-// Server-only entry point. Re-exports the public API the execution engine and
-// API routes use. Mirrors the lib/memory + lib/payments + lib/integrations
-// facade pattern: one import surface, server-only.
-
 import "server-only";
 
 export { registerAgent, getAgent, allAgents, registeredAgentIds } from "./registry";

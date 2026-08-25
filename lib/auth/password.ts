@@ -1,5 +1,3 @@
-// bcryptjs wrappers. Centralized so the cost factor lives in one place.
-
 import bcrypt from "bcryptjs";
 
 const COST = 12;

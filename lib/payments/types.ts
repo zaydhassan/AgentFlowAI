@@ -1,13 +1,3 @@
-// Payment provider abstraction — provider-agnostic domain types + the
-// PaymentProvider interface. The rest of the app imports only from
-// "@/lib/payments" and never calls a specific provider (Stripe / Razorpay)
-// directly. Concrete providers live in lib/payments/providers/* and are
-// selected by the factory in lib/payments/index.ts.
-//
-// This file is PURE TYPES (no runtime, no secrets) so it can be imported from
-// both server and client code. The client checkout helper in
-// lib/payments/client.ts re-exports the client-safe subset.
-
 import type { PaymentMethodData } from "@/components/billing/payment-method-card";
 
 /** The four product tiers. Enterprise is contact-sales (no self-serve checkout). */

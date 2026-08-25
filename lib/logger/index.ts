@@ -1,26 +1,3 @@
-// =============================================================================
-// Structured Logging — facade + request/execution/AI/error log helpers
-// =============================================================================
-// The public surface every backend module imports from `@/lib/logger`. The
-// shared logger (getLogger) + AsyncLocalStorage context (lib/logger/context)
-// + non-blocking async sink (lib/logger/logger) make structured logging
-// available app-wide with automatic request-scoped context.
-//
-// The `logRequest` / `logExecution` / `logAiCall` / `logError` helpers emit the
-// canonical structured events for each category. `withRequestLogging` wraps a
-// Next.js route handler: it opens a request context (requestId), logs the
-// incoming request, measures duration + status + response size, logs the
-// completed request (or error), and flushes the async sink before returning —
-// so no log is lost to a serverless freeze.
-//
-// Server-only (Node). Not wired into any existing route: every route in this
-// app belongs to a protected system (workflows / ai / memory / mcp / auth /
-// payments / integrations / queue), so retrofitting the HOC there is out of
-// scope per the constraints. It's provided ready to drop in:
-//   export const POST = withRequestLogging(async (req) => { ... });
-//
-// Server-only.
-
 import "server-only";
 import { flushLogger, getDroppedCount, getLogger as getRootLogger } from "./logger";
 import { newRequestId, withLogContextAsync } from "./context";
@@ -42,10 +19,8 @@ export {
 } from "./context";
 export { createLogger, flushLogger, getDroppedCount, getLogger } from "./logger";
 
-// The default shared logger — import { logger } from "@/lib/logger".
 export const logger = getRootLogger("app");
 
-// ─────────────────────────── error normalization ─────────────────────────────
 /** Capture an error's structured form: type, message, stack, and cause chain. */
 export function normalizeError(err: unknown): Record<string, unknown> {
   if (err instanceof Error) {
@@ -66,7 +41,6 @@ export function normalizeError(err: unknown): Record<string, unknown> {
   return { error: { type: typeof err, value: String(err) } };
 }
 
-// ─────────────────────────── request logging ────────────────────────────────
 export interface RequestLogFields {
   method: string;
   path: string;
@@ -99,7 +73,6 @@ export function logRequestCompleted(l: ReturnType<typeof getRootLogger>, f: Requ
   l.log(level, "request.completed", data);
 }
 
-// ─────────────────────────── execution logging ───────────────────────────────
 export interface ExecutionLogFields {
   event: "started" | "completed" | "failed";
   workflowId?: string;
@@ -121,7 +94,6 @@ export function logExecution(l: ReturnType<typeof getRootLogger>, f: ExecutionLo
   l.log(f.event === "failed" ? "error" : f.event === "started" ? "info" : "info", `workflow.${f.event}`, data);
 }
 
-// ─────────────────────────── AI logging ──────────────────────────────────────
 export interface AiLogFields {
   event?: "ai.call" | "memory.retrieval" | "mcp.invocation";
   model?: string;
@@ -179,7 +151,6 @@ export function logMcpInvocation(l: ReturnType<typeof getRootLogger>, f: AiLogFi
   l.log(f.error !== undefined ? "error" : "info", "mcp.invocation", data);
 }
 
-// ─────────────────────────── error logging ───────────────────────────────────
 export interface ErrorLogFields {
   /** The thrown value — its stack/type/cause are captured. */
   error: unknown;
@@ -198,7 +169,6 @@ export function logError(l: ReturnType<typeof getRootLogger>, f: ErrorLogFields)
   l.error("error.unhandled", data);
 }
 
-// ─────────────────────────── request HOC ─────────────────────────────────────
 /**
  * Wrap a Next.js App Router route handler (Node runtime) with request logging.
  * Opens a request context (requestId from `x-request-id` or generated), logs

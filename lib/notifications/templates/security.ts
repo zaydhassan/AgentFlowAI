@@ -1,7 +1,3 @@
-// =============================================================================
-// Security email templates — events: security.{new_login,password_changed,
-// api_key_created,suspicious_login}. Lazy-loaded by the template registry.
-
 import {
   badge, divider, emailLayout, esc, row, textBody, SUBJECT_PREFIX,
 } from "./components";
@@ -80,7 +76,7 @@ function finish(ctx: TemplateContext, title: string, bodyHtml: string, ctaLabel:
       unsubscribeToken: ctx.unsubscribeToken,
       year: new Date().getUTCFullYear(),
     }),
-    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel }),
+    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel, appUrl: ctx.appUrl }),
   };
 }
 

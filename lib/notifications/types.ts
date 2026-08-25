@@ -1,18 +1,3 @@
-// =============================================================================
-// Notifications — provider-agnostic domain types + the NotificationProvider
-// interface.
-// =============================================================================
-// The rest of the app imports only from "@/lib/notifications" and never calls a
-// specific provider (Email today; Slack/Discord/Push/SMS tomorrow) directly.
-// Concrete providers live in lib/notifications/providers/* and are selected by
-// the factory in lib/notifications/providers/index.ts.
-//
-// This file is PURE TYPES (no runtime, no secrets) so it can be imported from
-// both server and client code. The client helper in lib/notifications/client.ts
-// re-exports the client-safe subset. The event registry below is data-only.
-
-// ─────────────────────────── channels / categories ───────────────────────────
-
 /** Logical notification category. Drives preferences + templates + the feed. */
 export type NotificationCategory =
   | "workflow"
@@ -51,7 +36,6 @@ export type DeliveryStatus =
 /** Digest cadence. `instant` ⇒ send immediately; others roll into a digest. */
 export type DigestFrequency = "instant" | "hourly" | "daily" | "weekly";
 
-// ─────────────────────────── event registry ──────────────────────────────────
 // Every event the engine knows how to generate. Adding an event = add a key
 // here + a renderer in lib/notifications/templates + (optional) an emit call at
 // the producing seam. The engine routes by category + preference flag.
@@ -121,7 +105,6 @@ export interface NotificationEventMeta {
  * all reference it without a runtime import cycle.
  */
 export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEventMeta> = {
-  // ── Workflows ──
   "workflow.completed": {
     category: "workflow", severity: "success", preferenceFlag: "workflowEmails",
     title: "Workflow completed", description: "A workflow run finished successfully.",
@@ -152,7 +135,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     title: "Workflow retried", description: "A failed workflow run was retried.",
     channels: ["in_app", "email"],
   },
-  // ── AI ──
   "ai.agent_completed": {
     category: "ai", severity: "success", preferenceFlag: "aiEmails",
     title: "Agent completed", description: "An autonomous agent finished its run.",
@@ -178,7 +160,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     title: "Memory capacity reached", description: "The long-term memory store hit its capacity limit.",
     channels: ["in_app", "email"],
   },
-  // ── Integrations ──
   "integration.connected": {
     category: "integration", severity: "success", preferenceFlag: "integrationEmails",
     title: "Integration connected", description: "A third-party integration was connected.",
@@ -204,7 +185,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     title: "MCP server offline", description: "A registered MCP server is no longer reachable.",
     channels: ["in_app", "email"],
   },
-  // ── Billing ──
   "billing.payment_successful": {
     category: "billing", severity: "success", preferenceFlag: "billingEmails",
     title: "Payment successful", description: "A payment was captured successfully.",
@@ -230,7 +210,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     title: "Trial ending soon", description: "A free trial is about to expire.",
     channels: ["in_app", "email"],
   },
-  // ── Security ──
   "security.new_login": {
     category: "security", severity: "info", preferenceFlag: "securityEmails",
     title: "New login", description: "A new sign-in to your account was detected.",
@@ -251,7 +230,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     title: "Suspicious login attempt", description: "A sign-in attempt from an unusual location was blocked.",
     channels: ["in_app", "email"],
   },
-  // ── System ──
   "system.deployment_completed": {
     category: "system", severity: "success", preferenceFlag: "productUpdates",
     title: "Deployment completed", description: "A platform deployment finished.",
@@ -268,8 +246,6 @@ export const NOTIFICATION_EVENTS: Record<NotificationEventKey, NotificationEvent
     channels: ["in_app", "email"],
   },
 };
-
-// ─────────────────────────── payloads ────────────────────────────────────────
 
 /** Context every event payload may carry. All optional — events are flexible. */
 export interface NotificationPayload {
@@ -299,8 +275,6 @@ export interface EmitResult {
   /** Why no email was sent (preference / digest / quiet hours / suppressed). */
   reason?: string;
 }
-
-// ─────────────────────────── provider contract ───────────────────────────────
 
 /** A normalized, provider-agnostic outbound message handed to a provider. */
 export interface OutboundMessage {
@@ -341,8 +315,6 @@ export interface NotificationProvider {
   send(message: OutboundMessage): Promise<SendResult>;
 }
 
-// ─────────────────────────── template contract ───────────────────────────────
-
 /** A rendered template. `html` is the responsive email body; `text` is the
  *  plain-text fallback (and the in-app body when richer than `payload.body`). */
 export interface RenderedTemplate {
@@ -362,8 +334,6 @@ export interface TemplateContext {
   unsubscribeToken?: string;
   locale?: string;
 }
-
-// ─────────────────────────── digest ──────────────────────────────────────────
 
 /** A single stat row in a digest summary. */
 export interface DigestStat {
@@ -396,8 +366,6 @@ export interface DigestData {
   topWorkflows?: { id: string; name: string; runs: number; successRate: number }[];
   notificationCount: number;
 }
-
-// ─────────────────────────── client-safe shapes ──────────────────────────────
 
 /** Client-safe notification row (never includes internal/dedup fields). */
 export interface NotificationRecord {

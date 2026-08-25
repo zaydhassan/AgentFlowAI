@@ -1,11 +1,6 @@
 import type { WorkflowNode, WorkflowEdge } from "../types";
 import { getNodeDef } from "../nodes";
 
-// ============================================================
-// Mock execution engine — deterministic-ish simulation used by
-// the live builder + execution timeline. No network.
-// ============================================================
-
 export function topoOrder(nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[] {
   const adj = new Map<string, string[]>();
   const indeg = new Map<string, number>();

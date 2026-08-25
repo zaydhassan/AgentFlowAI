@@ -1,7 +1,3 @@
-// Gmail OAuth low-level: PKCE, consent URL, token exchange/refresh, userinfo,
-// revoke. Pure fetch against Google endpoints — no SDK (matches the lib/ai
-// REST-direct philosophy). Server-only: client id/secret never reach the client.
-
 import "server-only";
 import crypto from "node:crypto";
 import type { TokenSet, UserProfile } from "../../types";
@@ -13,8 +9,6 @@ import {
   GOOGLE_USERINFO_URL,
   GOOGLE_REVOKE_URL,
 } from "./scopes";
-
-// ─────────────────────────── env helpers ────────────────────────────────────
 
 export function gmailClientCredentials(): { clientId: string; clientSecret: string } {
   const clientId = process.env[GMAIL_CLIENT_ID_ENV];
@@ -31,8 +25,6 @@ export function gmailConfigured(): boolean {
   return Boolean(process.env[GMAIL_CLIENT_ID_ENV] && process.env[GMAIL_CLIENT_SECRET_ENV]);
 }
 
-// ─────────────────────────── PKCE ───────────────────────────────────────────
-
 /** Random URL-safe string (RFC 7636 verifier / nonce). */
 export function randomUrlSafe(bytes = 32): string {
   return crypto.randomBytes(bytes).toString("base64url");
@@ -42,8 +34,6 @@ export function randomUrlSafe(bytes = 32): string {
 export function codeChallengeS256(verifier: string): string {
   return crypto.createHash("sha256").update(verifier).digest("base64url");
 }
-
-// ─────────────────────────── consent URL ───────────────────────────────────
 
 export interface BuildAuthUrlArgs {
   redirectUri: string;
@@ -78,8 +68,6 @@ export function buildAuthUrl(args: BuildAuthUrlArgs): string {
   if (args.loginHint) params.set("login_hint", args.loginHint);
   return `${GOOGLE_AUTH_URL}?${params.toString()}`;
 }
-
-// ─────────────────────────── token endpoint ─────────────────────────────────
 
 interface GoogleTokenResponse {
   access_token?: string;
@@ -154,8 +142,6 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenSet
   return set;
 }
 
-// ─────────────────────────── userinfo + revoke ──────────────────────────────
-
 interface GoogleUserinfo {
   sub?: string;
   email?: string;
@@ -191,8 +177,6 @@ export async function revokeToken(token: string): Promise<void> {
     // best-effort
   }
 }
-
-// ─────────────────────────── encoding helpers ───────────────────────────────
 
 /** base64url encode (used for Gmail message raw payloads). */
 export function base64UrlEncode(buf: Buffer | string): string {

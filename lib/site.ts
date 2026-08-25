@@ -1,9 +1,7 @@
-// Single source of truth for site-wide brand + navigation metadata.
-// Update socials / email / version here once; the footer, contact page,
-// and OG metadata all read from this.
-//
-// NOTE: social handles + the business email below are the brand-canonical
-// defaults. Replace them with your real accounts before launch.
+// Contact + brand values are env-overridable so a deploy can point them at a
+// real domain/inbox without editing code. NEXT_PUBLIC_ prefix keeps them
+// identical on server and client (the footer renders in a shared component).
+const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || "zaydthirteen@gmail.com";
 
 export const site = {
   name: "AgentFlow AI",
@@ -15,11 +13,17 @@ export const site = {
   version: "1.0.0",
   // Business contact inbox (used by the footer, contact page, and the
   // contact-form server action). Contact form submissions are delivered here.
-  email: "zaydthirteen@gmail.com",
+  email: supportEmail,
+  // Role-based legal inboxes shown on the privacy/terms/security pages.
+  legal: {
+    privacy: process.env.NEXT_PUBLIC_PRIVACY_EMAIL?.trim() || "privacy@agentflow.ai",
+    legal: process.env.NEXT_PUBLIC_LEGAL_EMAIL?.trim() || "legal@agentflow.ai",
+    security: process.env.NEXT_PUBLIC_SECURITY_EMAIL?.trim() || "security@agentflow.ai",
+  },
   socials: {
-    github: "https://github.com/agentflow-ai",
-    linkedin: "https://www.linkedin.com/company/agentflow-ai",
-    x: "https://x.com/agentflowai",
+    github: process.env.NEXT_PUBLIC_SOCIAL_GITHUB?.trim() || "https://github.com/agentflow-ai",
+    linkedin: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN?.trim() || "https://www.linkedin.com/company/agentflow-ai",
+    x: process.env.NEXT_PUBLIC_SOCIAL_X?.trim() || "https://x.com/agentflowai",
   },
   // Footer navigation — every entry resolves to a real, implemented route.
   footerNav: [

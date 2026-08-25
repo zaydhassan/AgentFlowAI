@@ -1,12 +1,3 @@
-// Next.js 16 replaces `middleware.ts` with `proxy.ts`. Same API surface, new
-// file convention. Only one proxy file is allowed, so this single proxy
-// combines two concerns that previously lived in separate files:
-//   1. Per-IP rate limiting on /api/* requests (Edge in-memory limiter).
-//   2. NextAuth `auth` wrapper on page routes (runs the `authorized` callback
-//      in auth.config.ts for auth gating / session injection).
-// We branch on the path: API routes get rate-limited only (auth is handled
-// per-route by the NextAuth route handlers); page routes get auth-gated only.
-
 import NextAuth from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { authConfig } from "@/auth.config";

@@ -1,15 +1,3 @@
-// =============================================================================
-// MCP SSE transport adapter (legacy, still supported)
-// =============================================================================
-// SSEClientTransport is deprecated by the spec in favour of Streamable HTTP,
-// but many servers still use it, so clients must support both during the
-// migration period. Auth headers go into requestInit for the POST channel.
-// The initial SSE GET has no headers field on EventSourceInit, so we wrap
-// fetch to inject them there too — otherwise the stream request would be
-// unauthenticated on servers that require it.
-//
-// Server-only.
-
 import "server-only";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { buildAuthHeaders, type McpTransportBuildContext, type McpTransportAdapter } from "./index";

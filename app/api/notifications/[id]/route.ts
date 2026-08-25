@@ -1,9 +1,3 @@
-// PATCH /api/notifications/:id  — { read: boolean }  mark read/unread
-// GET   /api/notifications/:id  — fetch one (with delivery audit rows)
-// DELETE /api/notifications/:id — delete (ownership-checked)
-//
-// Per-user; every operation is ownership-checked against userId.
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiUser } from "@/lib/auth/api";

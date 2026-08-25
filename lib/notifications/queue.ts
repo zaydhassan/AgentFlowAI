@@ -1,22 +1,3 @@
-// =============================================================================
-// Notification queue — wraps the app's existing BullMQ layer (lib/queue) with
-// notification-specific enqueue helpers + the worker that processes deliveries
-// and digests. Reuses the provider-agnostic QueueProvider abstraction; this
-// module NEVER touches BullMQ directly, so the same Redis/no-op fallback applies
-// (when Redis is absent, deliveries run synchronously as a graceful fallback).
-// =============================================================================
-// Job kinds:
-//   - "deliver"  : send one notification delivery via the resolved provider.
-//                  Retry + exponential backoff + dead-letter on exhaustion.
-//                  Idempotent: the engine checks delivery status before sending.
-//   - "digest"   : build + send one user's digest for a frequency.
-//   - "tick"     : scheduler heartbeat — find due digests and enqueue "digest"
-//                  jobs, then re-schedule itself (self-perpetuating, so no
-//                  external cron is required — though /api/notifications/digest/run
-//                  can also drive it on a hosted cron).
-//
-// Server-only.
-
 import "server-only";
 import {
   getQueue,
@@ -110,8 +91,6 @@ export async function enqueueTick(): Promise<EnqueueResult> {
   );
 }
 
-// ─────────────────────────── worker ──────────────────────────────────────────
-
 import { deliverDelivery, buildAndSendDigest } from "@/lib/notifications/engine";
 import { runDueDigests } from "@/lib/notifications/scheduler";
 
@@ -129,7 +108,6 @@ export const handleNotificationJob: JobHandler<DeliverJobData | DigestJobData | 
       return;
     }
     case "tick":
-      // Find due digests across users + enqueue them, then schedule the next tick.
       await runDueDigests();
       await enqueueTick();
       return;

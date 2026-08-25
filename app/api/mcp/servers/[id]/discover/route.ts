@@ -1,6 +1,3 @@
-// POST /api/mcp/servers/[id]/discover — (re)connect and refresh the cached
-// tools/resources/prompts/capabilities from the live server.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { discoverServer } from "@/lib/mcp";

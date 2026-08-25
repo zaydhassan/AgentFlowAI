@@ -1,21 +1,3 @@
-// =============================================================================
-// Rate Limiting — Redis limiter (Node-only, lazy ioredis, atomic Lua)
-// =============================================================================
-// The production shared limiter. Reuses the app's REDIS_URL on its own
-// connection (rate limiting is high-frequency and wants fast failure, so it
-// keeps its own pool tuned with maxRetriesPerRequest: 1).
-//
-// Atomicity: every algorithm runs as a single Lua EVALSHA (SCRIPT LOAD'd once on
-// connect) so concurrent requests can't overrun the limit. On any Redis error
-// (NOSCRIPT, connection lost, EVAL failure) the check transparently delegates
-// to an internal InMemoryRateLimiter — the documented graceful fallback.
-//
-// Node-only. NEVER imported by the Edge entry (lib/rate-limit/edge) — ioredis
-// can't run in the Edge runtime, and importing this module there would drag it
-// into the Edge bundle. The Node facade (lib/rate-limit/index) is the only
-// consumer. ioredis is loaded LAZILY (dynamic import inside connect()), so
-// merely importing this module costs nothing until a check runs.
-
 import type { RateLimitInput, RateLimitResult, RateLimiter } from "./types";
 import { InMemoryRateLimiter } from "./in-memory";
 

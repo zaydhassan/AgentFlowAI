@@ -1,10 +1,3 @@
-// ============================================================
-// Executor Agent
-// ============================================================
-// Terminal node. Synthesizes the reviewed agent results into the final answer
-// returned to the operator (and emitted as the Multi-Agent node's output when
-// invoked from the workflow execution engine).
-
 import "server-only";
 import type { AgentDefinition, AgentState } from "../types";
 import { systemPromptFor } from "../prompts";

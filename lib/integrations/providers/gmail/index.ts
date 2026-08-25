@@ -1,11 +1,3 @@
-// GmailProvider — the Gmail implementation of IntegrationProvider. Owns the
-// Google OAuth specifics (PKCE consent URL, token exchange/refresh, userinfo,
-// revoke) and dispatches node actions to lib/integrations/providers/gmail/actions.
-//
-// Server-only: the client id/secret never reach the client. The facade
-// (lib/integrations/index.ts) handles persistence + token refresh-then-persist;
-// this provider is a pure token + API caller.
-
 import "server-only";
 import type {
   ActionContext,

@@ -1,6 +1,3 @@
-// GET /api/integrations/providers — list available integration providers with
-// configured status + the user's connected-account count. For the settings page.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { listProviders } from "@/lib/integrations";

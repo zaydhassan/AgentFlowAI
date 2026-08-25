@@ -1,6 +1,3 @@
-// GET  /api/memory/collections — list the user's collections (with memoryCount)
-// POST /api/memory/collections — create a collection ({name, description?})
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { repository } from "@/lib/memory";

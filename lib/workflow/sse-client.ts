@@ -1,7 +1,3 @@
-// Client-side SSE consumer. EventSource doesn't support POST + headers, so we
-// read the streaming fetch body and parse the `text/event-stream` frames by
-// hand. Used by the builder for run streaming + AI generate/copilot/explain.
-
 export interface SSEHandlers {
   onMessage?: (data: unknown) => void;
   // named events: "done" | "error" | custom

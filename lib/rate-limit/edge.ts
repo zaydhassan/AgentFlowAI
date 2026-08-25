@@ -1,23 +1,3 @@
-// =============================================================================
-// Rate Limiting — Edge runtime entry (for middleware.ts)
-// =============================================================================
-// Next.js 16 middleware is Edge-only (EdgeRuntime): ioredis is Node-only and
-// CANNOT be imported or executed there. So the Edge enforcement path uses the
-// IN-MEMORY limiter — which is exactly the documented "fall back to in-memory
-// when Redis is unavailable" behavior, applied here because Redis is unavailable
-// in this runtime.
-//
-// To keep ioredis OUT of the Edge bundle, this module imports ONLY the pure
-// types, the policies, and the in-memory limiter. It must NEVER import
-// ./index (the Node facade, which statically imports ./redis) — that would drag
-// the dynamic `import("ioredis")` into the Edge build and break it.
-//
-// The Redis-backed limiter (lib/rate-limit/redis via lib/rate-limit/index) is the
-// configured default provider and is used the moment rate limiting runs in a
-// Node context (applyRateLimit in a route handler). The two facades share the
-// same types, policies, headers, and observability core (./policies, ./types,
-// ./in-memory).
-
 import { NextResponse, type NextRequest } from "next/server";
 import { InMemoryRateLimiter } from "./in-memory";
 import {
@@ -89,5 +69,4 @@ export async function runRateLimit(req: NextRequest): Promise<NextResponse | nul
   );
 }
 
-// Re-export POLICIES for any Edge caller that wants the named limits directly.
 export { POLICIES };

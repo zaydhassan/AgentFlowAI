@@ -1,28 +1,3 @@
-// =============================================================================
-// Error Monitoring — server facade (factory + global handlers + HOCs)
-// =============================================================================
-// The public surface the rest of the backend imports from `@/lib/monitoring`.
-//
-// • Factory: `getMonitor()` resolves the active provider from env once and
-//   memoizes it. SENTRY_DSN unset → NoopProvider (all ops are cheap no-ops;
-//   callers run synchronously). Disabled monitoring must never block the app.
-// • Auto-context: `captureException` / `captureMessage` read the request-scoped
-//   AsyncLocalStorage (lib/logger/context) and merge it with caller-supplied
-//   context, so requestId/userId/workspaceId/workflowId/executionId/agentId/
-//   provider are attached to EVERY captured event automatically — callers do
-//   not have to thread them. (Logging System's public API; not modified.)
-// • Global handlers: `initMonitoring()` installs uncaughtException /
-//   unhandledRejection handlers that route through `captureException`. Called
-//   once per Node process from instrumentation.ts (the boot hook). Sentry's
-//   own GlobalHandlers integration is disabled in the provider to avoid
-//   double-capture — these handlers are the single source of truth.
-// • HOCs: `withErrorCapture` (route handler) + `withTracing` capture API
-//   errors/latency. They are LIBRARY primitives — provided ready to wire but
-//   NOT retrofitted into protected systems (per the hard constraints). Wires
-//   are additive: opt-in per route.
-//
-// Server-only (Node runtime).
-
 import "server-only";
 import type {
   MonitoringBreadcrumb,
@@ -40,10 +15,8 @@ export { resolveRelease } from "./sentry";
 
 const monitorLog = getLogger("monitoring");
 
-// ---------------------------------------------------------------------------
 // Noop provider — monitoring disabled. Every op is a cheap no-op so callers
 // can stay synchronous and never branch on whether monitoring is on.
-// ---------------------------------------------------------------------------
 class NoopProvider implements MonitoringProvider {
   readonly id = "noop";
   readonly active = false;
@@ -76,10 +49,8 @@ export function getMonitor(): MonitoringProvider {
   return _monitor;
 }
 
-// ---------------------------------------------------------------------------
 // Public capture API — auto-attaches request-scoped context from the logger.
 // These never throw. They are safe to call from anywhere in the Node runtime.
-// ---------------------------------------------------------------------------
 export function captureException(error: unknown, context?: MonitoringContext): void {
   try {
     const m = getMonitor();
@@ -151,10 +122,8 @@ export async function closeMonitor(): Promise<void> {
   } catch {}
 }
 
-// ---------------------------------------------------------------------------
 // Boot — install global uncaughtException / unhandledRejection handlers.
 // Called once per Node process from instrumentation.ts. Idempotent + guarded.
-// ---------------------------------------------------------------------------
 export function initMonitoring(): void {
   const m = getMonitor();
   if (!m.active || _monitorInitStarted) return;
@@ -187,10 +156,8 @@ export function initMonitoring(): void {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Route-handler HOCs — library primitives, opt-in. NOT wired into protected
 // systems per the constraints; available for any route that wants capture.
-// ---------------------------------------------------------------------------
 
 /**
  * Wrap a route handler so unexpected errors are captured (with method/path +

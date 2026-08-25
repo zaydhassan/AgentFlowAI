@@ -1,15 +1,3 @@
-// =============================================================================
-// MCP transport registry
-// =============================================================================
-// Additive transport layer. Each transport (stdio / http / sse) is a small
-// adapter implementing McpTransportAdapter and registered here at module load.
-// Adding a future transport (websocket, in-process, etc.) = one new file under
-// lib/mcp/transports/ + one registerTransport() call — the SDK client, the
-// connection manager, discovery, the gateway, and the agent runtime never
-// change. This is the "future transports without modifying the runtime" seam.
-//
-// Server-only.
-
 import "server-only";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpAuthScheme, McpCredentials, StoredMcpServer } from "../types";
@@ -26,8 +14,6 @@ export interface McpTransportAdapter {
   id: string;
   build(ctx: McpTransportBuildContext): Transport;
 }
-
-// ─────────────────────────── registry ───────────────────────────────────────
 
 // IMPORTANT: registration order vs. the adapter modules.
 //
@@ -69,7 +55,6 @@ export function buildTransport(ctx: McpTransportBuildContext): Transport {
   return adapter.build(ctx);
 }
 
-// ─────────────────────────── auth header builder ────────────────────────────
 // Shared by http + sse adapters. Translates the stored authScheme + decrypted
 // McpCredentials into the HTTP headers attached to every request. stdio does
 // not use HTTP and ignores this.

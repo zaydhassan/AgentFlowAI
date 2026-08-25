@@ -1,31 +1,5 @@
 "use client";
 
-// Client hook for the /executions/[id] detail page.
-//
-// Two channels, reusing existing server infra (same pattern as the observability
-// hook, but for a single run and with the full inspection payload):
-//   1. Fetches GET /api/executions/[id] for the persisted snapshot — the run's
-//      final state + its steps, including the AI Debugger inspection payload
-//      (nodeType/config/input/output/prompt/memories) per step.
-//   2. If the run is in flight, opens a native EventSource to the existing
-//      per-workflow SSE route (/api/workflows/[workflowId]/executions/[id]/stream)
-//      and folds live node events into a `live` LiveRunState.
-//
-// The page renders `steps` — a merge of the persisted steps (already-finished
-// nodes from before subscribe) overlaid by live updates by nodeId, so a mid-run
-// viewer sees the whole run. When the run completes, the source closes and the
-// hook refreshes the snapshot so the persisted final state (totals, error)
-// replaces the live view. If the server reports `{ type: "not-live" }` (run
-// finished between fetch + subscribe, or server restarted) the source closes
-// and the persisted snapshot stands on its own.
-//
-// `workflowId` is optional: the list page links to /executions/[id] without it,
-// so the hook reads it from the fetched detail. A caller that already has it can
-// pass it to open the stream one render sooner.
-//
-// `ExecutionEvent` is imported type-only from the server-only engine module —
-// the import is erased, so the server-only guard never fires in the bundle.
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ExecutionEvent } from "@/lib/execution/engine";
 import type { ExecutionDetail, ExecutionStepRow, LiveRunState, LiveStep } from "./types";
@@ -131,6 +105,8 @@ export function useExecution(eid: string, workflowId?: string): UseExecution {
 
   // Fetch the snapshot once per eid.
   useEffect(() => {
+    // Re-flag loading for the new run; `refresh` performs the async fetch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     void refresh();
     return () => {
@@ -259,6 +235,9 @@ export function useExecution(eid: string, workflowId?: string): UseExecution {
   // running, subscribe; once it's finished, ensure no stream lingers.
   useEffect(() => {
     closeStream();
+    // Drop the live overlay when the snapshot changes; re-subscribed below if
+    // the run is still in flight.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLive(null);
 
     if (!detail || detail.status !== "running") return;

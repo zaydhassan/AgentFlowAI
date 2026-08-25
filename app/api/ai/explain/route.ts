@@ -1,4 +1,3 @@
-// Streaming workflow explanation. SSE token stream.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { explainWorkflow } from "@/lib/ai/provider";

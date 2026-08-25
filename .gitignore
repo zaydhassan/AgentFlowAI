@@ -46,3 +46,7 @@ next-env.d.ts
 
 # User-uploaded content (profile photos, etc.) — runtime-generated, not for commit
 /public/uploads/
+
+# Local dev email spool (lib/resend writes outbound emails here when no
+# RESEND_API_KEY is set). Runtime-generated, may contain personal data.
+/tmp/

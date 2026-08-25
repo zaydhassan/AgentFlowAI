@@ -1,6 +1,3 @@
-// Friendly messages for the auth error codes Auth.js emits and our own.
-// Surface in UI as: friendlyAuthError(code).
-
 const MESSAGES: Record<string, string> = {
   // Auth.js v5 built-in error codes
   Configuration:

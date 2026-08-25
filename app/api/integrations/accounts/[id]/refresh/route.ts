@@ -1,7 +1,3 @@
-// POST /api/integrations/accounts/[id]/refresh — force a token refresh +
-// status check ("Test connection"). Returns { status } on success, 410 when
-// the grant is invalid (account auto-marked revoked).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { refreshAccount } from "@/lib/integrations";

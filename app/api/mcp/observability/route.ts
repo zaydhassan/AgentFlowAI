@@ -1,6 +1,3 @@
-// GET /api/mcp/observability — connected servers, call counts, latency, errors,
-// streaming events, recent failures, top tools.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { observability } from "@/lib/mcp";

@@ -1,10 +1,3 @@
-// MemoryEngine — the high-level facade the execution engine and API routes
-// call. Implements the brief's flow: recall (retrieve + rank + record), remember
-// (dedup + write + record), and manage (dedup/merge/expire/promote). No-ops
-// cleanly when embeddings are unconfigured — it NEVER fakes embeddings.
-//
-// Server-only.
-
 import "server-only";
 import { embeddingConfigured } from "./embeddings";
 import { retrieve, invalidateCache } from "./retrieval";
@@ -31,7 +24,6 @@ export const memoryEngine: MemoryEngine = {
     if (!embeddingConfigured()) return { hits: [], total: 0, cacheHit: false };
 
     const result = await retrieve(req);
-    // Record observability + touch access counters (best-effort, never blocks).
     void repository
       .recordEvent({ ownerId: req.userId, orgId: req.orgId ?? null, kind: "retrieve", scope: req.scope })
       .catch(() => {});
@@ -92,7 +84,6 @@ export const memoryEngine: MemoryEngine = {
     for (const m of memories) {
       if (Date.now() - t0 > MANAGE_BUDGET_MS) break;
 
-      // Promote frequently-hit memories.
       if (m.hitCount > PROMOTE_HIT_THRESHOLD && m.importanceScore < 1.0) {
         const next = Math.min(1.0, m.importanceScore + PROMOTE_BUMP);
         await repository.setImportance(m.id, next);
@@ -101,7 +92,6 @@ export const memoryEngine: MemoryEngine = {
         continue;
       }
 
-      // Expire low-value, untouched, old memories.
       if (
         m.importanceScore < EXPIRE_IMPORTANCE &&
         m.accessCount === 0 &&

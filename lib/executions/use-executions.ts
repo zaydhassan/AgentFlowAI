@@ -1,13 +1,5 @@
 "use client";
 
-// Client hook for the /executions list page.
-//
-// Polls GET /api/executions every 10s (+ on tab focus) for the owner-scoped run
-// list + status counts. No SSE here — a list only needs to reflect that a run is
-// "running" and flip it to succeeded/failed within ~10s; the per-step live
-// animation lives on the detail page (see use-execution.ts). The poll/visibility
-// shape mirrors lib/observability/use-observability.ts.
-
 import { useCallback, useEffect, useState } from "react";
 import type { ExecutionsList } from "./types";
 
@@ -37,6 +29,8 @@ export function useExecutions(): UseExecutions {
   }, []);
 
   useEffect(() => {
+    // Poll-on-mount + interval; `refresh` performs the async fetch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     const id = setInterval(() => void refresh(), 10_000);
     const onVis = () => {

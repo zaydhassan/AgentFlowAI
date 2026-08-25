@@ -1,11 +1,5 @@
 "use client";
 
-// Product-capability metrics — NOT generic business stats. Four cards that
-// showcase what makes AgentFlow AI different (nodes, integrations, memory,
-// multi-agent runtime). Numeric capabilities count up on scroll-into-view;
-// qualitative ones stay as text. Staggered fade-up, icons fade slightly later,
-// hover lifts/glow/scales per the spec.
-
 import { useRef, type CSSProperties } from "react";
 import { motion, useInView } from "framer-motion";
 import { AnimatedCounter } from "@/components/ui/animated-counter";

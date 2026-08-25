@@ -1,7 +1,3 @@
-// "Related documentation" list — a small grid of cards linking to the other
-// articles (and external references where relevant). Used at the bottom of each
-// article, inside the #related section.
-
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 

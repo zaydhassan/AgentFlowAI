@@ -1,8 +1,8 @@
-// Workflow collection: list mine / create.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
 import { EMPTY_GRAPH, normalizeGraph, workflowSummary } from "@/lib/workflow/graph";
+import { WORKFLOW_NAME_MAX, WORKFLOW_DESCRIPTION_MAX, WORKFLOW_TAGS_MAX } from "@/lib/workflow/limits";
 import { cached, cacheInvalidate } from "@/lib/cache";
 
 export const runtime = "nodejs";
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
   const wf = await prisma.workflow.create({
     data: {
       ownerId: user.id,
-      name: name.slice(0, 120),
-      description: body.description?.slice(0, 2000) ?? "",
+      name: name.slice(0, WORKFLOW_NAME_MAX),
+      description: body.description?.slice(0, WORKFLOW_DESCRIPTION_MAX) ?? "",
       category: body.category ?? "",
-      tags: Array.isArray(body.tags) ? body.tags.slice(0, 20) : [],
+      tags: Array.isArray(body.tags) ? body.tags.slice(0, WORKFLOW_TAGS_MAX) : [],
       status: body.status === "active" ? "active" : "draft",
       graph: graph as object,
     },

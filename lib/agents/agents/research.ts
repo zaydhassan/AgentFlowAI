@@ -1,13 +1,3 @@
-// ============================================================
-// Research Agent
-// ============================================================
-// Handles subtasks assigned to "research". Gathers/summarizes information from
-// the workspace context and recalled memories, and stores each finding to
-// long-term memory via the memory gateway.
-//
-// Per the brief: "Research stores findings." Every finding is written with
-// metadata { kind: "finding" } and the run's workspace scope.
-
 import "server-only";
 import type { AgentDefinition, AgentResult, AgentState, Subtask } from "../types";
 import { systemPromptFor } from "../prompts";
@@ -37,7 +27,6 @@ export const researchAgent: AgentDefinition = {
     for (const subtask of mine) {
       ctx.reason(`Research [${subtask.id}]: ${subtask.title}`);
 
-      // Recall any memories specific to this subtask.
       let subHits = "";
       try {
         const hits = await ctx.memory.recall(`${subtask.title} — ${subtask.detail}`, { topK: 3 });

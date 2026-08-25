@@ -1,7 +1,3 @@
-// Data Access Layer (DAL) for the current user. Centralizes auth checks so
-// pages and server actions don't each need their own. Wrapped in React's
-// `cache` to dedupe within a render pass.
-
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";

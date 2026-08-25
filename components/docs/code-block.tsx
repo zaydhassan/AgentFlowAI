@@ -1,9 +1,5 @@
 "use client";
 
-// Code block with a language label + copy button. Pure presentation — no syntax
-// highlighting dependency (keeps the bundle small and the docs reliable). The
-// monospace pre wraps long lines with horizontal scroll.
-
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";

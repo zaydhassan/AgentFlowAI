@@ -1,7 +1,3 @@
-// /verify-email — handles three cases:
-//   ?token=...   → mark email verified, redirect to /dashboard
-//   ?pending=1   → post-signup state, "check your inbox" message
-//   (no params)  → "enter your email to receive a new link" form
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -55,7 +51,7 @@ export default async function VerifyEmailPage(props: {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-fg-muted">
-              Enter your email and we'll send a new verification link.
+              Enter your email and we&rsquo;ll send a new verification link.
             </p>
             <ResendForm initialEmail={initialEmail} />
           </div>

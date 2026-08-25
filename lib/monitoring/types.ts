@@ -1,14 +1,3 @@
-// =============================================================================
-// Error Monitoring — provider interface + shared types
-// =============================================================================
-// Provider-agnostic monitoring abstraction. The concrete provider is chosen by
-// `getMonitor()` / `getClientMonitor()` from env (Sentry today; another vendor
-// later = one new file implementing this interface + one factory branch).
-//
-// Pure types only — safe to import from both the server (Node) facade and the
-// browser (client) facade. No runtime side effects, no server-only, no Node
-// APIs, no Sentry imports. Both facades reuse these types + the sanitizer.
-
 /** Severity mirrors Sentry levels but is owned by this interface, not Sentry. */
 export type MonitoringLevel = "fatal" | "error" | "warning" | "info" | "debug";
 

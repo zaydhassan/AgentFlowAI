@@ -1,11 +1,5 @@
 "use client";
 
-// Integrations manager: connect / disconnect / reconnect / test connected
-// accounts. Provider-agnostic — iterates the providers list, so adding
-// Slack/Notion later just works (each provider Card + its accounts render the
-// same way). All token handling stays server-side; this component only ever
-// sees the client-safe IntegrationAccount shape.
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

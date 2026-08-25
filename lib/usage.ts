@@ -1,16 +1,3 @@
-// Usage metering — the single place execution/workload code records consumption.
-//
-// NOTE: This is the metering SERVICE only. Call sites are not wired in this
-// repo (there is no workflow-execution pipeline yet). When executions land,
-// they should call `incrementUsage(userId, { aiCredits: n, executions: 1 })`
-// and similar. The billing page already reads `Usage` rows for display.
-//
-// Period model: one Usage row per (userId, periodStart). The period aligns to
-// the subscription's billing cycle when one exists, otherwise to the calendar
-// month. When the billing cycle rolls over (the webhook updates
-// currentPeriodEnd), a new row with zeroed counters is created — that is the
-// "monthly reset".
-
 import "server-only";
 import { prisma } from "@/lib/db";
 

@@ -1,7 +1,0 @@
-{
-  "to": "zaydthirteen@gmail.com",
-  "subject": "New contact form submission from Zayd Hassan",
-  "html": "\n    <div style=\"font-family:ui-sans-serif,system-ui,sans-serif;color:#0b0d14;max-width:560px\">\n      <h2 style=\"margin:0 0 16px;font-size:18px\">New contact form submission</h2>\n      <table style=\"font-size:14px;border-collapse:collapse\">\n        <tr><td style=\"padding:4px 12px 4px 0;color:#525a72\">Name</td><td>Zayd Hassan</td></tr>\n        <tr><td style=\"padding:4px 12px 4px 0;color:#525a72\">Email</td><td><a href=\"mailto:zaydthirteen@gmail.com\">zaydthirteen@gmail.com</a></td></tr>\n        <tr><td style=\"padding:4px 12px 4px 0;color:#525a72\">Company</td><td>zayd</td></tr>\n      </table>\n      <hr style=\"margin:16px 0;border:none;border-top:1px solid #e7eaf2\" />\n      <pre style=\"white-space:pre-wrap;font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;margin:0\">hey this is a test message</pre>\n    </div>",
-  "text": "New contact form submission\n\nName:    Zayd Hassan\nEmail:   zaydthirteen@gmail.com\nCompany: zayd\n\nhey this is a test message",
-  "from": "AgentFlow <noreply@agentflow.dev>"
-}

@@ -1,12 +1,5 @@
 import type { NodeDef, ConfigField } from "./types";
 
-// ============================================================
-// Node Library — 12 categories, each node carries a configSchema
-// that drives the inspector form, plus metrics flags.
-// `type` strings keep their original prefixes so existing seed
-// workflows and the execution engine keep resolving them.
-// ============================================================
-
 const f = (
   key: string,
   label: string,
@@ -36,7 +29,6 @@ const MEMORY_FIELDS: ConfigField[] = [
 ];
 
 export const NODE_LIBRARY: NodeDef[] = [
-  // ---- Scheduling (triggers) ----
   {
     type: "trigger.schedule", label: "Schedule", category: "scheduling",
     description: "Run on a cron schedule", icon: "Clock", color: "#f472b6", inputs: 0, outputs: 1,
@@ -74,7 +66,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("seconds", "Interval (seconds)", "number", { required: true, default: 300 })],
   },
 
-  // ---- Gmail (native integration) ----
   // Real OAuth-backed Gmail nodes. Each action node resolves the connected
   // account from `accountId` (the inspector renders an `account` dropdown that
   // fetches /api/integrations/accounts?provider=gmail). Message-id fields fall
@@ -193,7 +184,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     ],
   },
 
-  // ---- Communication ----
   {
     type: "comm.outlook", label: "Outlook", category: "communication",
     description: "Microsoft 365 mail", icon: "Mail", color: "#3b82f6", inputs: 1, outputs: 1,
@@ -221,7 +211,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("to", "Phone number", "text", { required: true }), f("template", "Template", "text", { placeholder: "hello_world" })],
   },
 
-  // ---- AI ----
   {
     type: "ai.openai", label: "OpenAI", category: "ai",
     description: "GPT models for text, vision, code", icon: "Sparkles", color: "#10a37f", inputs: 1, outputs: 1,
@@ -306,7 +295,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("strategy", "Strategy", "select", { options: [{ label: "Cost/quality", value: "balanced" }, { label: "Cheapest", value: "cost" }, { label: "Highest quality", value: "quality" }], default: "balanced" }), ...MEMORY_FIELDS],
   },
 
-  // ---- Memory ----
   {
     type: "ai.memory", label: "Memory Store", category: "memory",
     description: "Long-term memory store", icon: "Brain", color: "#f59e0b", inputs: 1, outputs: 1,
@@ -323,7 +311,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("scope", "Scope by", "select", { options: ["user", "session", "workflow"].map((v) => ({ label: v, value: v })), default: "session" }), f("ttl", "TTL (seconds)", "number", { default: 3600 })],
   },
 
-  // ---- RAG ----
   {
     type: "ai.rag", label: "RAG Retrieve", category: "rag",
     description: "Retrieval over your documents", icon: "Library", color: "#14b8a6", inputs: 1, outputs: 1,
@@ -340,7 +327,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("index", "Index", "text", { required: true, default: "knowledge" }), f("source", "Source URL / path", "text", { required: true }), f("chunkSize", "Chunk size", "number", { default: 800 })],
   },
 
-  // ---- Database ----
   {
     type: "store.postgres", label: "PostgreSQL", category: "database",
     description: "Query / insert into Postgres", icon: "Database", color: "#336791", inputs: 1, outputs: 1,
@@ -374,7 +360,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("collection", "Collection", "text", { required: true }), f("operation", "Operation", "select", { options: ["get", "add", "set", "delete"].map((v) => ({ label: v, value: v })) })],
   },
 
-  // ---- Files ----
   {
     type: "doc.pdf", label: "PDF", category: "files",
     description: "Read & generate PDFs", icon: "FileText", color: "#e11d48", inputs: 1, outputs: 1,
@@ -401,7 +386,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("engine", "Engine", "select", { options: ["tesseract", "google-vision", "aws-textract"].map((v) => ({ label: v, value: v })) }), f("image", "Image path / URL", "text", { required: true })],
   },
 
-  // ---- Cloud ----
   {
     type: "cloud.aws", label: "AWS", category: "cloud",
     description: "AWS service integrations", icon: "Cloud", color: "#ff9900", inputs: 1, outputs: 1,
@@ -424,7 +408,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("bucket", "Bucket", "text", { required: true }), f("key", "Key", "text", { required: true }), f("operation", "Operation", "select", { options: [{ label: "Upload", value: "upload" }, { label: "Fetch", value: "fetch" }] })],
   },
 
-  // ---- Integrations ----
   {
     type: "integrations.stripe", label: "Stripe", category: "integrations",
     description: "Create charges, invoices, customers", icon: "CreditCard", color: "#635bff", inputs: 1, outputs: 1,
@@ -456,7 +439,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("instance", "Instance URL", "text", { required: true }), f("token", "Session token", "secret", { required: true }), f("object", "Object", "text", { default: "Lead" })],
   },
 
-  // ---- Developer ----
   {
     type: "dev.rest", label: "REST API", category: "developer",
     description: "Call any REST endpoint", icon: "Globe", color: "#0ea5e9", inputs: 1, outputs: 1,
@@ -495,7 +477,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("url", "URL", "text", { required: true }), f("method", "Method", "text", { default: "GET" })],
   },
 
-  // ---- Logic ----
   {
     type: "util.condition", label: "Condition", category: "logic",
     description: "If / then branching", icon: "GitBranch", color: "#f59e0b", inputs: 1, outputs: 2,
@@ -527,7 +508,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     configSchema: [f("expression", "Predicate (JS)", "code", { required: true, default: "item.score > 0.5" })],
   },
 
-  // ---- Utilities ----
   {
     type: "util.delay", label: "Delay", category: "utilities",
     description: "Wait for a duration", icon: "Timer", color: "#64748b", inputs: 1, outputs: 1,
@@ -544,7 +524,6 @@ export const NODE_LIBRARY: NodeDef[] = [
     description: "Format dates, numbers, strings", icon: "Type", color: "#64748b", inputs: 1, outputs: 1,
     configSchema: [f("format", "Format", "select", { options: ["date", "number", "currency", "uppercase", "lowercase"].map((v) => ({ label: v, value: v })) }), f("template", "Template", "text", { default: "YYYY-MM-DD" })],
   },
-  // ─────────────────────────── MCP (Model Context Protocol) ────────────────
   // Discover + invoke external tools/resources through connected MCP servers.
   // Routed to the MCP runtime via lib/execution/actions/{registry,mcp}.ts; the
   // engine itself is unchanged. The selector field type renders a discovered-

@@ -1,20 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — memory gateway
-// ============================================================
-// The ONLY way agents touch long-term memory. Delegates to the existing
-// MemoryEngine (lib/memory) — never bypasses it — and enforces:
-//   • Workspace isolation: every call is scoped by userId + orgId + workflowId
-//     + agentId, so agents can never read or write another workspace's memory.
-//     The MemoryEngine itself enforces ownerId filtering; this gateway simply
-//     guarantees the scoping fields are always set from the run context.
-//   • Tool permissions: the gateway is constructed with the agent's declared
-//     memory tools, and throws PermissionError if an agent calls a tool it did
-//     not declare (see AgentDefinition.tools).
-//   • Graceful no-op when embeddings are unconfigured (the engine no-ops and
-//     returns empty/null results; we surface that as a log via the caller).
-//
-// Server-only.
-
 import "server-only";
 import { getMemoryEngine, embeddingConfigured } from "@/lib/memory";
 import type { MemoryHit, MemoryScope } from "@/lib/memory/types";

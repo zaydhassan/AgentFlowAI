@@ -34,6 +34,9 @@ export function CopilotPanel({
   const [tab, setTab] = useState<Tab>("build");
 
   useEffect(() => {
+    // Parent bumps `diagnoseSignal` to request a tab switch — a prop-driven
+    // command, so the effect is the right place to honor it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (diagnoseSignal && diagnoseSignal > 0) setTab("heal");
   }, [diagnoseSignal]);
 
@@ -72,8 +75,6 @@ export function CopilotPanel({
     </div>
   );
 }
-
-// ───────────────────────── Build (NL generate + recommend) ─────────────────
 
 function BuildTab({
   graph,
@@ -186,8 +187,6 @@ function BuildTab({
     </div>
   );
 }
-
-// ───────────────────────── Advice (chat + analyze + explain) ──────────────
 
 function AdviceTab({
   graph,
@@ -322,8 +321,6 @@ function AdviceTab({
     </div>
   );
 }
-
-// ───────────────────────── Heal (analyze a failed node) ────────────────────
 
 function HealTab({ graph, selectedNode }: { graph: { nodes: WorkflowNode[]; edges: WorkflowEdge[] }; selectedNode: WorkflowNode | null }) {
   const [fixes, setFixes] = useState<CopilotSuggestion[] | null>(null);

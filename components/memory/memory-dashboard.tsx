@@ -1,10 +1,5 @@
 "use client";
 
-// Memory dashboard client manager. Receives server-fetched initial data and
-// handles all mutations over /api/memory/*: semantic search, add/delete
-// memory, create/delete collection, run maintenance. NEVER renders the
-// embedding vector — the server strips it; the client only sees Memory rows.
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,13 +76,11 @@ export function MemoryDashboard({
   const [searching, setSearching] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  // add-memory form
   const [newScope, setNewScope] = useState<MemoryScope>("long_term");
   const [newImportance, setNewImportance] = useState(0.6);
   const [newContent, setNewContent] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // collections form
   const [collName, setCollName] = useState("");
   const [collBusy, setCollBusy] = useState(false);
 

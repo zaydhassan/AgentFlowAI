@@ -1,8 +1,3 @@
-// POST /api/payments/refund — refund a captured payment. Admin-only.
-// Body: { paymentId, amountMinor? }
-//   - Razorpay: refunds a payment (razorpay payment id).
-//   - Stripe: refunds a payment intent.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { getPaymentProvider } from "@/lib/payments";

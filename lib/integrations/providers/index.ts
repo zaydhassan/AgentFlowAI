@@ -1,6 +1,3 @@
-// Provider registry. Add ("slack" | "notion" | ...) here as they ship; the
-// facade (lib/integrations/index.ts) resolves by id via this map. Server-only.
-
 import "server-only";
 import type { IntegrationProvider, IntegrationProviderId } from "../types";
 import { GmailProvider } from "./gmail";

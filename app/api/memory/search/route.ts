@@ -1,13 +1,3 @@
-// POST /api/memory/search — semantic search. {query, scope?, topK?, threshold?, hybrid?}
-// → { hits: MemoryHit[] } where each hit carries the client-safe Memory + a score.
-// The embedding vector is never returned.
-//
-// "Cache memory retrievals": the HTTP response is edge-cached here (per user +
-// scope + params + query hash, 30s TTL). The Memory Engine in lib/memory is NOT
-// touched — the cache sits at the route boundary, so identical repeat searches
-// within the TTL return cached hits without an embedding round-trip. Memory is
-// append-mostly, so a short TTL keeps results fresh with no eager invalidation.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { memoryEngine, resolveOrgId, type MemoryScope } from "@/lib/memory";

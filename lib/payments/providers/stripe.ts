@@ -1,13 +1,3 @@
-// StripeProvider — the Stripe implementation behind the PaymentProvider
-// interface. Ports the pre-migration lib/stripe.ts + lib/stripe/products.ts +
-// the four /api/stripe/* routes' logic (SDK singleton, product/price auto-
-// provisioning, Checkout Session, Customer Portal, cancel/resume/un-cancel,
-// signature-verified webhooks) behind the interface.
-//
-// DORMANT under the default PAYMENT_PROVIDER=razorpay config — retained so the
-// architecture is PaymentProvider → StripeProvider → RazorpayProvider → future,
-// and so flipping back to Stripe is a config change. Server-only.
-
 import "server-only";
 import Stripe from "stripe";
 import { prisma } from "@/lib/db";
@@ -27,7 +17,6 @@ import type {
 
 export const STRIPE_API_VERSION = "2026-06-24.dahlia" as const;
 
-// Two env naming schemes (priority: per-interval → single-name → auto-create).
 const PRICE_ENV: Record<string, () => string | undefined> = {
   "pro:monthly": () => process.env.STRIPE_PRICE_PRO_MONTHLY ?? process.env.STRIPE_PRO_PRICE_ID,
   "pro:yearly": () => process.env.STRIPE_PRICE_PRO_YEARLY,
@@ -54,8 +43,6 @@ export class StripeProvider implements PaymentProvider {
     if (!s) throw new Error("Stripe is not configured. Set STRIPE_SECRET_KEY in .env.");
     return s;
   }
-
-  // --- Product/price provisioning -------------------------------------------
 
   private yearlyAmountCents(plan: PaidPlan): number {
     return PLAN_META[plan].priceAmount.yearly * 12 * 100;
@@ -109,8 +96,6 @@ export class StripeProvider implements PaymentProvider {
     const cached = await prisma.planPrice.findUnique({ where: { stripePriceId: priceId }, select: { interval: true } });
     return (cached?.interval as Interval | null) ?? null;
   }
-
-  // --- Checkout -------------------------------------------------------------
 
   async createCheckout(init: CheckoutInit): Promise<CheckoutSession> {
     if (init.plan === "free" || init.plan === "enterprise") {
@@ -206,8 +191,6 @@ export class StripeProvider implements PaymentProvider {
     }
   }
 
-  // --- Subscription lifecycle ------------------------------------------------
-
   async getSubscriptionState(subId: string): Promise<ProviderSubscriptionState | null> {
     const stripe = this.client();
     try {
@@ -286,8 +269,6 @@ export class StripeProvider implements PaymentProvider {
     return { provider: "stripe", url: session.url };
   }
 
-  // --- Webhooks -------------------------------------------------------------
-
   verifyWebhookSignature(rawBody: string, headers: Headers): { ok: boolean; event?: WebhookEvent } {
     const stripe = getStripe();
     if (!stripe) return { ok: false };
@@ -331,8 +312,6 @@ export class StripeProvider implements PaymentProvider {
         break;
     }
   }
-
-  // --- Stripe webhook handlers (ported from the original /api/stripe/webhook) ---
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const userId =
@@ -506,8 +485,6 @@ export class StripeProvider implements PaymentProvider {
     return repository.customers.findUserIdByCustomer("stripe", customerId);
   }
 }
-
-// --- Module singletons / shared helpers (moved from lib/stripe.ts) ----------
 
 let _stripe: Stripe | null = null;
 export function getStripe(): Stripe | null {

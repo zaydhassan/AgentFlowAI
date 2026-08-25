@@ -1,6 +1,3 @@
-// Compare two workflow versions: returns both versions' metadata + graphs and
-// a server-computed structural diff (lib/workflow/diff). Keeps the diff logic off
-// the client and avoids shipping both full graphs twice.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

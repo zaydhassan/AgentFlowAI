@@ -1,12 +1,5 @@
 "use client";
 
-// Reusable empty state for dashboard cards/charts. Two sizes:
-//   - default: chart-sized (tall) — icon, title, description, CTA
-//   - compact: stat-card-sized — same, tightened so it fits a ~h-28 tile
-// Premium but quiet: solid surface, brand-tinted icon chip, no glassmorphism,
-// no heavy gradients. Used wherever a metric/chart has no data yet so the UI
-// never shows a blank canvas or a bare "0".
-
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -1,15 +1,3 @@
-// POST   /api/user/avatar — upload (multipart) a profile photo.
-// DELETE /api/user/avatar — remove the current profile photo.
-//
-// Storage: the filesystem under public/uploads/avatars/. This is the pragmatic
-// default for the self-hosted monolith (no object store is configured today).
-// Files are served as static assets at /uploads/avatars/<name>. For a
-// horizontally-scaled / read-only-filesystem deployment, swap the read/write
-// here for an object store (S3/R2) — the route is the only seam that changes.
-//
-// Validation: JPEG/PNG/WebP only, ≤ 2 MB. The previous upload (if it was ours)
-// is deleted on replace and on remove so orphaned files don't accumulate.
-
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { promises as fs } from "node:fs";

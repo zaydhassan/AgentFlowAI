@@ -50,7 +50,11 @@ export function CostOptimizer({ workflowId, onClose }: { workflowId: string; onC
     }
   }, [workflowId]);
 
-  useEffect(() => { void load(strategy); }, [load, strategy]);
+  // Re-estimate when the strategy changes; `load` is the async fetch.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load(strategy);
+  }, [load, strategy]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);

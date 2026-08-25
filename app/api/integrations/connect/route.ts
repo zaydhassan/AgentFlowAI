@@ -1,7 +1,3 @@
-// POST /api/integrations/connect — begin a connect/reconnect OAuth flow.
-// Body: { provider, returnUrl?, accountId? } (accountId → reconnect).
-// Returns { authUrl } and sets the af_oauth_state cookie (HttpOnly, signed).
-
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { apiUser } from "@/lib/auth/api";

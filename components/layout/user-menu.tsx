@@ -1,17 +1,5 @@
 "use client";
 
-// Single shared profile menu used everywhere the signed-in avatar appears
-// (marketing navbar + dashboard topbar). One source of truth so the dropdown
-// is identical across the whole app.
-//
-// Premium behaviour:
-//  - Spring entrance + staggered items (framer-motion AnimatePresence).
-//  - Hover highlight + icon tint shift per row.
-//  - Esc-to-close, outside-click, single-open coordination, focus rings
-//    (all via the shared useDropdown hook in lib/hooks/use-dropdown).
-//  - Theme picker retained (it lives on a shared component, so the marketing
-//    pages can still switch themes).
-
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -27,7 +15,7 @@ export type UserMenuUser = {
   image?: string | null;
 };
 
-function initials(name?: string | null, email?: string | null): string {
+export function initials(name?: string | null, email?: string | null): string {
   const source = (name && name.trim()) || (email ? email.split("@")[0] : "") || "?";
   return source
     .split(/[\s_.-]+/)
@@ -66,7 +54,8 @@ const item: Variants = {
 // URL is missing OR fails to load at runtime (expired Google/GitHub URLs,
 // deleted avatars, network/CSP failures). A subtle skeleton fills the fixed
 // 7×7 box while the image loads so there's no layout shift.
-function UserAvatar({ user }: { user: UserMenuUser }) {
+export function UserAvatar({ user, size = "md" }: { user: UserMenuUser; size?: "md" | "lg" }) {
+  const px = size === "lg" ? "h-11 w-11" : "h-8 w-8";
   const src = user.image?.trim() || null;
   // "error" doubles as "show fallback" — used both when there's no URL and
   // when the <img> fires onError.
@@ -83,7 +72,7 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
   }
 
   const fallback = (
-    <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-xs font-semibold text-white">
+    <div className={cn("grid place-items-center rounded-full bg-gradient-to-br from-brand to-ai font-semibold text-white", px, size === "lg" ? "text-sm" : "text-xs")}>
       {initials(user.name, user.email)}
     </div>
   );
@@ -91,8 +80,8 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
   if (!src || status === "error") return fallback;
 
   return (
-    <div className="relative h-8 w-8 shrink-0">
-      {/* Skeleton behind the image while it loads (same 8×8 box → no shift). */}
+    <div className={cn("relative shrink-0", px)}>
+      {/* Skeleton behind the image while it loads (same box → no shift). */}
       {status !== "loaded" && (
         <div
           className="absolute inset-0 rounded-full bg-surface-3 animate-pulse"
@@ -108,7 +97,8 @@ function UserAvatar({ user }: { user: UserMenuUser }) {
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
         className={cn(
-          "h-8 w-8 rounded-full object-cover transition-opacity duration-200",
+          "rounded-full object-cover transition-opacity duration-200",
+          px,
           status === "loaded" ? "opacity-100" : "opacity-0",
         )}
       />

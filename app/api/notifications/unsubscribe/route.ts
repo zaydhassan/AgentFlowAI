@@ -1,11 +1,3 @@
-// GET /api/notifications/unsubscribe?token=<unsubscribeToken>
-//
-// Token-based (no session required — email links work for logged-out users).
-// Looks up the user by their unsubscribe token, turns OFF every email category
-// (the one-click unsubscribe semantics), and returns a minimal confirmation
-// page with a link to manage preferences. Verifies ownership via the token
-// (never accepts a bare userId).
-
 import { NextResponse } from "next/server";
 import { repository, updatePreferencesForUser } from "@/lib/notifications";
 import { appUrl } from "@/lib/resend";

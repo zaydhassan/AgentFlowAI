@@ -1,7 +1,3 @@
-// POST /api/mcp/invoke — stream a tool invocation over SSE.
-// Body: { serverId, toolName, arguments?, timeoutMs?, workflowId?, nodeId? }
-// Streams `progress` events as they arrive; terminal `result` or `error` event.
-
 import { apiUser } from "@/lib/auth/api";
 import { invokeToolStream } from "@/lib/mcp";
 import { sseStream } from "@/lib/execution/sse";

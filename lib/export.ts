@@ -1,12 +1,3 @@
-// Client-side CSV export helpers — no server round-trip. Builds a CSV string
-// in the browser and triggers a download via a Blob URL. Safe for cells that
-// contain commas, quotes, or newlines (RFC 4180 quoting + "" escaping).
-//
-// Use `rowsToCSV` to turn an array of records into a CSV table, and
-// `downloadCSV` to assemble multiple labelled sections into one file and save
-// it. Both run only in the browser (document/Blob/URL), so keep them in
-// client components or event handlers.
-
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   const s = String(value);

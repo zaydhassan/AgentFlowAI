@@ -1,7 +1,3 @@
-// GET /api/memory/stats — dashboard KPIs: {total, byScope, writes, hits,
-// misses, recallRate, collections, storeSizeBytes}. Driven entirely by the
-// authenticated user's data.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { repository } from "@/lib/memory";

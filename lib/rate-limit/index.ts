@@ -1,24 +1,3 @@
-// =============================================================================
-// Rate Limiting — Node facade (provider-agnostic factory + route guard)
-// =============================================================================
-// Resolution order for getRateLimiter():
-//   1. RATE_LIMIT_ENABLED=false                  → NoopRateLimiter (always allow)
-//   2. RATE_LIMIT_PROVIDER=memory                → InMemoryRateLimiter
-//   3. RATE_LIMIT_PROVIDER=redis (default), no REDIS_URL → InMemoryRateLimiter
-//   4. RATE_LIMIT_PROVIDER=redis, REDIS_URL set   → RedisRateLimiter, which
-//      itself falls back to an in-memory limiter per check when Redis is down
-//      (graceful fallback at both the factory and the runtime levels).
-//
-// `applyRateLimit()` is the seam for Node route handlers: returns null (allow)
-// or a 429 Response with the standard headers. Every existing API route belongs
-// to a protected system (workflows / ai / memory / mcp / auth / payments /
-// integrations / queue), so wiring this guard into any of them would violate
-// "do not modify unrelated systems" — instead the cross-cutting enforcement
-// lives in middleware.ts (Edge, in-memory; see lib/rate-limit/edge.ts), and the
-// Redis-backed guard here is ready for any Node consumer.
-//
-// Server-only (Node).
-
 import "server-only";
 import type {
   LimitPolicy,
@@ -53,7 +32,6 @@ export {
 export { InMemoryRateLimiter } from "./in-memory";
 export { RedisRateLimiter } from "./redis";
 
-// ─────────────────────────── no-op (disabled) ────────────────────────────────
 class NoopRateLimiter implements RateLimiter {
   readonly id = "noop";
   readonly active = false;
@@ -71,7 +49,6 @@ class NoopRateLimiter implements RateLimiter {
   async close(): Promise<void> {}
 }
 
-// ─────────────────────────── factory ─────────────────────────────────────────
 let _limiter: RateLimiter | null = null;
 let _noop: RateLimiter | null = null;
 

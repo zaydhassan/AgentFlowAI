@@ -1,22 +1,3 @@
-// =============================================================================
-// MCP audit — every tool invocation is recorded + mirrored to memory
-// =============================================================================
-// Two writes per invocation:
-//   1. A McpInvocation row (the durable audit trail: server, tool, args, status,
-//      latency, retries, error, tokens, streamed, run context). This is what the
-//      observability endpoint and the invocations list read.
-//   2. A Memory Engine entry via getMemoryEngine().remember(..., metadata), so
-//      tool usage / outputs / failures / frequently-used tools become recallable
-//      memory exactly like agent reasoning and user messages. The Memory Engine
-//      is NEVER bypassed — we go through the same remember() the rest of the
-//      platform uses, and it no-ops cleanly when embeddings are unconfigured.
-//
-// Memory write failures are swallowed: memory is observability/recall, not on
-// the critical path of a tool call. The McpInvocation row is the source of
-// truth for audit.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "./repository";
 import { getMemoryEngine, memoryConfigured } from "@/lib/memory";

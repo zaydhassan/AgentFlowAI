@@ -1,7 +1,3 @@
-// =============================================================================
-// Integration email templates — events: integration.{connected,disconnected,
-// token_expired,webhook_failed,mcp_offline}. Lazy-loaded by the registry.
-
 import {
   badge, divider, emailLayout, esc, row, textBody, SUBJECT_PREFIX,
 } from "./components";
@@ -86,7 +82,7 @@ function finish(ctx: TemplateContext, title: string, bodyHtml: string, ctaLabel:
       unsubscribeToken: ctx.unsubscribeToken,
       year: new Date().getUTCFullYear(),
     }),
-    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel }),
+    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel, appUrl: ctx.appUrl }),
   };
 }
 

@@ -1,18 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — LLM gateway for agents
-// ============================================================
-// Wraps the existing pluggable AI provider (lib/ai/provider.ts) so agents make
-// LLM calls the same way the rest of the app does — real model when a key is
-// configured, deterministic fallback otherwise. No SDK, no new dependency
-// surface beyond LangGraph.
-//
-// `completeJson` adds a JSON-extraction layer (reuses the provider's extractJson
-// heuristic via a local copy) so agents like the Planner/Reviewer can return
-// structured decisions. Falls back to {} (never throws) so the runtime degrades
-// gracefully on a malformed model response.
-//
-// Server-only.
-
 import "server-only";
 import { completeText } from "@/lib/ai/provider";
 
@@ -45,7 +30,6 @@ export async function agentCompleteJson<T = Record<string, unknown>>(
   return { value: parsed as T, tokensUsed, fellBack: false };
 }
 
-// ─────────────────────────── json extraction ────────────────────────────────
 // Local copy of lib/ai/provider.extractJson's heuristic (kept private there).
 // Parses a ```json fenced block, else the first balanced {...} span.
 

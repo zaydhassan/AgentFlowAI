@@ -1,9 +1,3 @@
-// Gmail OAuth scopes + Google endpoint constants. gmail.modify covers every
-// one of the 12 Gmail nodes (read, send, labels, archive, mark-read, drafts,
-// trash, and the polling trigger) without the destructive permanent-delete
-// scope of https://mail.google.com/. openid + userinfo.email/profile give us
-// the connected account's identity for display.
-
 import "server-only";
 
 export const GMAIL_SCOPES = {

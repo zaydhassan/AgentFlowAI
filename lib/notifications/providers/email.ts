@@ -1,18 +1,3 @@
-// =============================================================================
-// EmailProvider — the only NotificationProvider shipping today.
-// =============================================================================
-// Wraps the app's existing transport in lib/resend (Resend when
-// RESEND_API_KEY is set; otherwise a dev fallback that writes the rendered
-// email to tmp/emails/*.json). SMTP credentials are NEVER stored in the DB and
-// NEVER exposed to the client — the EmailProvider reads them from env only.
-//
-// Future providers (Slack/Discord/Push/SMS) implement the same
-// NotificationProvider interface and plug in via providers/index.ts — the
-// engine never branches on provider identity. AES-256-GCM encryption for any
-// future per-user provider credentials reuses lib/integrations/crypto.ts.
-//
-// Server-only.
-
 import "server-only";
 import { sendEmail } from "@/lib/resend";
 import type {

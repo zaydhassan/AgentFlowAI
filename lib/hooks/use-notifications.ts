@@ -1,13 +1,5 @@
 "use client";
 
-// useNotifications — polls the notification API for the bell + center.
-// Replaces the mock data the topbar previously used. 30s poll matches the
-// dashboard cadence; refreshes immediately after mark-read/mark-all actions.
-//
-// Mirrors the usePoll pattern in lib/hooks/use-dashboard.ts: the fetch runs as
-// a local async function inside the effect (setState after `await`, behind a
-// cancelled flag + AbortController), and a `tick` state drives manual refresh.
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   listNotificationsApi,

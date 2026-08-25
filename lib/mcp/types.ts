@@ -1,19 +1,4 @@
-// =============================================================================
-// Model Context Protocol (MCP) — pure types
-// =============================================================================
-// No runtime, no `server-only` — importable from client + server, mirroring the
-// split in lib/integrations/types.ts. The concrete server runtime lives in
-// lib/mcp/{repository,sdk-client,connection-manager,discovery,tool-registry,
-// audit,gateway}.ts (all server-only).
-//
-// The `AgentToolGateway` interface is declared here (pure) so lib/agents/types.ts
-// can add `ctx.tools: AgentToolGateway` to AgentRunContext WITHOUT importing any
-// server-only module — the concrete class lives in lib/mcp/gateway.ts and is
-// constructed inside the server-only agent runtime (lib/agents/runtime.ts).
-
 import type { MemoryScope } from "@/lib/memory/types";
-
-// ─────────────────────────── enums (as string unions) ────────────────────────
 
 export type McpTransportId = "stdio" | "http" | "sse";
 export type McpAuthScheme = "none" | "bearer" | "header" | "basic";
@@ -25,7 +10,6 @@ export type McpInvocationStatus = "succeeded" | "failed" | "streaming" | "cancel
 export const MCP_TRANSPORTS: readonly McpTransportId[] = ["stdio", "http", "sse"];
 export const MCP_AUTH_SCHEMES: readonly McpAuthScheme[] = ["none", "bearer", "header", "basic"];
 
-// ─────────────────────────── credentials (encrypted at rest) ─────────────────
 // The authScheme selects which fields the transport reads when injecting auth.
 // The whole object is serialized to JSON and AES-256-GCM encrypted (via
 // lib/integrations/crypto.ts) before being stored in McpServer.credentials.
@@ -45,7 +29,6 @@ export interface McpCredentials {
   headers?: Record<string, string>;
 }
 
-// ─────────────────────────── client-safe shapes ──────────────────────────────
 // These are what the API returns. They NEVER include credentials or env.
 
 export interface McpHealth {
@@ -138,7 +121,6 @@ export interface McpObservabilitySummary {
   topTools: { toolName: string; serverName: string | null; calls: number }[];
 }
 
-// ─────────────────────────── server-only shapes ──────────────────────────────
 // Decrypted, never serialized to a response (mirrors StoredIntegrationAccount).
 
 export interface StoredMcpServer {
@@ -163,8 +145,6 @@ export interface StoredMcpServer {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// ─────────────────────────── connect / call shapes ───────────────────────────
 
 export interface McpConnectOptions {
   server: StoredMcpServer;
@@ -205,7 +185,6 @@ export type ToolInvokeRef =
   | { serverId: string; toolName: string }
   | { tool: string }; // "<serverId>::<toolName>"
 
-// ─────────────────────────── the agent-facing tool gateway ───────────────────
 // The ONLY surface agents use to touch MCP tools (ctx.tools). Mirrors
 // AgentMemoryGateway (lib/agents/memory.ts): permission-checked against the
 // agent's declared tools, workspace-isolated, and audited. Agents never import
@@ -250,8 +229,6 @@ export interface AgentToolGateway {
     opts?: InvokeOptions,
   ): Promise<McpCallResult>;
 }
-
-// ─────────────────────────── repository input shapes ─────────────────────────
 
 export interface CreateMcpServerInput {
   ownerId: string;

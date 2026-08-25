@@ -1,8 +1,3 @@
-// POST /api/notifications/digest — build + send a digest for the current user
-// on demand (dev/admin testing). Body: { frequency: "hourly"|"daily"|"weekly" }.
-// Runs synchronously and returns the period covered. In production, digests are
-// driven by the scheduler heartbeat / cron route — this is a manual trigger.
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiUser } from "@/lib/auth/api";

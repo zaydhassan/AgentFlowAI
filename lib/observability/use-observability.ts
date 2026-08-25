@@ -1,23 +1,5 @@
 "use client";
 
-// Client hook for the AI Observability page.
-//
-// Two real-time channels, both reusing existing server infra:
-//   1. Polls GET /api/observability every 10s (+ on tab focus) for the
-//      aggregated snapshot — KPIs, trend, recent runs, in-flight list.
-//   2. For each in-flight run in that snapshot, opens a native EventSource to
-//      the existing per-execution SSE route
-//      (/api/workflows/[id]/executions/[eid]/stream) and folds live node-step
-//      events into a `live[eid]` map the page renders.
-//
-// Reconciles EventSources as the in-flight set changes between polls: opens
-// new ones, closes ones that have left the set (they moved to `recent`). When a
-// run completes (or the server reports `not-live`), the source is closed so
-// EventSource doesn't reconnect to a finished run.
-//
-// `ExecutionEvent` is imported type-only from the server-only engine module —
-// the import is erased, so the server-only guard never fires in the bundle.
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExecutionEvent } from "@/lib/execution/engine";
 import type { InFlightRun, ObservabilitySummary } from "./types";
@@ -236,6 +218,8 @@ export function useObservability(): UseObservability {
   }, [reconcile]);
 
   useEffect(() => {
+    // Poll-on-mount + interval; `refresh` performs the async fetch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     const id = setInterval(() => void refresh(), 10_000);
     const onVis = () => {

@@ -1,19 +1,3 @@
-// =============================================================================
-// Digest email template — the daily / weekly summary report. Charts-ready data
-// arrives as a DigestData payload (built by lib/notifications/scheduler.ts from
-// real DB events). Lazy-loaded by the template registry in ./index.ts.
-// =============================================================================
-// Daily example (per the brief):
-//   Yesterday
-//   ✔ 27 workflows completed
-//   ✔ 98.4% success rate
-//   ✔ 12 AI agents executed
-//   ✔ 82k tokens consumed
-//   ✔ 4 integrations active
-//   ✔ Credits remaining
-// Weekly: the same summary + a 7-day chart (rendered as a lightweight inline-SVG
-// sparkline so it renders in every email client without external assets).
-
 import {
   checkLine, divider, emailLayout, esc, row, statTile, textBody, SUBJECT_PREFIX,
 } from "./components";
@@ -25,7 +9,6 @@ export function renderDigest(ctx: TemplateContext & { digest: DigestData }): Ren
   const periodLabel = isWeekly ? "Last 7 days" : "Yesterday";
   const title = isWeekly ? "Your weekly report" : "Your daily summary";
 
-  // ── stat tiles (3 per row) ──
   const stats = digest.stats.slice(0, 6);
   const rows: string[] = [];
   for (let i = 0; i < stats.length; i += 3) {
@@ -37,15 +20,12 @@ export function renderDigest(ctx: TemplateContext & { digest: DigestData }): Ren
   }
   const statsHtml = rows.join("");
 
-  // ── highlight checkmarks ──
   const highlightsHtml = digest.highlights
     .map((h) => checkLine(`<strong style="color:${toneColor(h.tone)}">${esc(h.text)}</strong>`))
     .join("");
 
-  // ── weekly chart (inline SVG sparkline of executions) ──
   const chartHtml = isWeekly && digest.chart && digest.chart.length > 1 ? renderSparkline(digest.chart) : "";
 
-  // ── top workflows ──
   const topHtml = digest.topWorkflows && digest.topWorkflows.length > 0
     ? `<div style="margin-top:18px;">${divider()}` +
       `<p style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;font-weight:600;color:${"#0f1020"};margin:0 0 8px;">Top workflows</p>` +
@@ -90,6 +70,7 @@ export function renderDigest(ctx: TemplateContext & { digest: DigestData }): Ren
       ].filter(Boolean).join("\n"),
       link: ctaHref,
       linkLabel: "Open dashboard",
+      appUrl: ctx.appUrl,
     }),
   };
 }

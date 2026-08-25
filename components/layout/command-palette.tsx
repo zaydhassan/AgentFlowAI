@@ -1,29 +1,30 @@
 "use client";
 
-// AgentFlow command palette — a productivity surface modelled on Linear /
-// Cursor / Notion / VS Code, NOT a duplicate of the sidebar.
-//
-// Result priority (highest → lowest):
-//   ⚡ Actions → 📁 Workflows → 🤖 Agents → 🧠 Memory → ▶️ Executions →
-//   🔌 Integrations → 📚 Documentation → 🧭 Navigation
-//
-// Behaviour:
-//  - Empty query: Quick Actions + recently opened items (no navigation).
-//  - Typed query: fuzzy-matched results grouped by priority. Sidebar/nav
-//    items only surface when they actually match the query, and they always
-//    render last as a fallback — they never crowd out real content.
-//  - Selection runs the item's action (navigate / execute / open flow) and
-//    records it into localStorage so it resurfaces in the empty state.
-//  - Full keyboard control: ↑/↓ move, ↵ select, esc close.
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { fuzzyMatchFields } from "@/lib/fuzzy";
-import { workflows, executions } from "@/lib/mock/data";
 import { docArticles } from "@/lib/docs/navigation";
 import { connectProvider } from "@/lib/integrations/client";
+
+// Slim projections of the /api/workflows and /api/executions list responses —
+// only the fields the palette renders. Declared locally so this client
+// component doesn't import server-only types.
+type SlimWorkflow = {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  category: string;
+  tags: string[];
+};
+type SlimExecution = {
+  id: string;
+  workflowName: string;
+  status: string;
+  trigger: string;
+};
 
 type GroupId =
   | "recent"
@@ -65,12 +66,6 @@ const GROUPS: { id: GroupId; label: string; emoji: string }[] = [
 const GROUP_RANK: Record<GroupId, number> = Object.fromEntries(
   GROUPS.map((g, i) => [g.id, i]),
 ) as Record<GroupId, number>;
-
-// ─────────────────────────── static catalogs ────────────────────────────────
-// Workflows + executions come from the mock store (the same source the list
-// pages render), docs come from the docs nav model, and agents/integrations/
-// navigation are small static catalogs. When these move to live API data the
-// palette follows automatically for the dynamic ones.
 
 const AGENTS = [
   { id: "agent_planner", name: "Planner", icon: "Workflow", desc: "Breaks requests into subtasks and estimates cost & time." },
@@ -121,6 +116,8 @@ export function CommandPalette({
   const [active, setActive] = useState(0);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [realWorkflows, setRealWorkflows] = useState<SlimWorkflow[]>([]);
+  const [realExecutions, setRealExecutions] = useState<SlimExecution[]>([]);
   const listRef = useRef<HTMLDivElement | null>(null);
   // True when the active row last moved via keyboard (or a new query), false
   // when it moved via hover. We only scrollIntoView on keyboard moves —
@@ -163,7 +160,6 @@ export function CommandPalette({
       .finally(() => onClose());
   };
 
-  // ─────────────────────────── all palette items ────────────────────────────
   const allItems = useMemo<PaletteItem[]>(() => {
     const actions: PaletteItem[] = [
       { id: "qa_new_workflow", title: "New Workflow", icon: "Plus", group: "actions", hint: "create", description: "Create a blank workflow and open the builder.", keywords: "create new workflow build blank", action: createWorkflow },
@@ -174,7 +170,7 @@ export function CommandPalette({
       { id: "qa_build_prompt", title: "Build from prompt", icon: "Wand2", group: "actions", hint: "build", description: "Describe a workflow in natural language.", keywords: "build prompt natural language ai copilot generate", action: go("/ai") },
     ];
 
-    const wfItems: PaletteItem[] = workflows.map((w) => ({
+    const wfItems: PaletteItem[] = realWorkflows.map((w) => ({
       id: `wf_${w.id}`,
       title: w.name,
       description: w.description,
@@ -214,7 +210,7 @@ export function CommandPalette({
       { id: "mem_docs", title: "Memory Documentation", icon: "BookOpen", group: "memory", hint: "read", description: "How agents store and recall context (RAG).", keywords: "memory docs documentation rag retrieval", action: go("/docs/agents") },
     ];
 
-    const execItems: PaletteItem[] = executions.map((e) => ({
+    const execItems: PaletteItem[] = realExecutions.map((e) => ({
       id: `ex_${e.id}`,
       title: `${e.workflowName} — ${e.id}`,
       description: `${e.status} · ${e.trigger} trigger`,
@@ -290,9 +286,8 @@ export function CommandPalette({
       ...navItems,
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [router, realWorkflows, realExecutions]);
 
-  // ─────────────────────────── filtering + ranking ──────────────────────────
   const results = useMemo<PaletteItem[]>(() => {
     const q = query.toLowerCase().trim();
     if (!q) return [];
@@ -320,8 +315,6 @@ export function CommandPalette({
       .map((s) => s.item);
   }, [query, allItems]);
 
-  // ─────────────────────────── empty-state items ────────────────────────────
-  // Recent (if any) first, then the Quick Actions — no navigation.
   const emptyItems = useMemo<PaletteItem[]>(() => {
     if (!hydrated) return [];
     const recent = recentIds
@@ -342,7 +335,6 @@ export function CommandPalette({
 
   const display = query.trim() ? results : emptyItems;
 
-  // Group while preserving priority order.
   const grouped = useMemo(() => {
     const buckets = new Map<GroupId, PaletteItem[]>();
     for (const item of display) {
@@ -356,9 +348,12 @@ export function CommandPalette({
     }));
   }, [display]);
 
-  // Reset query + selection whenever the palette opens; hydrate recent ids.
   useEffect(() => {
     if (!open) return;
+    // Reset transient palette state when it opens. `open` is a parent-controlled
+    // prop, so this effect is the natural sync point; the leading setState is
+    // intentional and not a cascading-render smell.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery("");
     setActive(0);
     try {
@@ -368,6 +363,25 @@ export function CommandPalette({
       setRecentIds([]);
     }
     setHydrated(true);
+  }, [open]);
+
+  // Fetch the user's real workflows + recent executions whenever the palette
+  // opens, so the Workflows/Executions groups reflect live data instead of
+  // fabricated mock records. Failures degrade gracefully to empty groups.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    Promise.all([
+      fetch("/api/workflows").then((r) => (r.ok ? r.json() : { workflows: [] })).catch(() => ({ workflows: [] })),
+      fetch("/api/executions").then((r) => (r.ok ? r.json() : { runs: [] })).catch(() => ({ runs: [] })),
+    ]).then(([wf, ex]) => {
+      if (cancelled) return;
+      setRealWorkflows(Array.isArray(wf?.workflows) ? wf.workflows : []);
+      setRealExecutions(Array.isArray(ex?.runs) ? ex.runs : []);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   // Active index, clamped to the current result set. Derived (not set in an
@@ -391,7 +405,6 @@ export function CommandPalette({
     item.action();
   };
 
-  // Keyboard navigation: ↑/↓ move, ↵ select, esc close.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -459,7 +472,6 @@ export function CommandPalette({
             onChange={(e) => {
               setQuery(e.target.value);
               setActive(0);
-              // New query → jump to the top result and bring it into view.
               keyboardNavRef.current = true;
             }}
             placeholder="Type a command or search workflows, agents, docs…"

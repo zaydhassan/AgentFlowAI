@@ -1,11 +1,3 @@
-// =============================================================================
-// Rate Limiting — provider-agnostic contract
-// =============================================================================
-// Any backend (Redis via lib/rate-limit/redis, the in-memory limiter, a future
-// Upstash/edge adapter) implements `RateLimiter` and plugs in via getRateLimiter()
-// (Node) or the in-memory factory (Edge middleware). Pure types — runtime-
-// agnostic, safe to import from both Node and Edge bundles.
-
 /** Rate-limiting algorithm. Sliding window is the default. */
 export type Algorithm = "sliding" | "fixed" | "token";
 

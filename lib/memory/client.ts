@@ -1,9 +1,5 @@
 "use client";
 
-// Client-safe memory helpers for the dashboard. The browser only ever lists,
-// searches, creates, and deletes memories — it never sees the embedding
-// vector (the server strips it). Re-exports the client-safe types for components.
-
 import type {
   Memory,
   MemoryCollection,

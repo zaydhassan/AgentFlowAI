@@ -1,11 +1,3 @@
-// Architecture diagram placeholder — a clean, labelled layered diagram built
-// from divs (no SVG/Chart dependency). Each "layer" is a row of one or more
-// nodes; a downward chevron sits between layers to imply flow.
-//
-// This is intentionally a tasteful placeholder (the requirement asks for an
-// "architecture diagram placeholder") — not an empty box. The diagram is driven
-// by data so each article can render its own structure without bespoke JSX.
-
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { ConceptTone } from "@/components/marketing/core-concept-card";

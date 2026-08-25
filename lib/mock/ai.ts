@@ -1,11 +1,6 @@
 import { NODE_LIBRARY, getNodeDef } from "../nodes";
 import type { WorkflowNode, WorkflowEdge, CopilotSuggestion } from "../types";
 
-// ============================================================
-// Mock AI — NL workflow generation, copilot, self-healing.
-// Fully simulated; zero external calls.
-// ============================================================
-
 // Naive intent matcher over the node library.
 function detectNode(p: string, i: number): string | null {
   const t = p.toLowerCase();

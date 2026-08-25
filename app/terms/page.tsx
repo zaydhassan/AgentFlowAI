@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingPage } from "@/components/marketing/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service — AgentFlow AI",
@@ -84,7 +85,7 @@ export default function TermsPage() {
 
       <section className="mx-auto max-w-3xl px-5 lg:px-8 pb-24">
         <p className="text-fg-muted">
-          These terms govern your use of AgentFlow AI. They're written in plain language wherever
+          These terms govern your use of AgentFlow AI. They&rsquo;re written in plain language wherever
           possible, but they are a legal agreement — please read them.
         </p>
         <div className="mt-10 space-y-10">
@@ -108,7 +109,7 @@ export default function TermsPage() {
 
         <div className="mt-12 rounded-2xl border border-border bg-surface-2/40 p-6 text-sm text-fg-muted">
           Questions about these terms? Email{" "}
-          <a href="mailto:legal@agentflow.ai" className="text-brand hover:underline">legal@agentflow.ai</a>{" "}
+          <a href={`mailto:${site.legal.legal}`} className="text-brand hover:underline">{site.legal.legal}</a>{" "}
           or use our <a href="/contact" className="text-brand hover:underline">contact page</a>.
         </div>
       </section>

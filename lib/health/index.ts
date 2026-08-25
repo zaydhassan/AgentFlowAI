@@ -1,24 +1,3 @@
-// =============================================================================
-// Health Monitoring — facade (runner, aggregation, liveness/readiness/details)
-// =============================================================================
-// The public surface the health endpoints import from `@/lib/health`.
-//
-// Runner: runs every provider IN PARALLEL; each provider self-caps at
-// `timeoutMs` (HEALTH_CHECK_TIMEOUT_MS, default 1500, clamped to ≤2000). Because
-// they run concurrently, the whole probe completes in ≈ max(timeoutMs) — well
-// under the 2s hard budget. An outer 2s guard catches any runaway probe.
-//
-// Aggregation matrix (see lib/health/types):
-//   • postgres unhealthy  → overall UNHEALTHY (only critical dep)
-//   • any other unhealthy → DEGRADED
-//   • any degraded        → DEGRADED
-//   • otherwise           → healthy
-// Per the spec: Redis fail → degraded; Postgres fail → unhealthy; AI fail →
-// ready (degraded capability). Every failed check is logged via the central
-// logger (lib/logger) — using its public API, not modifying it.
-//
-// Server-only (Node).
-
 import "server-only";
 import { ALL_PROVIDERS } from "./checks";
 import type { CheckResult, DetailsReport, HealthStatus, ReadinessReport } from "./types";

@@ -39,7 +39,7 @@ import { SimulationModal } from "@/components/workflow/simulation-modal";
 import { NodeSearch } from "@/components/workflow/node-search";
 import { ContextMenu, type ContextAction } from "@/components/workflow/context-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { getNodeDef } from "@/lib/nodes";
 import { cn, formatDuration } from "@/lib/utils";
@@ -66,7 +66,6 @@ export interface InitialWorkflow {
   versions: VersionEntry[];
 }
 
-// ── domain <-> React Flow conversion ──
 function toFlowNodes(nodes: WorkflowNode[]): Node[] {
   return nodes.map((n) => {
     if (CANVAS_TYPES.has(n.type)) {
@@ -146,7 +145,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   const [ctx, setCtx] = useState<{ x: number; y: number; nodeId: string | null } | null>(null);
   const [diagnoseSignal, setDiagnoseSignal] = useState(0);
 
-  // run state
   const [runStatus, setRunStatus] = useState<DockStatus>("idle");
   const [runLog, setRunLog] = useState<string[]>([]);
   const [steps, setSteps] = useState<DockStep[]>([]);
@@ -158,7 +156,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   const replayHandle = useRef<{ abort: () => void } | null>(null);
   const stepsRef = useRef<Map<string, DockStep>>(new Map());
 
-  // history
   const undoStack = useRef<Snapshot[]>([]);
   const redoStack = useRef<Snapshot[]>([]);
   const clipboard = useRef<Node[]>([]);
@@ -176,7 +173,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     return { nodes: fromFlowNodes(getNodes()), edges: domainEdges(rfEdges), viewport: { x: vp.x, y: vp.y, zoom: vp.zoom } };
   }, [getNodes, rfEdges, getViewport]);
 
-  // ── history snapshots ──
   const snapshot = useCallback(() => {
     undoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() });
     if (undoStack.current.length > 50) undoStack.current.shift();
@@ -189,7 +185,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setViewport(s.viewport);
   }, [setRfNodes, setRfEdges, setViewport]);
 
-  // ── auto-save (debounced) ──
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("{}");
   useEffect(() => {
@@ -211,7 +206,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [rfNodes, rfEdges, name, workflowId, graphForApi]);
 
-  // ── node ops ──
   const patchNode = useCallback((nodeId: string, patch: Record<string, unknown>) => {
     setRfNodes((nds) => nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n)));
   }, [setRfNodes]);
@@ -254,7 +248,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     const ids = new Set(sel.map((n) => n.id));
     const copies = sel.map((n) => ({ ...JSON.parse(JSON.stringify(n)), id: nextId(), position: { x: n.position.x + 40, y: n.position.y + 40 }, selected: false }));
     setRfNodes((nds) => [...nds, ...copies]);
-    // duplicate internal edges
     const internal = rfEdges.filter((e) => ids.has(e.source) && ids.has(e.target));
     const idMap = new Map(sel.map((n, i) => [n.id, copies[i].id]));
     setRfEdges((eds) => [...eds, ...internal.map((e) => ({ ...JSON.parse(JSON.stringify(e)), id: `e${nextId()}`, source: idMap.get(e.source)!, target: idMap.get(e.target)! }))]);
@@ -276,7 +269,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     });
   }, [rfNodes, snapshot, setRfNodes]);
 
-  // ── connections ──
   const onConnect = useCallback((c: Connection | Edge) => {
     snapshot();
     setRfEdges((eds) => addEdge({ ...c, type: "custom", animated: true, data: {}, style: EDGE_STYLE, markerEnd: EDGE_MARKER } as Edge, eds));
@@ -296,7 +288,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     for (const c of changes) if (c.type === "select" && c.selected) setSelectedId(c.id);
   }, [onNodesChange]);
 
-  // ── run via SSE ──
   const resetNodeStatuses = useCallback(() => {
     setRfNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, status: "idle", logs: [], durationMs: undefined, tokensUsed: undefined, retries: 0 } })));
     setRfEdges((eds) => eds.map((e) => ({ ...e, data: { ...e.data, status: undefined } })));
@@ -401,18 +392,15 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setTimeout(() => patchNode(nodeId, { status: "succeeded", logs: ["Completed"], durationMs: 800 }), 900);
   }, [patchNode, getNode]);
 
-  // ── step-by-step: advance one node, then pause before the next ──
   const stepRunCb = useCallback(() => {
     if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=step&executionId=${executionId.current}`, { method: "POST" });
     setRunStatus("running");
   }, [workflowId]);
 
-  // ── pause: arm pause-before-next-node while a node is executing ──
   const pauseRunCb = useCallback(() => {
     if (executionId.current) fetch(`/api/workflows/${workflowId}/run?control=pause&executionId=${executionId.current}`, { method: "POST" });
   }, [workflowId]);
 
-  // ── replay / retry individual node (real server re-execution) ──
   // Streams the replay endpoint and updates the step's inspection payload +
   // status in place, so the Debug tab shows the new I/O live.
   const replayNode = useCallback((nodeId: string) => {
@@ -448,7 +436,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     });
   }, [workflowId, currentExecutionId]);
 
-  // ── NL generate apply ──
   const handleGenerate = useCallback((gen: { nodes: WorkflowNode[]; edges: { id: string; source: string; target: string }[] }) => {
     snapshot();
     setRfNodes(toFlowNodes(gen.nodes));
@@ -456,7 +443,16 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setTimeout(() => fitView({ padding: 0.2, duration: 500 }), 80);
   }, [snapshot, setRfNodes, setRfEdges, fitView]);
 
-  // ── keyboard shortcuts ──
+  const saveVersion = useCallback(() => {
+    const message = window.prompt("Version message (optional):", `v${version + 1}`);
+    if (message === null) return;
+    setSaveState("saving");
+    fetch(`/api/workflows/${workflowId}/versions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ graph: graphForApi(), message: message || undefined }) })
+      .then((r) => r.json())
+      .then((v: VersionEntry) => { setVersion(v.version); setVersions((vs) => [v, ...vs.filter((x) => x.id !== v.id)]); setSaveState("saved"); })
+      .catch(() => setSaveState("saved"));
+  }, [workflowId, version, graphForApi]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -505,18 +501,7 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [rfNodes, rfEdges, getViewport, restore, snapshot, setRfNodes, setRfEdges, duplicateSelected, groupSelected, fitView, runWorkflow]);
-
-  // ── version save ──
-  const saveVersion = useCallback(() => {
-    const message = window.prompt("Version message (optional):", `v${version + 1}`);
-    if (message === null) return;
-    setSaveState("saving");
-    fetch(`/api/workflows/${workflowId}/versions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ graph: graphForApi(), message: message || undefined }) })
-      .then((r) => r.json())
-      .then((v: VersionEntry) => { setVersion(v.version); setVersions((vs) => [v, ...vs.filter((x) => x.id !== v.id)]); setSaveState("saved"); })
-      .catch(() => setSaveState("saved"));
-  }, [workflowId, version, graphForApi]);
+  }, [rfNodes, rfEdges, getViewport, restore, snapshot, setRfNodes, setRfEdges, duplicateSelected, groupSelected, fitView, runWorkflow, saveVersion]);
 
   const restoreVersion = useCallback((g: Graph) => {
     snapshot();
@@ -531,7 +516,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setCompareOpen(true);
   }, []);
 
-  // ── context menu ──
   const onPaneContextMenu = useCallback((e: MouseEvent | React.MouseEvent) => {
     e.preventDefault();
     setCtx({ x: e.clientX, y: e.clientY, nodeId: null });
@@ -567,7 +551,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     ];
   }, [ctx, getNode, duplicateSelected, rfNodes, toggleBreakpoint, retryNode, deleteNode, insertNode, fitView]);
 
-  // ── auto layout ──
   const autoLayout = useCallback(() => {
     snapshot();
     const nodes = getNodes().filter((n) => !CANVAS_TYPES.has(n.type ?? ""));
@@ -589,18 +572,16 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   useEffect(() => () => { sseHandle.current?.abort(); }, []);
 
   const nodeCount = rfNodes.filter((n) => !CANVAS_TYPES.has(n.type ?? "")).length;
-  const statusTone = initial.status === "active" ? "success" : initial.status === "error" ? "danger" : initial.status === "paused" ? "warning" : "neutral";
+  const statusTone: Tone = initial.status === "active" ? "success" : initial.status === "error" ? "danger" : initial.status === "paused" ? "warning" : "neutral";
 
   const graphContext = useMemo(() => ({ nodes: fromFlowNodes(rfNodes), edges: domainEdges(rfEdges) }), [rfNodes, rfEdges]);
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -m-4 lg:-m-8">
-      {/* Left palette */}
       <div className="hidden md:flex w-64 shrink-0 border-r border-border bg-bg-soft/60">
         <NodePalette onAISuggest={() => setCopilotOpen(true)} />
       </div>
 
-      {/* Center canvas */}
       <div className="relative flex-1 min-w-0">
         <ReactFlow
           nodes={rfNodes}
@@ -628,7 +609,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
           <Controls className="border! border-border! rounded-lg! overflow-hidden!" />
           <MiniMap pannable zoomable nodeColor={(n) => getNodeDef((n.data as { __type?: string }).__type ?? (n.type === "agentflow" ? "util.delay" : n.type ?? ""))?.color ?? "#3a3f52"} className="border! border-border! rounded-lg!" maskColor="rgba(7,8,12,0.7)" />
 
-          {/* Top-left toolbar */}
           <Panel position="top-left">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-2.5 py-1.5 shadow-lg">
               <button onClick={() => history.back()} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="ArrowLeft" className="h-4 w-4" /></button>
@@ -642,12 +622,11 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
             </div>
           </Panel>
 
-          {/* Header strip */}
           <Panel position="top-center">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-3 py-1.5 shadow-lg">
               <Icon name="Workflow" className="h-4 w-4 text-brand" />
               <input value={name} onChange={(e) => setName(e.target.value)} className="w-40 bg-transparent text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 -mx-1" />
-              <Badge tone={statusTone as any}>{initial.status}</Badge>
+              <Badge tone={statusTone}>{initial.status}</Badge>
               <span className="text-[11px] text-fg-subtle">v{version} · {nodeCount} nodes</span>
               <span className={cn("flex items-center gap-1 text-[11px]", saveState === "saving" ? "text-fg-subtle" : "text-success")}>
                 {saveState === "saving" ? <><Icon name="LoaderCircle" className="h-3 w-3 animate-spin" /> Saving…</> : <><Icon name="Check" className="h-3 w-3" /> Saved</>}
@@ -655,7 +634,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
             </div>
           </Panel>
 
-          {/* Top-right controls */}
           <Panel position="top-right">
             <div className="flex items-center gap-2">
               <Button variant="secondary" size="sm" onClick={() => setOptimizerOpen(true)} title="AI Cost Optimizer (preflight estimate)">
@@ -700,7 +678,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
             </div>
           </Panel>
 
-          {/* Execution dock */}
           <Panel position="bottom-center">
             <div className="w-[42rem] max-w-[90vw]">
               <ExecutionDock
@@ -739,7 +716,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
         )}
       </div>
 
-      {/* Right inspector / copilot */}
       <div className="hidden lg:flex w-80 shrink-0 border-l border-border bg-bg-soft/60 relative">
         <AnimatePresence mode="wait">
           {copilotOpen ? (

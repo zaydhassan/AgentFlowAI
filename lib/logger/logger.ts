@@ -1,25 +1,7 @@
-// =============================================================================
-// Structured Logging — JSON + pretty backends, async non-blocking sink, factory
-// =============================================================================
-// Two output backends share one async sink:
-//   • JsonBackend   — one JSON object per line (NDJSON), the production format.
-//   • PrettyBackend — colored, human-readable lines, the development format.
-// Both write to stdout through an async queue that flushes on `setImmediate`,
-// so a hot request path never blocks on stdout I/O. `flushLogger()` drains the
-// queue (awaitable) — `withRequestLogging` awaits it before returning so logs
-// are never dropped by a serverless freeze.
-//
-// Format + level come from env (LOG_LEVEL, LOG_FORMAT, LOG_PRETTY); a single
-// memoized root logger is shared app-wide. Child loggers inherit threshold +
-// backend and carry a name (component/module) for filtering.
-//
-// Server-only (Node).
-
 import "server-only";
 import { LOG_LEVELS, type LogContext, type LogData, type LogEntry, type LogFormat, type LogLevel, type Logger } from "./types";
 import { getLogContext } from "./context";
 
-// ─────────────────────────── async sink ──────────────────────────────────────
 // Bounded queue + setImmediate flush. Non-blocking: callers enqueue a
 // pre-formatted line and return immediately. Drops (and counts) new lines only
 // if the queue exceeds the cap (backpressure) — never blocks the request.
@@ -75,7 +57,6 @@ export function flushLogger(): Promise<void> {
   return new Promise((resolve) => setImmediate(resolve));
 }
 
-// ─────────────────────────── formatting ─────────────────────────────────────
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -128,7 +109,6 @@ function formatPretty(entry: LogEntry): string {
   );
 }
 
-// ─────────────────────────── logger impl ─────────────────────────────────────
 class AppLogger implements Logger {
   constructor(readonly name: string, private readonly threshold: number, private readonly format: LogFormat) {}
 
@@ -160,7 +140,6 @@ class AppLogger implements Logger {
   fatal(m: string, d?: LogData) { this.log("fatal", m, d); }
 }
 
-// ─────────────────────────── factory ────────────────────────────────────────
 let _root: Logger | null = null;
 
 function parseLevel(name: string | undefined, fallback: LogLevel): number {

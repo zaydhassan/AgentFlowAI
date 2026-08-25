@@ -1,10 +1,3 @@
-// =============================================================================
-// Notifications client — the client-safe subset for the UI.
-// =============================================================================
-// Re-exports the pure types + fetch helpers the bell / settings / history page
-// use. No server-only imports, no secrets, no Prisma. The components talk to the
-// /api/notifications routes through these helpers.
-
 import type { NotificationPreferences, NotificationRecord } from "@/lib/notifications/types";
 
 export type {

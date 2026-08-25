@@ -1,13 +1,5 @@
 "use client";
 
-// Documentation landing-page search. Client-side filtering over the article
-// set (title, category, description). No external dependency — the docs corpus
-// is small enough that filtering in the browser is instant and reliable.
-//
-// Empty query → render nothing (the category grid below already shows
-// everything). Non-empty → a results list of article links; "no results" gets a
-// quiet empty state with a link back to all docs.
-
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";

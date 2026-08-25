@@ -1,10 +1,3 @@
-// =============================================================================
-// Workflow email templates — events: workflow.{completed,failed,cancelled,
-// paused,resumed,retried}. Lazy-loaded by the template registry in ./index.ts.
-// =============================================================================
-// Each renderer receives a TemplateContext and returns a responsive HTML email
-// + plain-text fallback. Reusable components live in ./components.ts.
-
 import {
   badge, divider, emailLayout, esc, row, textBody, SUBJECT_PREFIX,
 } from "./components";
@@ -114,7 +107,7 @@ function finish(
       unsubscribeToken: ctx.unsubscribeToken,
       year: new Date().getUTCFullYear(),
     }),
-    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel }),
+    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel, appUrl: ctx.appUrl }),
   };
 }
 

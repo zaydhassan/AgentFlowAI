@@ -1,16 +1,3 @@
-// GET  /api/user/password — whether the signed-in user has a password set.
-// PATCH /api/user/password — change (or, for OAuth-only users, set) the password.
-//
-// Behaviour:
-//   - If the user already has a passwordHash (credential sign-in), the current
-//     password is required and verified with bcrypt before the new one is set.
-//   - If the user has no passwordHash (OAuth-only — Google/GitHub), they may set
-//     an initial password here without a current password. This lets them also
-//     sign in with email + password while keeping their OAuth provider.
-//
-// The JWT session is not invalidated on change (strategy is JWT, maxAge 7d).
-// Password strength matches the signup/reset rules (≥12, letter + number).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

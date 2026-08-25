@@ -1,12 +1,3 @@
-// Repository — the ONLY place Prisma is read/written for the memory engine, and
-// the ONLY place the embedding vector is touched. Mirrors lib/integrations/
-// repository.ts: client-safe shapes on the way out (toClient strips the vector),
-// server-only in-memory shapes internally. All vector reads/writes go through
-// prisma.$queryRaw/$executeRaw with parameterized SQL (the `vector` column is
-// Unsupported() in Prisma and cannot be used through the typed client).
-//
-// Server-only.
-
 import "server-only";
 import { Prisma } from "@prisma/client";
 import crypto from "node:crypto";
@@ -47,8 +38,6 @@ type MemoryRow = {
 };
 
 type SearchRow = MemoryRow & { score: Prisma.Decimal | number };
-
-// ─────────────────────────── helpers ───────────────────────────────────────
 
 /** SHA-256 of normalized content; the dedup key per (ownerId, scope). */
 export function hashContent(content: string): string {
@@ -91,11 +80,7 @@ function vectorLiteral(vec: number[]): string {
   return "[" + safe.join(",") + "]";
 }
 
-// ─────────────────────────── public API ─────────────────────────────────────
-
 export const repository = {
-  // ── writes ──
-
   async findByHash(ownerId: string, scope: MemoryScope, contentHash: string): Promise<Memory | null> {
     const row = await prisma.memory.findUnique({
       where: { ownerId_scope_contentHash: { ownerId, scope, contentHash } },
@@ -181,8 +166,6 @@ export const repository = {
   async deleteMemory(id: string): Promise<void> {
     await prisma.memory.delete({ where: { id } });
   },
-
-  // ── reads ──
 
   async findById(id: string): Promise<Memory | null> {
     const row = await prisma.memory.findUnique({
@@ -319,8 +302,6 @@ export const repository = {
     return rows.map((r) => ({ memory: toClient(r), score: num(r.score) }));
   },
 
-  // ── management ──
-
   async listForManage(userId: string, scope?: MemoryScope): Promise<{ id: string; scope: string; importanceScore: number; hitCount: number; accessCount: number; createdAt: Date }[]> {
     const rows = await prisma.memory.findMany({
       where: { ownerId: userId, status: "active", ...(scope ? { scope } : {}) },
@@ -349,7 +330,6 @@ export const repository = {
         data: { status: "merged" },
       }),
     ]);
-    // Pull the drop's counters and add them to the keep, then remove the embedding.
     const drop = await prisma.memory.findUnique({ where: { id: dropId }, select: { accessCount: true, hitCount: true } });
     if (drop) {
       await prisma.memory.update({
@@ -367,8 +347,6 @@ export const repository = {
   async setImportance(id: string, importanceScore: number): Promise<void> {
     await prisma.memory.update({ where: { id }, data: { importanceScore } });
   },
-
-  // ── collections ──
 
   async listCollections(ownerId: string): Promise<MemoryCollection[]> {
     const rows = await prisma.memoryCollection.findMany({
@@ -425,8 +403,6 @@ export const repository = {
     };
   },
 
-  // ── events (observability) ──
-
   async recordEvent(input: { ownerId: string; orgId?: string | null; kind: string; scope: string; memoryId?: string | null; score?: number | null }): Promise<void> {
     await prisma.memoryEvent.create({
       data: {
@@ -439,8 +415,6 @@ export const repository = {
       },
     });
   },
-
-  // ── stats (dashboard) ──
 
   async stats(ownerId: string): Promise<MemoryStats> {
     const [byScopeRows, eventRows, collections, storeSizeRows] = await Promise.all([

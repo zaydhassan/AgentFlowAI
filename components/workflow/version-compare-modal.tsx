@@ -23,7 +23,6 @@ interface CompareData {
   diff: GraphDiff;
 }
 
-// ── value formatting for the config diff ──
 function fmt(v: unknown): string {
   if (v === undefined) return "∅";
   if (v === null) return "null";
@@ -58,7 +57,6 @@ export function VersionCompareModal({
   initialTo?: number;
   onClose: () => void;
 }) {
-  // Default to the two most recent versions when none are preselected.
   const sortedDesc = useMemo(() => [...versions].sort((a, b) => b.version - a.version), [versions]);
   const [fromV, setFromV] = useState<number>(initialFrom ?? sortedDesc[1]?.version ?? sortedDesc[0]?.version ?? 0);
   const [toV, setToV] = useState<number>(initialTo ?? sortedDesc[0]?.version ?? 0);
@@ -74,6 +72,9 @@ export function VersionCompareModal({
   }, [onClose]);
 
   useEffect(() => {
+    // Fetch the comparison when the selected versions change; the leading
+    // setData(null) clears stale results before the async load.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!fromV || !toV || fromV === toV) { setData(null); return; }
     const ctrl = new AbortController();
     setLoading(true);

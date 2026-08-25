@@ -1,13 +1,3 @@
-// =============================================================================
-// Health Monitoring — types + HealthProvider interface
-// =============================================================================
-// Pure types, runtime-agnostic. A HealthProvider probes one dependency and
-// returns a CheckResult with a status + latency. The runner runs every
-// provider in parallel (each capped by its own timeout) and aggregates into an
-// overall readiness status. Only PostgreSQL is "critical" — its failure makes
-// the app UNHEALTHY; every other dependency failure is DEGRADED (the app keeps
-// serving, with reduced capability). See lib/health/index.ts for the matrix.
-
 export type HealthStatus = "healthy" | "degraded" | "unhealthy";
 
 /** Result of probing one dependency. Extra fields (e.g. queues, provider) are allowed. */

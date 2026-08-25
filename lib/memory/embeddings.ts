@@ -1,15 +1,3 @@
-// Embedding providers for the memory engine. Provider-agnostic: the
-// EmbeddingProvider interface (lib/memory/types.ts) is the swappable seam —
-// add Voyage/Cohere/local implementations later without touching the engine.
-//
-// OpenAI today, via fetch (no SDK — matches lib/ai/provider.ts philosophy).
-// Reuses OPENAI_API_KEY (the same key the AI nodes use for generation), so a
-// user with AI configured gets memory for free. When no key is set the provider
-// is unconfigured and the memory engine no-ops cleanly — it NEVER fakes
-// embeddings.
-//
-// Server-only.
-
 import "server-only";
 import type { EmbeddingProvider, EmbeddingProviderId, EmbeddingVector } from "./types";
 
@@ -56,8 +44,6 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     return v;
   }
 }
-
-// ─────────────────────────── registry + factory ─────────────────────────────
 
 const providers: Record<EmbeddingProviderId, EmbeddingProvider> = {
   openai: new OpenAIEmbeddingProvider(),

@@ -1,10 +1,5 @@
 "use client";
 
-// NotificationsBell — the real, DB-backed notification center dropdown.
-// Replaces the mock-data bell in the topbar. Polls /api/notifications (30s),
-// shows an unread badge, lists the latest notifications, supports mark-read +
-// mark-all-read, and links to the full history page. No mock data.
-
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Badge } from "@/components/ui/badge";

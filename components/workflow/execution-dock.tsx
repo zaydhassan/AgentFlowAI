@@ -24,7 +24,6 @@ export interface DockStep {
   retries: number;
   error?: string;
   logs: string[];
-  // ── Debugger inspection payload (optional; populated from node:success/fail).
   nodeType?: string;
   config?: unknown;
   input?: unknown;
@@ -233,11 +232,6 @@ function StepCard({ step, onRetry, onDiagnose }: { step: DockStep; onRetry: (id:
     </div>
   );
 }
-
-// ── Debug tab ──────────────────────────────────────────────────────────────
-// Execution state viewer + an inspectable per-node timeline. Each step expands
-// to show the debugger inspection payload (config, input, output, prompt,
-// retrieved memories) captured by the engine, with a real server-side Replay.
 
 function DebugTab({
   steps,

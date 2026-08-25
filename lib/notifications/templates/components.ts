@@ -1,17 +1,3 @@
-// =============================================================================
-// Email template components — the shared design system for every notification
-// email. Inline-styled (email clients ignore external <style> for elements),
-// with a <head> <style> block for the dark-mode media query + reset. No external
-// assets — the logo is an inline SVG, accents are hex colors. Responsive down to
-// 320px. Dark-mode compatible via prefers-color-scheme.
-// =============================================================================
-// Comparable to Stripe / Linear / GitHub / Vercel / OpenAI transactional email:
-// a single centered card, brand gradient logo tile, accent status badge, one
-// primary CTA, a muted footer with unsubscribe + preferences links.
-//
-// Pure functions, no server-only (templates are lazy-loaded by the engine on the
-// server; keeping this module side-effect-free lets it be unit-tested too).
-
 /** Brand palette — matches the app gradient (brand → ai). */
 export const PALETTE = {
   brand: "#7c5cff",
@@ -143,8 +129,6 @@ export function textLine(s: string): string {
   return s;
 }
 
-// ─────────────────────────── layout ──────────────────────────────────────────
-
 /** Subject line prefix for consistent inbox recognition. */
 export const SUBJECT_PREFIX = "AgentFlow";
 
@@ -242,9 +226,15 @@ export function emailLayout(args: {
 }
 
 /** Build a plain-text fallback from a title, body, and optional link. */
-export function textBody(args: { title: string; body: string; link?: string; linkLabel?: string }): string {
+export function textBody(args: {
+  title: string;
+  body: string;
+  link?: string;
+  linkLabel?: string;
+  appUrl: string;
+}): string {
   const parts = [args.title, "", args.body];
   if (args.link) parts.push("", `${args.linkLabel ?? "Open"}: ${args.link}`);
-  parts.push("", "— AgentFlow AI", "Manage notifications: https://agentflow.ai/settings/notifications");
+  parts.push("", "— AgentFlow AI", `Manage notifications: ${args.appUrl}/settings/notifications`);
   return parts.join("\n");
 }

@@ -1,9 +1,5 @@
 "use client";
 
-// Client-safe MCP helpers. Browser fetch wrappers for /api/mcp/** — typed, no
-// secrets, no SDK. The settings page + inspector use these. Mirrors
-// lib/integrations/client.ts.
-
 import type {
   McpServer,
   McpHealth,

@@ -1,15 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — agent system prompts
-// ============================================================
-// Each agent gets a focused system prompt. Prompts are intentionally explicit
-// about the agent's role, inputs, and required JSON output shape (for the
-// Planner / Reviewer which return structured decisions).
-//
-// A shared preamble carries the workspace context and any user guidance so
-// every agent operates with the same grounding. The preamble is spliced in at
-// runtime via the `__PREAMBLE__` token (a literal placeholder, NOT a template
-// interpolation — so the prompt bodies stay static strings).
-
 import type { AgentId } from "./types";
 
 const PREAMBLE_TOKEN = "__PREAMBLE__";
@@ -29,8 +17,6 @@ export function sharedPreamble(opts: { objective: string; guidance?: string }): 
     .join("\n");
 }
 
-// ─────────────────────────── Planner ────────────────────────────────────────
-
 const PLANNER_BODY = `${PREAMBLE_TOKEN}
 You are the PLANNER agent.
 Decompose the objective into 2–6 concrete subtasks and assign each to exactly one worker agent.
@@ -47,28 +33,20 @@ Respond with STRICT JSON of shape:
 }
 Use ids t1, t2, t3, ... in order. Prefer assigning at least one subtask to each of research and reasoning when the objective warrants it.`;
 
-// ─────────────────────────── Research ───────────────────────────────────────
-
 const RESEARCH_BODY = `${PREAMBLE_TOKEN}
 You are the RESEARCH agent.
 For each subtask assigned to you, gather/summarize the relevant information from the provided context and memories, and produce a concise finding.
 Respond with plain text: a short bulleted summary per subtask (prefix each with "[tN] ").`;
-
-// ─────────────────────────── Memory ─────────────────────────────────────────
 
 const MEMORY_BODY = `${PREAMBLE_TOKEN}
 You are the MEMORY agent.
 Retrieve and organize relevant long-term memories for the objective. You are given recalled memories; synthesize them into a concise context brief that the other agents can use.
 Respond with plain text: a short brief that distills the most relevant recalled facts, prefixed "Memory brief:".`;
 
-// ─────────────────────────── Reasoning ──────────────────────────────────────
-
 const REASONING_BODY = `${PREAMBLE_TOKEN}
 You are the REASONING agent.
 For each subtask assigned to you, reason step by step and produce a conclusion. Show concise reasoning, then a verdict.
 Respond with plain text: per subtask, prefix "[tN] ", then "Reasoning: ...", then "Conclusion: ...".`;
-
-// ─────────────────────────── Reviewer ───────────────────────────────────────
 
 const REVIEWER_BODY = `${PREAMBLE_TOKEN}
 You are the REVIEWER agent.
@@ -80,8 +58,6 @@ Respond with STRICT JSON of shape:
   "corrections": ["specific change required", "..."]
 }
 Set approved=true only when the results satisfy the objective. corrections must be actionable instructions for the Planner.`;
-
-// ─────────────────────────── Executor ───────────────────────────────────────
 
 const EXECUTOR_BODY = `${PREAMBLE_TOKEN}
 You are the EXECUTOR agent.

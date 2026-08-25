@@ -1,10 +1,3 @@
-// GET  /api/notifications        — list + search/filter + unread count
-// POST /api/notifications        — { action: "markAllRead", category? } | emit (admin)
-//
-// Per-user. Filters: category, severity, read, q (title/body search), since,
-// until, limit, cursor. When ?unread=1 is set, returns ONLY { unread } (a
-// lightweight badge poll). Search/filter is driven by real DB rows — no mocks.
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiUser } from "@/lib/auth/api";
@@ -29,7 +22,6 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const sp = url.searchParams;
 
-  // Lightweight unread-only poll for the bell badge.
   if (sp.get("unread") === "1") {
     const unread = await countUnread(user.id);
     return NextResponse.json({ unread });

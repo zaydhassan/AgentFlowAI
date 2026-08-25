@@ -1,15 +1,3 @@
-// ============================================================
-// Reviewer Agent
-// ============================================================
-// Evaluates the aggregated worker results against the objective and decides
-// approve / request-revisions. When human approval is enabled, the runtime
-// pauses (interruptBefore) before this node; on resume the operator's decision
-// arrives in ctx.approval. A human rejection short-circuits the LLM review and
-// routes back to the planner with the operator's feedback as a correction.
-//
-// Per the brief: "Reviewer stores corrections." Corrections are written to
-// long-term memory (kind "correction") so future runs in the workspace learn.
-
 import "server-only";
 import type { AgentDefinition, AgentState, ReviewOutcome } from "../types";
 import { systemPromptFor } from "../prompts";
@@ -26,7 +14,6 @@ export const reviewerAgent: AgentDefinition = {
     ctx.trace("agent:start", "Reviewing results");
     ctx.reason("Evaluate results against objective");
 
-    // Human-in-the-loop short-circuit.
     if (ctx.approval && ctx.approval.approved === false) {
       const feedback = ctx.approval.feedback?.trim() || "Operator requested revisions.";
       const review: ReviewOutcome = { approved: false, confidence: 0, corrections: [feedback] };

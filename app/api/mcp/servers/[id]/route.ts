@@ -1,5 +1,3 @@
-// GET/PATCH/DELETE /api/mcp/servers/[id] — per-server CRUD (ownership-checked).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { getServer, updateServer, deleteServer } from "@/lib/mcp";

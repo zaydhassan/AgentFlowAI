@@ -1,12 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — agent registry
-// ============================================================
-// A simple plugin registry. Agents register an AgentDefinition; the graph
-// builder iterates the registry to wire LangGraph nodes. Adding an agent later
-// = call registerAgent(...) at import time — no runtime edits required.
-//
-// Server-only (agents pull server-only tools).
-
 import "server-only";
 import type { AgentDefinition, AgentId } from "./types";
 

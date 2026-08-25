@@ -1,10 +1,5 @@
 "use client";
 
-// /notifications — full notification history with search + filters + delivery
-// status. All data is real (from /api/notifications); no mocks. Supports filter
-// by category/severity/read, free-text search, mark-read, mark-all-read, and
-// per-notification delivery audit (channel/provider/status/attempts).
-
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
@@ -123,7 +118,6 @@ export default function NotificationsPage() {
         }
       />
 
-      {/* Filters */}
       <Card className="mb-4 p-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -159,7 +153,6 @@ export default function NotificationsPage() {
         </div>
       </Card>
 
-      {/* List */}
       <Card className="divide-y divide-border">
         {loading && items.length === 0 ? (
           <div className="px-4 py-10 text-center text-sm text-fg-subtle">Loading…</div>
@@ -205,7 +198,6 @@ export default function NotificationsPage() {
                 </button>
               </div>
 
-              {/* Delivery audit (expandable) */}
               {expanded === n.id && (
                 <div className="bg-surface-2/30 px-4 py-3">
                   <div className="mb-2 text-[11px] font-medium text-fg-muted">Delivery audit</div>

@@ -1,10 +1,5 @@
 "use client";
 
-// NotificationsSettings — the Settings → Notifications panel.
-// Loads the user's real preferences from /api/notifications/preferences, edits
-// them in-place, and saves on submit. Category opt-ins, frequency, quiet hours,
-// and timezone — all real, all persisted. No mock data.
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

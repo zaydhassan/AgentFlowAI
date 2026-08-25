@@ -135,7 +135,7 @@ export default function ExecutionDocPage() {
           <h2>Code examples</h2>
           <p>
             Attach a retry policy to any node. This HTTP node retries on 5xx and timeouts with
-            exponential backoff, capped at five attempts and an 8s ceiling.
+            exponential backoff, a configurable attempt cap, and a per-attempt delay ceiling.
           </p>
           <CodeBlock filename="retry-policy.json" language="json" code={retryPolicy} />
 

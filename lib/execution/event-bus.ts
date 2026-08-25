@@ -1,20 +1,3 @@
-// In-process pub/sub for live execution events.
-//
-// The run route already streams events to the one client that started the run
-// (the workflow builder). The Debugger needs the same live event stream to be
-// consumable from a *second* client — e.g. the executions/[id] page opened
-// mid-run, or a future observability view — without re-triggering the run.
-// There is no Redis pub/sub in this app, so we mirror the existing in-memory
-// run-registry pattern (lib/execution/engine.ts `runs` Map): a process-local
-// subscriber registry keyed by executionId.
-//
-// Single-process dev server only — same documented limitation as the run
-// registry. The run route publishes every event; the live-stream SSE route
-// subscribes. When a run is not in flight, the stream route closes immediately
-// (there is nothing live to tail; persisted history lives in the [eid] API).
-//
-// `Date.now()` is fine — server module.
-
 import "server-only";
 import type { ExecutionEvent } from "./engine";
 

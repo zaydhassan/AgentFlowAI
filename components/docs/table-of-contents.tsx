@@ -1,13 +1,5 @@
 "use client";
 
-// Right-rail table of contents with scrollspy. Watches each <section id> in the
-// article body via IntersectionObserver and highlights the entry for whichever
-// section is currently in view. Clicking an entry smooth-scrolls to it.
-//
-// "On this page" stays useful on long articles; on short ones it still lists the
-// sections for orientation. Hidden below `lg` (the right rail only exists on
-// wide screens).
-
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { DocSection } from "@/lib/docs/navigation";

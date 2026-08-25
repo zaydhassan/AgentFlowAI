@@ -1,8 +1,3 @@
-// GET /api/integrations/callback — the OAuth redirect target. Google sends back
-// ?code=&state= (or ?error=). Verifies the state cookie, exchanges the code,
-// persists the account, and redirects to the settings page (or returnUrl).
-// Clears the state cookie on the way out.
-
 import { NextResponse } from "next/server";
 import { handleOAuthCallback, OAUTH_STATE_COOKIE } from "@/lib/integrations";
 

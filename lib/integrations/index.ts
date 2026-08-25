@@ -1,10 +1,3 @@
-// Integrations facade. The rest of the app imports only from "@/lib/integrations"
-// and never references a specific provider (Gmail today; Slack/Notion/etc.
-// later). The facade owns the OAuth orchestration: it signs/verifies the state
-// cookie (state.ts), persists accounts (repository.ts), refreshes+persists
-// tokens before action runs, and delegates token work + actions to the
-// provider. Server-only.
-
 import "server-only";
 import { allProviders, getProvider } from "./providers";
 import { repository } from "./repository";
@@ -30,8 +23,6 @@ export type {
 export { OAUTH_STATE_COOKIE, stateCookieAttributes } from "./state";
 export { encryptionConfigured } from "./crypto";
 
-// ─────────────────────────── app URL / redirect URI ─────────────────────────
-
 /** Public app URL — prefers NEXT_PUBLIC_APP_URL, then APP_URL, then the request origin. */
 export function appUrl(requestUrl: string | URL): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
@@ -51,8 +42,6 @@ export function integrationsCallbackUrl(requestUrl: string | URL): string {
   return `${appUrl(requestUrl)}/api/integrations/callback`;
 }
 
-// ─────────────────────────── providers ─────────────────────────────────────
-
 export function getIntegrationProvider(id: string): IntegrationProvider | undefined {
   return getProvider(id);
 }
@@ -69,8 +58,6 @@ export async function listProviders(
   }
   return out;
 }
-
-// ─────────────────────────── OAuth start ────────────────────────────────────
 
 export interface StartOAuthArgs {
   providerId: IntegrationProviderId;
@@ -104,8 +91,6 @@ export async function getOAuthStart(args: StartOAuthArgs): Promise<{ authUrl: st
   void nonce;
   return { authUrl, stateValue: value };
 }
-
-// ─────────────────────────── OAuth callback ─────────────────────────────────
 
 export interface CallbackArgs {
   code: string;
@@ -145,8 +130,6 @@ export async function handleOAuthCallback(args: CallbackArgs): Promise<{
     return { ok: false, error: err instanceof Error ? err.message : "OAuth code exchange failed." };
   }
 }
-
-// ─────────────────────────── accounts ───────────────────────────────────────
 
 export async function listAccounts(userId: string, provider?: IntegrationProviderId): Promise<IntegrationAccount[]> {
   return repository.listClientAccounts(userId, provider);
@@ -201,8 +184,6 @@ export async function refreshAccount(userId: string, accountId: string): Promise
     throw err instanceof Error ? err : new Error("Refresh failed.");
   }
 }
-
-// ─────────────────────────── action execution ──────────────────────────────
 
 /**
  * Ensure a stored account has a live access token, refreshing + persisting if

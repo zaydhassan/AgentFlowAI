@@ -1,14 +1,3 @@
-// ============================================================
-// Memory Agent
-// ============================================================
-// The dedicated memory specialist. Retrieves a broad set of relevant long-term
-// memories for the objective and synthesizes them into a context brief the
-// other agents consume. Distinct from the planner's single recall: this agent
-// does a wider retrieval and organizes the results.
-//
-// Memory touches go exclusively through the memory gateway (workspace-isolated,
-// permission-checked). It never reads another workspace's memory.
-
 import "server-only";
 import type { AgentDefinition, AgentResult, AgentState } from "../types";
 import { systemPromptFor } from "../prompts";
@@ -42,7 +31,6 @@ export const memoryAgent: AgentDefinition = {
       };
     }
 
-    // Synthesize the recalled memories into a brief.
     const system = systemPromptFor("memory", { objective: state.objective, guidance: ctx.guidance });
     const memoryBlock = hits
       .map((h, i) => `(${i + 1}) [${h.score.toFixed(2)}] ${h.memory.content}`)

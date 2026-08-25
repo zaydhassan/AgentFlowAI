@@ -1,21 +1,3 @@
-// Single-node re-execution for the AI Workflow Debugger.
-//
-// "Replay failed node" / "retry individual node" re-runs ONE node in isolation,
-// streaming the same ExecutionEvent shape the run engine produces, but seeded
-// with the node's *recorded* inputs (from its persisted ExecutionStep `input`)
-// so a replay is deterministic w.r.t. upstream state. It reuses the real action
-// executors (lib/integrations runAction, lib/agents runMultiAgent, lib/ai
-// completeText, lib/memory getMemoryEngine) and the engine's exported helpers
-// (upstreamOutputs / synthOutput / nodeLogs / nodeReasoning). The hot
-// runWorkflow loop is untouched — this is an additive, parallel executor.
-//
-// It deliberately does NOT re-simulate flakiness/timing: a replay is meant to
-// inspect a node's real I/O, so the simulated branch streams its logs and
-// succeeds. Real branches (memory AI, multi-agent, MCP/integration) perform
-// the live call again.
-//
-// `Date.now()` is fine — server module.
-
 import "server-only";
 import type { WorkflowNode } from "@/lib/types";
 import { getNodeDef } from "@/lib/nodes";
@@ -94,7 +76,6 @@ export async function* runSingleNode(
 
   yield { type: "node:start", at: at(), nodeId: node.id, nodeName: node.data.label, status: "running", attempt: 0, nodeType: node.type };
 
-  // ── memory-aware AI ──
   if (isMemoryAINode(node)) {
     if (!controls.userId) {
       const err = "No user context — sign in to run memory-enabled AI nodes.";
@@ -121,19 +102,26 @@ export async function* runSingleNode(
     const baseSystem = typeof cfg.system === "string" && cfg.system.trim() ? cfg.system : `You are an AI agent ("${node.data.label || node.type}") in an AgentFlow workflow.`;
     const memoryBlock = hits.length ? `\n\nRelevant memories (most relevant first, score in brackets):\n${hits.map((h, i) => `(${i + 1}) [${h.score.toFixed(2)}] ${h.memory.content}`).join("\n")}` : "";
     const augmentedSystem = baseSystem + memoryBlock;
-    const { text: response, tokensUsed } = await completeText(augmentedSystem, userPrompt);
-    if (controls.stopped()) return;
-    const elapsed = Date.now() - nodeStart;
-    yield {
-      type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0,
-      durationMs: elapsed, tokensUsed, cost: tokensUsed * TOKEN_RATE, retries: 0,
-      nodeType: node.type, config: cfg, input: inputs, output: { text: response, memories: hits },
-      prompt: { system: augmentedSystem, user: userPrompt }, memories: hits.map(mem),
-    };
-    return;
+    try {
+      const { text: response, tokensUsed } = await completeText(augmentedSystem, userPrompt);
+      if (controls.stopped()) return;
+      const elapsed = Date.now() - nodeStart;
+      yield {
+        type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0,
+        durationMs: elapsed, tokensUsed, cost: tokensUsed * TOKEN_RATE, retries: 0,
+        nodeType: node.type, config: cfg, input: inputs, output: { text: response, memories: hits },
+        prompt: { system: augmentedSystem, user: userPrompt }, memories: hits.map(mem),
+      };
+      return;
+    } catch (err) {
+      // Configured key but the model call failed — surface as a node failure
+      // (completeText no longer masks this with deterministic output).
+      const e = err instanceof Error ? err.message : "AI node failed";
+      yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: e, attempt: 0, error: e, durationMs: Date.now() - nodeStart, tokensUsed: 0, cost: 0, retries: 0, nodeType: node.type, config: cfg, input: inputs, prompt: { system: augmentedSystem, user: userPrompt } };
+      return;
+    }
   }
 
-  // ── multi-agent runtime ──
   if (node.type === "ai.multiAgent") {
     if (!controls.userId) {
       const err = "No user context — sign in to run the Multi-Agent runtime.";
@@ -170,7 +158,6 @@ export async function* runSingleNode(
     return;
   }
 
-  // ── real integration / MCP action ──
   const actionMeta = resolveAction(node.type);
   if (actionMeta) {
     if (!controls.userId) {
@@ -205,7 +192,6 @@ export async function* runSingleNode(
     return;
   }
 
-  // ── simulated node: stream its logs and emit the synthesized I/O ──
   const logs = nodeLogs(node);
   for (const log of logs) {
     await sleep(120, controls.stopped);

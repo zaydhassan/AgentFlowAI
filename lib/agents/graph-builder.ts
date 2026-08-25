@@ -1,41 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — LangGraph graph builder
-// ============================================================
-// Builds the orchestration graph from the agent registry:
-//
-//   START → planner ─┬→ research ─┐
-//                    ├→ memory   ─┤→ aggregator → reviewer ──→ executor → END
-//                    └→ reasoning ┘                    │
-//                                          (revise) ←──┘
-//
-// Topology:
-//  • planner fans out to the three worker agents in PARALLEL (plain edges —
-//    LangGraph runs all successors of a node concurrently).
-//  • research / memory / reasoning all edge into `aggregator`, which is a
-//    join barrier — it runs once after all three complete. The `results`
-//    channel's object-merge reducer combines their parallel writes.
-//  • aggregator → reviewer.
-//  • reviewer → conditional router:
-//      - approved OR iterations >= maxIterations  → executor (terminates)
-//      - otherwise                                → planner (revision loop)
-//  • executor → END.
-//
-// Loop prevention: the planner increments `iterations` (adder reducer) on
-// every pass; the router force-routes to executor once maxIterations is hit,
-// and LangGraph's recursionLimit (passed at stream time) is a hard backstop.
-//
-// Human approval: when requireApproval, the graph compiles with
-// interruptBefore:["reviewer"] so the run pauses for an operator decision
-// before review. The runtime resumes via the thread_id (see runtime.ts).
-//
-// The builder is pure w.r.t. agent logic — it accepts pre-wrapped node
-// functions, so it stays testable and the runtime owns retry/timeout/tracing.
-//
-// NOTE: LangGraph's StateGraph narrows node-name types statically, which
-// breaks for our registry-driven (string-keyed) node set. We wire the graph
-// through a permissive `WireableGraph` interface so adding agents never
-// requires a type change here.
-
 import "server-only";
 import { END, MemorySaver, START, StateGraph } from "@langchain/langgraph";
 import { AgentStateAnnotation, type GraphState } from "./state";
@@ -64,7 +26,6 @@ export interface BuiltGraph {
   snapshot: ExecutionGraphSnapshot;
 }
 
-// The static worker agents that run in parallel after the planner.
 export const WORKER_AGENTS = ["research", "memory", "reasoning"] as const;
 export const AGGREGATOR_NODE = "aggregator";
 
@@ -84,13 +45,11 @@ export function buildGraph(opts: BuildGraphOptions): BuiltGraph {
     graph.addNode(id, fn);
   }
 
-  // planner fans out to the three workers in parallel.
   graph.addEdge(START, "planner");
   for (const w of WORKER_AGENTS) {
     if (opts.nodes[w]) graph.addEdge("planner", w);
   }
 
-  // Workers join at the aggregator (barrier).
   for (const w of WORKER_AGENTS) {
     if (opts.nodes[w]) graph.addEdge(w, AGGREGATOR_NODE);
   }

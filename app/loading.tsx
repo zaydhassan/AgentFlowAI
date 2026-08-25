@@ -1,6 +1,3 @@
-// AgentFlow AI — root loading screen.
-// Shown by the App Router while route segments are rendering/suspending.
-// Premium, calm, on-brand: the Flow Loop flows while the app boots.
 const LOOP =
   "M24 30 L40 30 C40 22 37 15 32 13 C27 15 24 22 24 30 C19 36 12 43 12 53 C19 62 45 62 52 53 C52 43 45 36 40 30 L24 30 Z";
 
@@ -28,7 +25,6 @@ export default function Loading() {
             <stop offset="1" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
-        {/* faint full loop */}
         <path
           d={LOOP}
           stroke="var(--color-fg-subtle)"
@@ -37,7 +33,6 @@ export default function Loading() {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* traveling gradient arc — continuous execution */}
         <path
           d={LOOP}
           stroke="url(#af-load)"

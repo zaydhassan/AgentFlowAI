@@ -1,25 +1,3 @@
-// =============================================================================
-// Error Monitoring — browser facade (client / @sentry/react)
-// =============================================================================
-// The browser-side capture surface imported by client components (notably
-// app/global-error.tsx). Mirrors the server facade's contract but uses
-// `@sentry/react` and the NEXT_PUBLIC_* env vars (only NEXT_PUBLIC_ vars reach
-// the client bundle; SENTRY_DSN is server-only and stripped).
-//
-// • Lazy-imports @sentry/react and lazy-inits the SDK on first capture, so the
-//   client bundle pays nothing until monitoring is actually used, and so a
-//   missing DSN is a cheap no-op rather than a crash.
-// • DSN comes from NEXT_PUBLIC_SENTRY_DSN. The Sentry DSN is a PUBLIC endpoint
-//   identifier (it's safe to ship to the browser — Sentry documents this);
-//   it carries no secret.
-// • `beforeSend` runs the shared scrubSensitive over every outgoing event —
-//   the same sanitization chokepoint as the server. Headers/cookies/PII the
-//   SDK auto-attaches are scrubbed before send.
-// • captureException lazily ensures init has run (idempotent) before sending.
-//
-// Browser-safe: no "server-only", no Node APIs, no ioredis, no Prisma. Reuses
-// only the shared types + sanitizer.
-
 import type * as SentryReact from "@sentry/react";
 import type {
   MonitoringBreadcrumb,

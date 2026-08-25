@@ -1,9 +1,3 @@
-// POST /api/payments/webhook/stripe — Stripe webhook, refactored to delegate to
-// the StripeProvider + repository. DORMANT under the default
-// PAYMENT_PROVIDER=razorpay config; fully functional when PAYMENT_PROVIDER=stripe.
-//
-// Must read the raw body for signature verification (request.text()).
-
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/payments/repository";
 import { activeProviderId, getPaymentProvider } from "@/lib/payments";

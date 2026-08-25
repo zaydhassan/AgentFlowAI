@@ -1,6 +1,3 @@
-// GET /api/mcp/servers — list the user's MCP servers (client-safe, no creds).
-// POST /api/mcp/servers — register a new MCP server (encrypts creds + env).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { listServers, createServer } from "@/lib/mcp";

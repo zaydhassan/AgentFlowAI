@@ -1,16 +1,3 @@
-// Server-side execution engine for the Visual Workflow Builder.
-//
-// This is a structured *simulation*: the control flow (topological order,
-// streaming events, timing, retries, breakpoints, pause/resume/stop) is real
-// and server-driven; node *actions* are simulated (no live calls to external
-// services). This matches the established pattern in lib/mock/engine.ts and
-// is appropriate for a builder product — n8n's UI also simulates until
-// credentials are wired. The engine is the single source of truth the SSE run
-// route streams from, and it produces the rows we persist to Execution +
-// ExecutionStep.
-//
-// `Date.now()` is fine here — this is a server module, not a workflow script.
-
 import "server-only";
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
 import { getNodeDef } from "@/lib/nodes";
@@ -18,6 +5,15 @@ import { resolveAction, runAction, type ActionResult } from "./actions/registry"
 import { runMultiAgent, type MultiAgentActionResult } from "./actions/multiagent";
 import { getMemoryEngine, embeddingConfigured, type MemoryHit, type MemoryScope } from "@/lib/memory";
 import { completeText } from "@/lib/ai/provider";
+
+/**
+ * Per-node retry cap for transient failures. Multi-agent runs, integration
+ * actions (e.g. Gmail), and the generic node runner all retry up to this many
+ * extra attempts before surfacing the failure. Tunable — the docs
+ * (app/docs/execution) describe a richer per-node `retry` policy schema as the
+ * intended future shape; this is the enforced default today.
+ */
+export const MAX_NODE_RETRIES = 2;
 
 // Re-exported graph shape (mirrors lib/workflow/graph.ts without a cross-import).
 export interface EngineGraph {
@@ -111,8 +107,6 @@ export interface NodeResult {
   reasoning: string[] | null;
   error?: string;
 }
-
-// ─────────────────────────── graph analysis ──────────────────────────────
 
 export function topoOrder(nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[] {
   const adj = new Map<string, string[]>();
@@ -224,7 +218,6 @@ export function nodeReasoning(node: WorkflowNode): string[] | null {
   return ["Parse input", "Generate", "Validate output"];
 }
 
-// ─────────────────────────── data flow (real actions) ───────────────────────
 // Real integration actions read their upstream nodes' outputs and emit a
 // structured output for downstream nodes. Simulated nodes synthesize a
 // representative output so a downstream real node (e.g. gmail.label.add after a
@@ -251,8 +244,6 @@ export function synthOutput(node: WorkflowNode): unknown {
   return { value: label, simulated: true };
 }
 
-// ─────────────────────────── timing helpers ───────────────────────────────
-
 const TOKEN_RATE = 0.002 / 1000; // $0.002 per 1k tokens — illustrative
 
 // Map a simulated node duration to a real wall-clock delay that's watchable
@@ -272,7 +263,6 @@ function sleep(ms: number, stopped: () => boolean): Promise<void> {
   });
 }
 
-// ─────────────────────────── memory-aware AI branch ──────────────────────
 // AI nodes that opt into long-term memory (config.useMemory === true) take a
 // real path: retrieve relevant memories → inject into the prompt → generate a
 // real response (real LLM via lib/ai, or the shipped deterministic fallback
@@ -315,8 +305,6 @@ function buildMemoryUserPrompt(node: WorkflowNode, inputs: unknown[]): string {
 
 const MEMORY_TOP_K = Number(process.env.MEMORY_TOP_K ?? 5) || 5;
 const MEMORY_THRESHOLD = Number(process.env.MEMORY_SIMILARITY_THRESHOLD ?? 0.75) || 0.75;
-
-// ─────────────────────────── the run loop ─────────────────────────────────
 
 export async function* runWorkflow(
   graph: EngineGraph,
@@ -361,7 +349,6 @@ export async function* runWorkflow(
 
     const nodeStart = Date.now();
 
-    // ── memory-aware AI: retrieve → inject → generate → store ──
     // AI nodes with useMemory=true take this real path; every other node falls
     // through to the integration-action / simulation paths below, unchanged.
     if (isMemoryAINode(node)) {
@@ -421,7 +408,6 @@ export async function* runWorkflow(
         }
       }
 
-      // Augmented system prompt: base role + retrieved memories block.
       const baseSystem =
         typeof cfg.system === "string" && cfg.system.trim() ? cfg.system :
         `You are an AI agent ("${node.data.label || node.type}") in an AgentFlow workflow.`;
@@ -432,64 +418,95 @@ export async function* runWorkflow(
         : "";
       const augmentedSystem = baseSystem + memoryBlock;
 
-      const { text: response, tokensUsed } = await completeText(augmentedSystem, userPrompt);
-      const cost = tokensUsed * TOKEN_RATE;
-      if (controls.stopped()) { runStatus = "cancelled"; break; }
+      try {
+        const { text: response, tokensUsed } = await completeText(augmentedSystem, userPrompt);
+        const cost = tokensUsed * TOKEN_RATE;
+        if (controls.stopped()) { runStatus = "cancelled"; break; }
 
-      // Store the exchange as a new memory (best-effort — never blocks the run).
-      if (embeddingConfigured()) {
-        try {
-          const res = await getMemoryEngine().remember({
-            userId: controls.userId,
-            orgId: controls.orgId ?? null,
-            scope,
-            content: `Q: ${userPrompt}\n---\nA: ${response}`,
-            importance,
-            workflowId: controls.workflowId ?? null,
-            agentId: node.id,
-            metadata: { nodeType: node.type, workflowId: controls.workflowId ?? null },
-          });
-          const wrote = `✓ memory · wrote 1 (scope=${scope}, importance=${importance})${res.deduplicated ? " · dedup" : ""}`;
-          stepLogs.push(wrote);
-          yield { type: "node:log", at: at(), nodeId: node.id, log: wrote, status: "running", attempt: 0 };
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "memory write failed";
-          stepLogs.push(`✓ memory · write error: ${msg}`);
-          yield { type: "node:log", at: at(), nodeId: node.id, log: `✓ memory · write error: ${msg}`, status: "running", attempt: 0 };
+        // Store the exchange as a new memory (best-effort — never blocks the run).
+        if (embeddingConfigured()) {
+          try {
+            const res = await getMemoryEngine().remember({
+              userId: controls.userId,
+              orgId: controls.orgId ?? null,
+              scope,
+              content: `Q: ${userPrompt}\n---\nA: ${response}`,
+              importance,
+              workflowId: controls.workflowId ?? null,
+              agentId: node.id,
+              metadata: { nodeType: node.type, workflowId: controls.workflowId ?? null },
+            });
+            const wrote = `✓ memory · wrote 1 (scope=${scope}, importance=${importance})${res.deduplicated ? " · dedup" : ""}`;
+            stepLogs.push(wrote);
+            yield { type: "node:log", at: at(), nodeId: node.id, log: wrote, status: "running", attempt: 0 };
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : "memory write failed";
+            stepLogs.push(`✓ memory · write error: ${msg}`);
+            yield { type: "node:log", at: at(), nodeId: node.id, log: `✓ memory · write error: ${msg}`, status: "running", attempt: 0 };
+          }
         }
-      }
 
-      const elapsed = Date.now() - nodeStart;
-      nodeOutputs.set(node.id, { text: response, memories: hits });
-      totalTokens += tokensUsed;
-      totalCost += cost;
-      yield {
-        type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0,
-        durationMs: elapsed, tokensUsed, cost, retries: 0,
-        nodeType: node.type,
-        config: cfg,
-        input: inputs,
-        output: { text: response, memories: hits },
-        prompt: { system: augmentedSystem, user: userPrompt },
-        memories: hits.map((h) => ({ score: h.score, id: h.memory.id, content: h.memory.content, scope: h.memory.scope })),
-      };
-      results.push({
-        nodeId: node.id,
-        nodeName: node.data.label || node.type,
-        status: "succeeded",
-        durationMs: elapsed,
-        tokensUsed,
-        cost,
-        retries: 0,
-        logs: stepLogs,
-        reasoning: null,
-      });
-      await sleep(80, controls.stopped);
-      if (controls.stopped()) { runStatus = "cancelled"; break; }
-      continue;
+        const elapsed = Date.now() - nodeStart;
+        nodeOutputs.set(node.id, { text: response, memories: hits });
+        totalTokens += tokensUsed;
+        totalCost += cost;
+        yield {
+          type: "node:success", at: at(), nodeId: node.id, status: "succeeded", log: "Completed", attempt: 0,
+          durationMs: elapsed, tokensUsed, cost, retries: 0,
+          nodeType: node.type,
+          config: cfg,
+          input: inputs,
+          output: { text: response, memories: hits },
+          prompt: { system: augmentedSystem, user: userPrompt },
+          memories: hits.map((h) => ({ score: h.score, id: h.memory.id, content: h.memory.content, scope: h.memory.scope })),
+        };
+        results.push({
+          nodeId: node.id,
+          nodeName: node.data.label || node.type,
+          status: "succeeded",
+          durationMs: elapsed,
+          tokensUsed,
+          cost,
+          retries: 0,
+          logs: stepLogs,
+          reasoning: null,
+        });
+        await sleep(80, controls.stopped);
+        if (controls.stopped()) { runStatus = "cancelled"; break; }
+        continue;
+      } catch (err) {
+        // A key is configured but the model call failed (bad key, quota,
+        // network). Surface it as a real node failure instead of letting the
+        // throw escape the run generator — completeText no longer masks this
+        // with deterministic output, so we record it like any other node fail.
+        const msg = err instanceof Error ? err.message : "AI node failed";
+        const elapsed = Date.now() - nodeStart;
+        stepLogs.push(`✗ AI · ${msg}`);
+        yield {
+          type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: msg, attempt: 0, error: msg,
+          durationMs: elapsed, tokensUsed: 0, cost: 0, retries: 0, nodeType: node.type, config: cfg, input: inputs,
+          prompt: { system: augmentedSystem, user: userPrompt },
+        };
+        runStatus = "failed";
+        runError = runError ?? `Node "${node.data.label || node.type}" failed: ${msg}`;
+        results.push({
+          nodeId: node.id,
+          nodeName: node.data.label || node.type,
+          status: "failed",
+          durationMs: elapsed,
+          tokensUsed: 0,
+          cost: 0,
+          retries: 0,
+          logs: stepLogs,
+          reasoning: null,
+          error: msg,
+        });
+        await sleep(80, controls.stopped);
+        if (controls.stopped()) { runStatus = "cancelled"; break; }
+        continue;
+      }
     }
 
-    // ── multi-agent runtime: launch the LangGraph orchestration ──
     // ai.multiAgent nodes run the real multi-agent runtime (lib/agents) and
     // stream per-agent logs as node:log events. Drained with the same retry
     // shape as integration actions. Independent of the OAuth action registry.
@@ -507,7 +524,7 @@ export async function* runWorkflow(
         maError = "No user context — sign in to run the Multi-Agent runtime.";
         yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: maError, attempt: 0, error: maError, durationMs: 0, retries: 0 };
       } else {
-        while (attempt <= 2) {
+        while (attempt <= MAX_NODE_RETRIES) {
           if (controls.stopped()) { runStatus = "cancelled"; break; }
           const gen = runMultiAgent({
             userId: controls.userId,
@@ -539,7 +556,7 @@ export async function* runWorkflow(
           maTokens = result?.tokensUsed ?? 0;
           maCost = result?.cost ?? 0;
 
-          if (failed && attempt < 2 && result?.retryable !== false) {
+          if (failed && attempt < MAX_NODE_RETRIES && result?.retryable !== false) {
             maError = result?.error ?? "Multi-agent run failed";
             yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: maError, attempt, error: maError, durationMs: elapsed, tokensUsed: maTokens, cost: maCost, retries: attempt };
             yield { type: "node:retry", at: at(), nodeId: node.id, status: "retrying", log: "Retrying multi-agent run…", attempt: attempt + 1 };
@@ -586,7 +603,6 @@ export async function* runWorkflow(
       continue;
     }
 
-    // ── real integration action: live API calls + streaming logs ──
     // gmail.* (and future provider) nodes take this path; every other node
     // falls through to the simulation below, unchanged.
     const actionMeta = resolveAction(node.type);
@@ -603,7 +619,7 @@ export async function* runWorkflow(
         realError = "No user context — sign in to run Gmail nodes.";
         yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt: 0, error: realError, durationMs: 0, retries: 0, nodeType: node.type, config: node.data.config ?? {} };
       } else {
-        while (attempt <= 2) {
+        while (attempt <= MAX_NODE_RETRIES) {
           if (controls.stopped()) { runStatus = "cancelled"; break; }
           const gen = runAction({
             userId: controls.userId,
@@ -633,7 +649,7 @@ export async function* runWorkflow(
           const tokensUsed = result?.tokensUsed ?? 0;
           const cost = result?.cost ?? 0;
 
-          if (failed && attempt < 2 && result?.retryable !== false) {
+          if (failed && attempt < MAX_NODE_RETRIES && result?.retryable !== false) {
             realError = result?.error ?? "Action failed";
             yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: realError, attempt, error: realError, durationMs: elapsed, tokensUsed, cost, retries: attempt };
             yield { type: "node:retry", at: at(), nodeId: node.id, status: "retrying", log: "Retrying…", attempt: attempt + 1 };
@@ -688,12 +704,10 @@ export async function* runWorkflow(
     let nodeStatus: "succeeded" | "failed" = "failed";
     let nodeError: string | undefined;
 
-    // Up to 2 retries (attempts 0,1,2).
-    while (attempt <= 2) {
+    while (attempt <= MAX_NODE_RETRIES) {
       const attemptStart = Date.now();
       const attemptLogs = attempt === 0 ? logs : ["Self-healing: retrying…", ...logs.slice(1)];
 
-      // Stream logs across the node's real duration.
       const slices = Math.max(1, attemptLogs.length);
       for (let i = 0; i < attemptLogs.length; i++) {
         const until = attemptStart + Math.round((real / slices) * (i + 0.6));
@@ -709,7 +723,6 @@ export async function* runWorkflow(
       }
       if (runStatus === "cancelled") break;
 
-      // Stream reasoning for AI nodes (first attempt only).
       if (reasoning && attempt === 0) {
         for (let i = 0; i < reasoning.length; i++) {
           await sleep(Math.round(real / 8), controls.stopped);
@@ -724,7 +737,6 @@ export async function* runWorkflow(
         if (runStatus === "cancelled") break;
       }
 
-      // Burn the remainder of the node's duration.
       const remain = attemptStart + real - Date.now();
       if (remain > 0) await sleep(remain, controls.stopped);
       if (controls.stopped()) {
@@ -736,7 +748,7 @@ export async function* runWorkflow(
       const elapsedSoFar = Date.now() - nodeStart;
       const tokensUsed = nodeTokens(node);
       const cost = tokensUsed * TOKEN_RATE;
-      if (failed && attempt < 2) {
+      if (failed && attempt < MAX_NODE_RETRIES) {
         nodeError = `${logs[logs.length - 1]} — error`;
         stepLogs.push(nodeError);
         yield { type: "node:fail", at: at(), nodeId: node.id, status: "failed", log: nodeError, attempt, error: nodeError, durationMs: elapsedSoFar, tokensUsed, cost, retries: attempt };
@@ -814,7 +826,6 @@ export async function* runWorkflow(
   return results;
 }
 
-// ─────────────────────────── run registry ─────────────────────────────────
 // In-memory handles for live runs so control POSTs (resume/stop) can reach an
 // active generator. Single-process dev server only — fine for this product.
 

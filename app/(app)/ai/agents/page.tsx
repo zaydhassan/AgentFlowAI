@@ -17,7 +17,11 @@ const agents = [
 export default function AgentsPage() {
   return (
     <div className="animate-float-up">
-      <PageHeader title="Agents" description="Your autonomous AI workforce. Each agent is specialized and observable." />
+      <PageHeader
+        title="Agents"
+        description="Your autonomous AI workforce. Each agent is specialized and observable."
+        actions={<Badge tone="warning"><Icon name="FlaskConical" className="mr-1 h-3 w-3" /> Demo</Badge>}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {agents.map((a) => (

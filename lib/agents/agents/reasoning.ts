@@ -1,10 +1,3 @@
-// ============================================================
-// Reasoning Agent
-// ============================================================
-// Handles subtasks assigned to "reasoning". Performs step-by-step logical
-// inference, analysis, and deduction, and returns a conclusion per subtask.
-// Unlike research (which gathers), reasoning derives.
-
 import "server-only";
 import type { AgentDefinition, AgentResult, AgentState, Subtask } from "../types";
 import { systemPromptFor } from "../prompts";

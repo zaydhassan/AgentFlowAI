@@ -4,14 +4,8 @@ import type {
   Template,
   CopilotSuggestion,
   AgentRun,
-  AuditLogEntry,
-  TeamMember,
   Notification,
 } from "../types";
-
-// ============================================================
-// Mock datasets — realistic enough to feel like a real product
-// ============================================================
 
 const now = Date.now();
 const iso = (minsAgo: number) => new Date(now - minsAgo * 60_000).toISOString();
@@ -383,36 +377,9 @@ export const agentRuns: AgentRun[] = [
   },
 ];
 
-export const auditLogs: AuditLogEntry[] = [
-  { id: "al1", actor: "Maya Chen", action: "Published workflow", target: "Invoice Processing v12", timestamp: iso(120), ip: "10.0.4.22" },
-  { id: "al2", actor: "Jordan Pike", action: "Rotated secret", target: "SLACK_BOT_TOKEN", timestamp: iso(240), ip: "10.0.4.88" },
-  { id: "al3", actor: "system", action: "Self-heal retried", target: "ex_8840 / Research Agent", timestamp: iso(31), ip: "internal" },
-  { id: "al4", actor: "Sam Rivera", action: "Invited member", target: "alex@acme.io (Editor)", timestamp: iso(360), ip: "10.0.4.14" },
-  { id: "al5", actor: "Maya Chen", action: "Changed role", target: "Sam Rivera → Admin", timestamp: iso(600), ip: "10.0.4.22" },
-  { id: "al6", actor: "system", action: "API key created", target: "prod-key-2f8a", timestamp: iso(1440), ip: "internal" },
-];
-
-export const teamMembers: TeamMember[] = [
-  { id: "u1", name: "Maya Chen", email: "maya@acme.io", role: "Owner", avatar: "MC", lastActive: iso(2) },
-  { id: "u2", name: "Jordan Pike", email: "jordan@acme.io", role: "Admin", avatar: "JP", lastActive: iso(14) },
-  { id: "u3", name: "Sam Rivera", email: "sam@acme.io", role: "Editor", avatar: "SR", lastActive: iso(45) },
-  { id: "u4", name: "Alex Kim", email: "alex@acme.io", role: "Editor", avatar: "AK", lastActive: iso(360) },
-  { id: "u5", name: "Priya Nair", email: "priya@acme.io", role: "Viewer", avatar: "PN", lastActive: iso(1440) },
-];
-
 export const notifications: Notification[] = [
   { id: "n1", title: "Workflow self-healed", body: "Invoice Processing recovered after Gmail token refresh.", type: "success", timestamp: iso(11), read: false },
   { id: "n2", title: "Action required", body: "CRM Sync failed: HubSpot quota exceeded. Review now.", type: "error", timestamp: iso(31), read: false },
   { id: "n3", title: "Credits low", body: "You've used 78% of your monthly credits.", type: "warning", timestamp: iso(60), read: false },
   { id: "n4", title: "New template", body: "Financial Reports template is now available.", type: "info", timestamp: iso(200), read: true },
 ];
-
-export const orgInfo = {
-  name: "Acme Robotics",
-  plan: "Business",
-  seats: 12,
-  seatsUsed: 5,
-  credits: 142500,
-  region: "us-east-1",
-  sso: false,
-};

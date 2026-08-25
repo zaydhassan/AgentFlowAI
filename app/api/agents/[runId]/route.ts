@@ -1,14 +1,3 @@
-// Multi-Agent Runtime — per-run trace + control.
-// GET  /api/agents/run/[runId]  → live trace snapshot (timeline, latency,
-//                                 tokens, reasoning path, graph, events).
-// POST /api/agents/run/[runId]  → control a live run:
-//                                   { action: "approve" | "reject" | "stop", feedback? }
-//
-// The trace is served from the in-memory run handle, so it is available while a
-// run is in flight or paused at an approval checkpoint. After completion the
-// handle is unregistered (single-process dev server) and GET returns 404 — the
-// final trace was already delivered in the SSE `complete` event.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { getAgentRun, stopAgentRun } from "@/lib/agents";

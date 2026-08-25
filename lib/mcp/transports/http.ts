@@ -1,13 +1,3 @@
-// =============================================================================
-// MCP Streamable HTTP transport adapter
-// =============================================================================
-// The recommended HTTP transport (MCP spec "Streamable HTTP"): POST to send,
-// GET+SSE to receive. Auth headers from buildAuthHeaders() ride along in
-// requestInit so every request is authenticated. The last server-advertised
-// session id is threaded back in on reconnect (resumability), when present.
-//
-// Server-only.
-
 import "server-only";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { buildAuthHeaders, type McpTransportBuildContext, type McpTransportAdapter } from "./index";

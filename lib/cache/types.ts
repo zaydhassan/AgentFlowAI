@@ -1,14 +1,3 @@
-// =============================================================================
-// Cache — provider-agnostic contract
-// =============================================================================
-// Any key/value store (Redis, Memcached, Valkey, Upstash, an in-process Map)
-// implements `CacheProvider` and plugs in via `getCache()` in ./index. The rest
-// of the app depends only on this interface + the `cached()` helper, never on a
-// concrete provider — so swapping Redis for another store is a one-file change.
-//
-// Pure types only (no server-only import) so client-safe modules may reference
-// the interface without pulling server-side code into the browser bundle.
-
 /** Optional flags for a cache read (reserved for future bypass/no-stale controls). */
 export interface CacheGetOptions {
   /** Skip the cache and force a fresh load. */

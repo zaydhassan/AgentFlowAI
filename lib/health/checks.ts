@@ -1,15 +1,3 @@
-// =============================================================================
-// Health Monitoring — dependency probes (HealthProvider implementations)
-// =============================================================================
-// Each probe OBSERVES a dependency through its public API (read-only — no
-// dependency is modified). Probes are deliberately cheap: a SELECT 1, a Redis
-// PING, a queue snapshot, a couple of boolean config checks. No probe makes an
-// expensive external call (no live AI completion, no Razorpay API hit) — health
-// endpoints run on every platform poll and must be fast + free.
-//
-// Server-only (Node). Uses the shared prisma client, the cache/queue/memory
-// facades, and the AI/payment config helpers.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { getCache } from "@/lib/cache";
@@ -34,7 +22,6 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
-// ─────────────────────────── PostgreSQL (CRITICAL) ─────────────────────────
 // A failure here is the only thing that makes the app UNHEALTHY — without the
 // database the app cannot serve.
 export const postgresProvider: HealthProvider = {
@@ -51,7 +38,6 @@ export const postgresProvider: HealthProvider = {
   },
 };
 
-// ─────────────────────────── Redis (via cache layer) ───────────────────────
 // Redis failure → DEGRADED (the cache + queue fall back to in-memory). When
 // REDIS_URL is unset the app intentionally runs without Redis — that's healthy,
 // not degraded (reported with configured:false).
@@ -79,7 +65,6 @@ export const redisProvider: HealthProvider = {
   },
 };
 
-// ─────────────────────────── Queue (BullMQ snapshot) ────────────────────────
 // Queue failure → DEGRADED (enqueue falls back to synchronous). When the queue
 // is disabled or Redis is absent it's intentionally off — healthy, configured:false.
 export const queueProvider: HealthProvider = {
@@ -109,7 +94,6 @@ export const queueProvider: HealthProvider = {
   },
 };
 
-// ─────────────────────────── Memory Engine (capability) ────────────────────
 // Memory failure / not configured → DEGRADED (memory-enabled nodes no-op
 // cleanly). Config check only — no embeddings call on every probe.
 export const memoryProvider: HealthProvider = {
@@ -128,7 +112,6 @@ export const memoryProvider: HealthProvider = {
   },
 };
 
-// ─────────────────────────── MCP Runtime ──────────────────────────────────
 // MCP is user-scoped (no system ping exported), so this is a system-scoped
 // read-only count of configured MCP servers via the shared prisma client —
 // confirms the MCP data layer is reachable and surfaces how many servers exist.
@@ -154,7 +137,6 @@ export const mcpProvider: HealthProvider = {
   },
 };
 
-// ─────────────────────────── AI Provider (capability) ──────────────────────
 // AI not configured → DEGRADED (the app runs on the deterministic fallback —
 // READY, but with degraded capability, per the spec). Config check only: a live
 // model completion on every probe would cost money + latency and add an external
@@ -177,7 +159,6 @@ export const aiProviderCheck: HealthProvider = {
   },
 };
 
-// ─────────────────────────── Payment Provider (capability) ────────────────
 // Payments not configured → DEGRADED (checkout returns 503; the rest of the app
 // serves normally). Config check only — a live provider API call per probe
 // would be rate-limited and slow.

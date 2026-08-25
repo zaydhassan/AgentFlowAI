@@ -1,5 +1,3 @@
-// Validation schemas for all auth forms. Used in server actions and tests.
-
 import { z } from "zod";
 
 export const SignupSchema = z.object({

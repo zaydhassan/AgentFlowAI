@@ -1,17 +1,3 @@
-// =============================================================================
-// Structured Logging — request-scoped context (AsyncLocalStorage)
-// =============================================================================
-// Context (requestId, userId, workspaceId, workflowId, executionId, agentId,
-// nodeId, provider) propagates across `await` boundaries automatically, so a
-// log emitted anywhere inside a request handler carries the same context
-// without threading it through every function. `environment` is a process-level
-// default attached to every entry.
-//
-// Node-only (async_hooks). The logger is a server-only module; the live
-// enforcement seams in this app are all Node route handlers.
-//
-// Server-only.
-
 import "server-only";
 import { AsyncLocalStorage } from "async_hooks";
 import type { LogContext } from "./types";

@@ -1,5 +1,3 @@
-// Run a workflow → SSE stream of execution events. Also handles resume/stop
-// control posts via ?control=resume|stop&executionId=...
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
@@ -58,7 +56,6 @@ export async function POST(req: Request, { params }: Params) {
   const control = url.searchParams.get("control");
   const executionId = url.searchParams.get("executionId");
 
-  // ── control posts (resume / stop an active run) ──
   if (control === "resume" && executionId) {
     const ok = resumeRun(executionId);
     if (ok) {
@@ -81,16 +78,13 @@ export async function POST(req: Request, { params }: Params) {
   if (control === "stop" && executionId) {
     return NextResponse.json({ ok: stopRun(executionId) });
   }
-  // ── step post (advance one node in step-by-step debugging) ──
   if (control === "step" && executionId) {
     return NextResponse.json({ ok: stepRun(executionId) });
   }
-  // ── pause post (arm pause-before-next-node while a node is executing) ──
   if (control === "pause" && executionId) {
     return NextResponse.json({ ok: pauseRun(executionId) });
   }
 
-  // ── start a run ──
   const wf = await prisma.workflow.findUnique({ where: { id }, select: { ownerId: true, graph: true, name: true } });
   if (!wf || wf.ownerId !== user.id) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
@@ -289,7 +283,6 @@ export async function POST(req: Request, { params }: Params) {
             data: { lastRunAt: new Date(), status: finalStatus === "failed" ? "error" : "active" },
           });
 
-          // ── Notification Engine: emit a workflow event (non-blocking). ──
           // The engine dedupes per (user, event, entity, day) and routes per the
           // user's preferences. Never throws — wrapped so it can't break the run.
           const wfEvent: NotificationEventKey | null =

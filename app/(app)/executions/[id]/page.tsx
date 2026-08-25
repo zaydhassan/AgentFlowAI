@@ -1,24 +1,11 @@
 "use client";
 
-// Execution detail — real + real-time.
-//
-// Pulls a persisted snapshot from GET /api/executions/[id] (steps incl. the AI
-// Debugger inspection payload) and, while the run is in flight, animates it via
-// the existing per-workflow SSE stream (see lib/executions/use-execution.ts).
-// Nothing here is mocked:
-//   - "Replay run" is a truthful client-side playback of the *real* recorded
-//     step logs (staged reveal), not fake content.
-//   - "Replay node" re-executes one node server-side via the real replay route
-//     (POST …/nodes/[nodeId]/replay) and streams the result.
-// The collapsible "Inspect" section exposes the rich payload the backend
-// already persists per step (nodeType/config/input/output/prompt/memories).
-
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -26,7 +13,7 @@ import { useExecution } from "@/lib/executions/use-execution";
 import { cn, formatDuration, formatCurrency, relativeTime } from "@/lib/utils";
 import type { ExecutionStepRow, MemoryHit } from "@/lib/executions/types";
 
-const statusMeta: Record<string, { tone: any; icon: string; color: string }> = {
+const statusMeta: Record<string, { tone: Tone; icon: string; color: string }> = {
   idle: { tone: "neutral", icon: "Circle", color: "#6b7185" },
   running: { tone: "brand", icon: "LoaderCircle", color: "#7c5cff" },
   succeeded: { tone: "success", icon: "CheckCircle2", color: "#34d399" },
@@ -56,6 +43,10 @@ export default function ExecutionDetailPage() {
   // updates while running, or a fresh snapshot). Replay re-animates from there.
   useEffect(() => {
     if (replaying) return; // don't clobber an in-progress playback.
+    // Re-sync the reveal counters to the latest step set (live updates while a
+    // run is in flight, or a fresh snapshot). Steps come from the data hook, so
+    // this effect is the sync point.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleSteps(steps.length);
     const init: Record<string, number> = {};
     for (const s of steps) init[s.id] = Math.min(s.logs.length, MAX_LOGS);
@@ -82,7 +73,6 @@ export default function ExecutionDetailPage() {
     setTimeout(() => setReplaying(false), tail);
   };
 
-  // ── States ──
   if (loading && !detail) {
     return (
       <div className="animate-float-up">
@@ -131,7 +121,6 @@ export default function ExecutionDetailPage() {
     );
   }
 
-  // ── Metrics (live totals win while running; persisted snapshot otherwise) ──
   const totals = live?.totals;
   const durationMs = totals?.durationMs ?? detail.durationMs;
   const totalCost = totals?.totalCost ?? detail.totalCost;
@@ -150,7 +139,7 @@ export default function ExecutionDetailPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-semibold">{detail.workflowName}</h1>
-              <Badge tone={toneOf(status) as any}>
+              <Badge tone={toneOf(status)}>
                 {running && <Icon name="LoaderCircle" className="mr-1 h-2.5 w-2.5 animate-spin" />}
                 {status}
               </Badge>
@@ -163,7 +152,6 @@ export default function ExecutionDetailPage() {
         </Button>
       </div>
 
-      {/* metrics */}
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MetricCard icon="Clock" label="Duration" value={durationMs ? formatDuration(durationMs) : running ? "—" : "—"} />
         <MetricCard icon="Coins" label="Cost" value={totalCost ? formatCurrency(totalCost) : "—"} />
@@ -235,7 +223,7 @@ function BackLink() {
   );
 }
 
-function toneOf(s: string) {
+function toneOf(s: string): Tone {
   return s === "succeeded" ? "success" : s === "failed" ? "danger" : s === "running" ? "brand" : s === "retrying" ? "warning" : "neutral";
 }
 
@@ -299,7 +287,6 @@ function StepRow({
         <div className="mt-2 rounded-lg border border-danger/30 bg-danger/5 p-2 font-mono text-[11px] text-danger">{step.error}</div>
       )}
 
-      {/* reasoning */}
       {step.reasoning && step.reasoning.length > 0 && (
         <div className="mt-2 rounded-lg border border-ai/20 bg-ai/5 p-2.5">
           <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ai">
@@ -315,7 +302,6 @@ function StepRow({
         </div>
       )}
 
-      {/* logs */}
       {step.logs.length > 0 && (
         <div className="mt-2 rounded-lg border border-border bg-bg/60 p-2 font-mono text-[10px] leading-relaxed">
           {step.logs.slice(0, logsShown).map((log, li) => (
@@ -328,7 +314,6 @@ function StepRow({
         </div>
       )}
 
-      {/* inspect */}
       {hasInspect && <InspectSection step={step} workflowId={workflowId} executionId={executionId} />}
     </div>
   );

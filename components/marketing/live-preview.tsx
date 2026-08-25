@@ -1,10 +1,5 @@
 "use client";
 
-// Lazy gate for the live product preview. Next.js 16 forbids
-// `dynamic({ ssr:false })` inside a Server Component, so this thin client
-// wrapper keeps the dashboard out of SSR and only mounts (and downloads) its
-// chunk once the section scrolls near the viewport.
-
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import { useInView } from "framer-motion";

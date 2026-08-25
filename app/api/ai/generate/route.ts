@@ -1,4 +1,3 @@
-// NL → streaming workflow plan + graph. SSE: {type:"token"/"text", text...} then {type:"plan", plan}.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { generateWorkflow, type GenChunk } from "@/lib/ai/provider";

@@ -1,9 +1,3 @@
-// ============================================================
-// AgentFlow AI — Shared domain types
-// ============================================================
-
-// The 12 brief categories. Node `type` strings keep their original prefixes
-// (e.g. "trigger.*", "store.*"); `category` only drives palette grouping.
 export type NodeCategory =
   | "ai"
   | "communication"

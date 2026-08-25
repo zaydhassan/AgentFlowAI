@@ -1,7 +1,3 @@
-// Documentation breadcrumbs — server component. Renders
-// Home / Documentation / <Category> / <Title>, with the current page as plain
-// text (no self-link) and the rest as real routes.
-
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 

@@ -1,7 +1,3 @@
-// Preflight AI cost/latency estimate for a workflow (before execution).
-// GET ?strategy=cost|fast|balanced — returns per-provider estimates + the
-// cheapest/fastest/balanced recommendation. Owner-checked, reuses normalizeGraph
-// and the execution engine's token/duration estimators (see lib/ai/optimizer).
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

@@ -1,28 +1,7 @@
-// =============================================================================
-// Cache — production-ready, provider-agnostic caching layer
-// =============================================================================
-// Resolution order for `getCache()`:
-//   1. CACHE_ENABLED=false            → NoopCacheProvider (every read is a miss)
-//   2. CACHE_ENABLED=true, no REDIS_URL → InMemoryCacheProvider (per-process LRU+TTL)
-//   3. CACHE_ENABLED=true, REDIS_URL   → RedisCacheProvider wrapped in a
-//      ResilientCacheProvider that transparently falls back to InMemoryCacheProvider
-//      when Redis is unreachable, and reopens the circuit after a cooldown.
-//
-// All integration code calls `cached()` / `cacheDel()` / `cacheInvalidate()`
-// (below) — never a provider method directly — so hit/miss metrics are counted
-// exactly once per operation regardless of which provider is active.
-//
-// Redis is reached via a LAZY `import("ioredis")`, so the app boots even if the
-// package is absent (the noop/memory path never touches it). The dependency is
-// declared in package.json so the Redis path resolves once installed.
-//
-// Server-only.
-
 import "server-only";
 import type { CacheProvider, CacheSnapshot, CacheStats } from "./types";
 export type { CacheProvider, CacheGetOptions, CacheStats, CacheSnapshot } from "./types";
 
-// ─────────────────────────── metrics ─────────────────────────────────────────
 // Single module-level counter set shared by every provider. Counted at the
 // `cached()` / `cacheDel()` / `cacheInvalidate()` choke points (one increment
 // per logical operation) so wrapping a primary with a fallback never double-counts.
@@ -37,7 +16,6 @@ export function resetCacheStats(): void {
   stats.hits = stats.misses = stats.sets = stats.deletes = stats.errors = 0;
 }
 
-// ─────────────────────────── NoopCacheProvider ──────────────────────────────
 // Active when caching is disabled. Every read is a miss; writes are dropped.
 // Lets `cached()` short-circuit to the loader with zero overhead.
 class NoopCacheProvider implements CacheProvider {
@@ -55,7 +33,6 @@ class NoopCacheProvider implements CacheProvider {
   async close(): Promise<void> {}
 }
 
-// ─────────────────────────── InMemoryCacheProvider ──────────────────────────
 // Per-process LRU-ish map with per-entry TTL. Used standalone (no REDIS_URL)
 // and as the ResilientCacheProvider's fallback when Redis is down.
 class InMemoryCacheProvider implements CacheProvider {
@@ -111,7 +88,6 @@ class InMemoryCacheProvider implements CacheProvider {
   }
 }
 
-// ─────────────────────────── RedisCacheProvider ─────────────────────────────
 // Wraps a lazily-created `ioredis` client. Connection is established on first
 // use with a bounded timeout; methods THROW when the client is unusable so the
 // enclosing ResilientCacheProvider can fall back to in-memory. JSON is the wire
@@ -209,7 +185,6 @@ class RedisCacheProvider implements CacheProvider {
   }
 }
 
-// ─────────────────────────── ResilientCacheProvider ─────────────────────────
 // Wraps a primary (Redis) + a fallback (in-memory) with a small circuit breaker:
 // after `failureThreshold` consecutive primary failures the circuit opens for
 // `cooldownMs`, routing all traffic to the fallback; the first call after the
@@ -283,7 +258,6 @@ class ResilientCacheProvider implements CacheProvider {
   }
 }
 
-// ─────────────────────────── factory ────────────────────────────────────────
 let _provider: CacheProvider | null = null;
 
 function resolveProvider(): CacheProvider {
@@ -310,7 +284,6 @@ export function __resetCacheForTests(): void {
   _provider = null;
 }
 
-// ─────────────────────────── helpers ────────────────────────────────────────
 /** Default TTL (seconds) for entries that don't specify one. */
 export function defaultTtl(): number {
   return Math.max(1, Number(process.env.CACHE_DEFAULT_TTL ?? 60));

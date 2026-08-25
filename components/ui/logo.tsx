@@ -1,16 +1,5 @@
 "use client";
 
-// AgentFlow AI — the Flow Loop (Concept B v2, the final identity).
-//
-// One continuous closed path = continuous execution. The lower swoop is the
-// dominant gesture; the upper counter hides a subtle "A" (rounded apex +
-// waist crossbar) as the brand reveal. Dot-free so it stays crisp inside the
-// small gradient tiles used across navbar / sidebar / topbar (16–32px).
-//
-// Uses `currentColor` so the caller controls glyph color (typically white on
-// the brand gradient). For the full mark with the four cycle nodes
-// (Plan → Reason → Execute → Learn), use the brand SVG at ≥64px, not this
-// component — this is the compact UI glyph.
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">

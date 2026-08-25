@@ -1,7 +1,3 @@
-// GET /api/integrations/accounts?provider=gmail — list the user's connected
-// accounts in the CLIENT-SAFE shape (no tokens). Used by the inspector `account`
-// dropdown and the settings page.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { listAccounts } from "@/lib/integrations";

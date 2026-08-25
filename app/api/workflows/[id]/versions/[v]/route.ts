@@ -1,4 +1,3 @@
-// Single workflow version: fetch / restore.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
@@ -9,7 +8,6 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string; v: string }> };
 
-// GET — one version's graph + author/message/timestamp.
 export async function GET(_req: Request, { params }: Params) {
   const u = await apiUser();
   if ("error" in u) return u.error;

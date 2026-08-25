@@ -1,13 +1,3 @@
-// ============================================================
-// Agent registrations
-// ============================================================
-// Imports register the six initial agents into the registry at module load.
-// To add a new agent later: write a new AgentDefinition file and register it
-// here (or call registerAgent at your import site). The runtime picks it up
-// automatically — no runtime edits.
-//
-// Server-only.
-
 import "server-only";
 import { registerAgent } from "../registry";
 import { plannerAgent } from "./planner";

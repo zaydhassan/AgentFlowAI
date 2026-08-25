@@ -1,18 +1,3 @@
-// =============================================================================
-// Template registry — maps an event key to its renderer with LAZY loading.
-// =============================================================================
-// Per the brief's performance requirement, category template modules are
-// imported on demand (dynamic import) the first time an event of that category
-// is rendered, then memoized. This keeps the email-rendering code (and its
-// inline-SVG/HTML string building) out of the worker's hot path until a digest
-// or delivery actually needs it.
-//
-// Workflow / billing / security / integration events each have a dedicated
-// category module. AI and system events use a shared generic renderer (below) —
-// clean, professional, and consistent with the rest. Digests use renderDigest.
-//
-// Server-only (renders email bodies with app URLs + unsubscribe tokens).
-
 import "server-only";
 import {
   badge, divider, emailLayout, esc, row, textBody, SUBJECT_PREFIX,
@@ -26,7 +11,6 @@ import type {
 
 export { PALETTE, logoTile, emailLayout } from "./components";
 
-// A category renderer takes a TemplateContext and returns the rendered email.
 type CategoryRenderer = (ctx: TemplateContext) => RenderedTemplate;
 const _modules = new Map<string, CategoryRenderer>();
 
@@ -62,8 +46,6 @@ export async function renderDigestEmail(ctx: TemplateContext & { digest: DigestD
   return renderDigest(ctx);
 }
 
-// ─────────────────────────── generic renderer (ai + system) ───────────────────
-
 /** A clean, professional default for events without a dedicated category module. */
 export function renderGeneric(ctx: TemplateContext): RenderedTemplate {
   const d = ctx.payload.data ?? {};
@@ -72,7 +54,6 @@ export function renderGeneric(ctx: TemplateContext): RenderedTemplate {
   const ctaHref = ctx.payload.link ?? `${ctx.appUrl}/dashboard`;
   const ctaLabel = String(d.ctaLabel ?? "Open AgentFlow");
 
-  // Render any key/value pairs in `data` as rows (amounts, names, counts, …).
   const rowsHtml = Object.entries(d)
     .filter(([k]) => !["ctaLabel"].includes(k))
     .slice(0, 6)
@@ -96,7 +77,7 @@ export function renderGeneric(ctx: TemplateContext): RenderedTemplate {
       unsubscribeToken: ctx.unsubscribeToken,
       year: new Date().getUTCFullYear(),
     }),
-    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel }),
+    text: textBody({ title, body, link: ctaHref, linkLabel: ctaLabel, appUrl: ctx.appUrl }),
   };
 }
 

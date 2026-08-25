@@ -1,10 +1,3 @@
-// Client-safe shapes for the AI Observability page.
-//
-// Pure types only — no `server-only`, no Prisma import — so the client hook
-// (`use-observability.ts`) and the page can import them without pulling server
-// code into the bundle. The server aggregation module (`summary.ts`) builds
-// these from Prisma rows. Mirrors the lib/mcp/types.ts split.
-
 export interface ObservabilityKpis {
   p50LatencyMs: number | null;
   p99LatencyMs: number | null;

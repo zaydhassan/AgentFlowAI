@@ -1,13 +1,3 @@
-// Repository pattern — the only place that reads/writes the billing Prisma
-// models. Provider implementations and webhook handlers call into here so
-// Prisma upsert logic is defined once (no duplication) and the provider-aware
-// columns (stripe_* vs razorpay_*) are written consistently.
-//
-// Idempotency: subscriptions key on userId (@unique), invoices on the active
-// provider's invoice id (@unique), events on a recorded audit-log action.
-// A concurrent webhook re-delivery converges to the same state even if it
-// slips past the event-dedup fast path.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import type { ProviderId } from "@/lib/payments/types";
@@ -75,7 +65,6 @@ export const subscriptions = {
       });
     }
 
-    // stripe
     return prisma.subscription.upsert({
       where: { userId },
       update: {

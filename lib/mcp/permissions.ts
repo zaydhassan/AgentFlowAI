@@ -1,13 +1,3 @@
-// =============================================================================
-// MCP permissions — allow-list / deny-list matching
-// =============================================================================
-// Pure (no server-only). Deny-first: a name is rejected if it matches any deny
-// pattern; otherwise it must match an allow pattern (empty allowList = allow all).
-// Patterns support a trailing "*" wildcard for prefix matching (e.g. "fs.read*",
-// "github.*"), and exact matches otherwise. This is the same spirit as the
-// agent tool-permission check in lib/agents/memory.ts (can/ensure) but applied
-// to discovered tool/resource names.
-
 /** True if `name` matches `pattern` (trailing "*" = prefix wildcard). */
 export function matchesPattern(name: string, pattern: string): boolean {
   if (!pattern) return false;

@@ -1,13 +1,5 @@
 "use client";
 
-// Documentation left sidebar — sticky, grouped by category, with an active
-// indicator that tracks the current route. Used inside DocsArticle (desktop)
-// and inside the mobile drawer.
-//
-// "Active" is exact-match on the article href so /docs/workflows highlights only
-// the Workflows entry (not its neighbours). A subtle brand rail marks the active
-// row in the Stripe/Vercel register.
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";

@@ -1,17 +1,5 @@
 "use client";
 
-// Security pillar card for the /security landing page.
-//
-// Restraint over flash — the Stripe / Vercel / Linear register, not a gaming
-// dashboard: solid dark surface, a soft 1px border, a quiet 2px purple→cyan
-// accent at the top, a small purple icon tile, and a gentle hover.
-//
-// Framer Motion is used ONLY for the hover lift (-4px) and the icon scale
-// (1.05). The border brightening and soft shadow are plain CSS transitions so
-// the interaction stays understated. Content (icon/title/body) is owned by the
-// page; this component only renders presentation. h-full keeps cards equal
-// height within the grid row; the page's grid wrapper handles responsiveness.
-
 import { motion, type Variants } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 

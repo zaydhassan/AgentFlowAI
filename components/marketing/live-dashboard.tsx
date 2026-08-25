@@ -1,10 +1,5 @@
 "use client";
 
-// Live product preview — a large mock dashboard that looks like the real
-// product. Metrics count up, the chart animates, logs stream in, running
-// agents pulse. Mounted lazily (ssr:false) from the page so it never bloats
-// the initial bundle or blocks first paint.
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { AnimatedCounter } from "@/components/ui/animated-counter";

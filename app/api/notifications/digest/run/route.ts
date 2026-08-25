@@ -1,12 +1,3 @@
-// POST /api/notifications/digest/run — cron-driven scheduler tick.
-//
-// Protected by CRON_SECRET: pass `x-cron-secret: <value>` matching the env.
-// Runs runDueDigests() (finds due hourly/daily/weekly digests across users and
-// enqueues them on the notification queue) and re-arms the heartbeat. Use this
-// from an external cron when the in-process worker heartbeat isn't running
-// (e.g. serverless). When the BullMQ worker IS running, the self-perpetuating
-// "tick" job already drives this and this route is a no-op duplicate guard.
-
 import { NextResponse } from "next/server";
 import { runDueDigests } from "@/lib/notifications";
 import { enqueueTick } from "@/lib/notifications/queue";

@@ -1,12 +1,5 @@
 "use client";
 
-// Displays the customer's default payment method (card) and billing address,
-// with an "Update card" action that opens the provider's management session
-// (Stripe Customer Portal URL / Razorpay registration link).
-//
-// Card data is fetched server-side in the billing page and passed in as props;
-// this component only owns the management redirect + the empty state.
-
 import { useTransition } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";

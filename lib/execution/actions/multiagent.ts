@@ -1,26 +1,15 @@
-// ============================================================
-// Multi-Agent action — execution-engine bridge
-// ============================================================
-// Adapts the LangGraph multi-agent runtime (lib/agents) to the execution
-// engine's real-action contract: an async generator that yields `{type:"log"}`
-// events (streamed to the canvas as node:log) and returns a final result the
-// engine reads for success/failure + token accounting.
-//
-// This mirrors lib/execution/actions/registry.runAction's shape so the engine
-// can drain it with the same retry loop it uses for integration actions — but
-// it is independent of the integrations (OAuth) registry. The engine dispatches
-// it via a dedicated branch gated on node.type === "ai.multiAgent".
-//
-// Workspace isolation + tool permissions are enforced inside the runtime
-// (lib/agents/memory.ts). Memory scope flows from the node config.
-//
-// Human-in-the-loop: the workflow-node path runs to completion (the engine's
-// own breakpoint mechanism provides pre-node human approval). Mid-run approval
-// checkpoints are exposed via the standalone /api/agents/run SSE API.
-
 import "server-only";
 import { startAgentRun, type AgentEvent } from "@/lib/agents";
 import type { MemoryScope } from "@/lib/memory/types";
+import {
+  clampInt,
+  AGENT_ITERATIONS_MIN,
+  AGENT_ITERATIONS_MAX,
+  AGENT_ITERATIONS_DEFAULT,
+  AGENT_TIMEOUT_MIN_MS,
+  AGENT_TIMEOUT_MAX_MS,
+  AGENT_TIMEOUT_DEFAULT_MS,
+} from "@/lib/execution/limits";
 
 export interface MultiAgentLogEvent {
   type: "log";
@@ -62,8 +51,8 @@ export async function* runMultiAgent(
   }
 
   const memoryScope = (typeof cfg.memoryScope === "string" ? cfg.memoryScope : "long_term") as MemoryScope;
-  const maxIterations = clampInt(cfg.maxIterations, 1, 6, 2);
-  const timeoutMs = clampInt(cfg.timeoutMs, 10_000, 300_000, 120_000);
+  const maxIterations = clampInt(cfg.maxIterations, AGENT_ITERATIONS_MIN, AGENT_ITERATIONS_MAX, AGENT_ITERATIONS_DEFAULT);
+  const timeoutMs = clampInt(cfg.timeoutMs, AGENT_TIMEOUT_MIN_MS, AGENT_TIMEOUT_MAX_MS, AGENT_TIMEOUT_DEFAULT_MS);
   const requireApprovalConfigured = cfg.requireApproval === true;
   const guidance = typeof cfg.guidance === "string" ? cfg.guidance : undefined;
 
@@ -140,8 +129,6 @@ export async function* runMultiAgent(
   return { status: "failed", error: error ?? "multi-agent run failed", tokensUsed, cost, retryable: true };
 }
 
-// ─────────────────────────── helpers ────────────────────────────────────────
-
 function resolveObjective(cfg: Record<string, unknown>, inputs: unknown[]): string {
   const obj = typeof cfg.objective === "string" ? cfg.objective.trim() : "";
   if (obj) return obj;
@@ -153,12 +140,6 @@ function resolveObjective(cfg: Record<string, unknown>, inputs: unknown[]): stri
   } catch {
     return String(first);
   }
-}
-
-function clampInt(v: unknown, lo: number, hi: number, dflt: number): number {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return dflt;
-  return Math.max(lo, Math.min(hi, Math.round(n)));
 }
 
 function truncate(s: string, n: number): string {

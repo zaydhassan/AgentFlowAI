@@ -6,7 +6,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { cn, relativeTime } from "@/lib/utils";
@@ -21,7 +21,7 @@ const filters: { label: string; value: WorkflowStatus | "all" }[] = [
   { label: "Error", value: "error" },
 ];
 
-const statusTone = (s: string) =>
+const statusTone = (s: string): Tone =>
   s === "active" ? "success" : s === "draft" ? "neutral" : s === "paused" ? "warning" : "danger";
 
 export function WorkflowsList({ workflows }: { workflows: WorkflowSummary[] }) {
@@ -105,7 +105,7 @@ export function WorkflowsList({ workflows }: { workflows: WorkflowSummary[] }) {
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand">
                     <Icon name="Workflow" className="h-5 w-5" />
                   </div>
-                  <Badge tone={statusTone(w.status) as any}>
+                  <Badge tone={statusTone(w.status)}>
                     <span className={cn("dot", w.status === "active" && "dot-live")} />
                     {w.status}
                   </Badge>

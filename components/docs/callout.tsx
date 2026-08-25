@@ -1,6 +1,3 @@
-// Documentation callout — a quiet, labelled note/tip/warning panel used inside
-// article bodies. Restrained: a tinted left rail + matching icon, no heavy fill.
-
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 

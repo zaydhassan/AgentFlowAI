@@ -1,4 +1,3 @@
-// Workflow versions: list / save a named version from the current graph.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
@@ -10,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET — version list (id/version/message/author/createdAt), newest first.
 export async function GET(_req: Request, { params }: Params) {
   const u = await apiUser();
   if ("error" in u) return u.error;

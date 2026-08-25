@@ -1,13 +1,3 @@
-// Server-only data access for the Executions list + detail pages.
-//
-// Owner-scoped over Execution.ownerId (no workflow-path indirection — these
-// routes are keyed by execution id alone). `listExecutions` returns the recent
-// rows + a status-breakdown `counts` in one pass; `getExecution` returns a single
-// run with its persisted steps, including the full AI Workflow Debugger
-// inspection payload (nodeType/config/input/output/prompt/memories). The step
-// mapping is identical to the existing per-workflow per-execution route so the
-// two endpoints emit the same shape.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import type {

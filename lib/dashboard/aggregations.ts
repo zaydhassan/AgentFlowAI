@@ -1,26 +1,9 @@
-// Dashboard aggregations — the single place dashboard metrics are computed from
-// the DB. Called by app/api/dashboard/route.ts under a per-user cache (60s).
-//
-// Everything is scoped to one owner (ownerId / userId = the signed-in user).
-// Metrics that aren't fully tracked in the schema today are derived honestly:
-//   - tokenBreakdown by provider: heuristic from ExecutionStep.nodeName keyword
-//     match, with a single-bucket fallback (no fabricated split).
-//   - costByCategory: only "AI inference" is a real $ figure (sum of
-//     Execution.totalCost this month); API/Storage/Compute come from Usage
-//     counters and appear only when non-zero (no invented $ amounts).
-//   - creditsRemaining: PLAN_CREDIT_LIMIT[plan] - Usage.aiCredits this period.
-//     Usage metering is not yet wired to executions, so aiCredits may be 0 —
-//     in which case creditsRemaining equals the full plan limit (real, unmetered).
-//
-// "server-only" so this never leaks into a client bundle.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { getOrCreateCurrentUsage } from "@/lib/usage";
 import { PLAN_CREDIT_LIMIT } from "@/lib/payments/plans";
 import type { PlanId } from "@/lib/payments/types";
 
-// ─────────────────────────── types ───────────────────────────────────────────
 export interface DashboardStats {
   totalExecutions: number;
   activeWorkflows: number;
@@ -78,7 +61,6 @@ export interface DashboardPayload {
   generatedAt: string;
 }
 
-// ─────────────────────────── palette ─────────────────────────────────────────
 // Colors reused from lib/mock/data.ts so the charts look consistent.
 const TOKEN_COLORS = {
   OpenAI: "#10a37f",
@@ -94,7 +76,6 @@ const COST_COLORS = {
   Compute: "#f59e0b",
 } as const;
 
-// ─────────────────────────── helpers ─────────────────────────────────────────
 const TREND_DAYS = 14;
 const RATE_WINDOW_DAYS = 30;
 
@@ -146,7 +127,6 @@ function activityText(action: string, metadata: unknown): string {
   return action;
 }
 
-// ─────────────────────────── main ────────────────────────────────────────────
 export async function buildDashboard(userId: string): Promise<DashboardPayload> {
   const now = new Date();
   const { start: monthStart, end: monthEnd } = monthWindow(now);
@@ -220,7 +200,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
     prisma.notification.count({ where: { userId, read: false } }),
   ]);
 
-  // ── success / error rate over the 30d window ──
   const rateCount: Record<string, number> = {};
   for (const g of rateGroups) rateCount[g.status] = g._count._all;
   const succeeded = rateCount.succeeded ?? 0;
@@ -232,7 +211,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
   const monthlyCost = round2(monthlyAgg._sum.totalCost ?? 0);
   const tokenUsage = monthlyAgg._sum.totalTokens ?? 0;
 
-  // ── 14-day trend (in-memory day bucketing) ──
   const buckets = new Map<string, TrendPoint>();
   for (let i = 0; i < TREND_DAYS; i++) {
     const day = new Date(trendStart.getTime() + i * 86_400_000);
@@ -258,7 +236,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
   }
   const executionTrend = [...buckets.values()];
 
-  // ── token breakdown by provider (heuristic) ──
   const tokenSums: Record<string, number> = { OpenAI: 0, Claude: 0, Gemini: 0, Local: 0 };
   let classifiedTokens = 0;
   for (const s of stepRows) {
@@ -279,7 +256,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
     tokenBreakdown = [];
   }
 
-  // ── cost by category ──
   // Only "AI inference" is a real $ figure (sum of Execution.totalCost this
   // month). API/Storage/Compute are metered as unitless Usage counters with no
   // dollar rate defined anywhere in the codebase, so we omit them rather than
@@ -289,7 +265,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
       ? [{ name: "AI inference", value: monthlyCost, color: COST_COLORS["AI inference"] }]
       : [];
 
-  // ── recent activity from audit logs ──
   const recentActivity: ActivityItem[] = auditRows.map((a) => {
     const { type, icon } = classifyAction(a.action);
     return {
@@ -301,7 +276,6 @@ export async function buildDashboard(userId: string): Promise<DashboardPayload> 
     };
   });
 
-  // ── workflow health rows ──
   // Per-workflow success rate over the 30d window, joined to the top-5 workflows.
   const wfSuccess: Record<string, { ok: number; fail: number }> = {};
   for (const g of wfRateGroups) {

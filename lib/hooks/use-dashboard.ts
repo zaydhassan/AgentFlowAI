@@ -1,16 +1,5 @@
 "use client";
 
-// Lightweight, dependency-free data hooks for the dashboard. The repo has no
-// SWR/React Query and we add none — these are small fetch+poll hooks with
-// loading/error/refresh state.
-//
-//   useDashboardData(intervalMs?)  → GET /api/dashboard (cached 60s server-side)
-//   useHealth(intervalMs?)         → GET /api/health/ready (unauthenticated, live)
-//
-// Both: fetch on mount, poll on an interval, expose a manual refresh(), abort
-// in-flight requests on unmount, and keep stale data visible across refresh
-// failures so the UI never blanks out on a transient network blip.
-
 import { useCallback, useEffect, useState } from "react";
 import type { DashboardPayload } from "@/lib/dashboard/aggregations";
 import type { ReadinessReport } from "@/lib/health/types";

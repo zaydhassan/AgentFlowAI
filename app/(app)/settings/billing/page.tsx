@@ -21,6 +21,7 @@ import {
   getPaymentProvider,
   paymentConfigured,
   PLAN_META,
+  PLAN_CREDIT_LIMIT,
   type Interval,
   type PlanId,
 } from "@/lib/payments";
@@ -117,12 +118,10 @@ export default async function BillingPage(props: { searchParams: Promise<SearchP
   const tokenUsage = usage?.tokenUsage ?? 0;
   const compute = usage?.compute ?? 0;
 
-  const cap =
-    plan === "free" ? 1000 : plan === "pro" ? 150_000 : plan === "business" ? 1_000_000 : 1_000_000;
+  const cap = PLAN_CREDIT_LIMIT[plan];
   const creditsRemaining = Math.max(0, cap - aiCreditsUsed);
   const usedPct = cap > 0 ? Math.min(100, Math.round((aiCreditsUsed / cap) * 100)) : 0;
 
-  // Monthly spend: sum of paid invoices in the current billing period.
   const periodStart = currentPeriodStart ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const monthlySpend = invoices
     .filter((inv) => inv.status === "paid" && inv.createdAt >= periodStart)
@@ -196,7 +195,6 @@ export default async function BillingPage(props: { searchParams: Promise<SearchP
         </div>
       ) : null}
 
-      {/* Current plan + usage */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center justify-between">
@@ -275,7 +273,6 @@ export default async function BillingPage(props: { searchParams: Promise<SearchP
         </Card>
       </div>
 
-      {/* Payment method + spend */}
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <PaymentMethodCard method={paymentMethod} />
@@ -295,7 +292,6 @@ export default async function BillingPage(props: { searchParams: Promise<SearchP
         </Card>
       </div>
 
-      {/* Plans */}
       <div className="mt-4">
         <h3 className="mb-3 text-sm font-semibold text-fg-muted">Change plan</h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -336,7 +332,6 @@ export default async function BillingPage(props: { searchParams: Promise<SearchP
         </div>
       </div>
 
-      {/* Invoices */}
       <Card className="mt-4">
         <CardHeader>
           <CardTitle>Invoices</CardTitle>

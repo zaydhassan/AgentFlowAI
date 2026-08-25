@@ -1,4 +1,3 @@
-// Run history for a workflow.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

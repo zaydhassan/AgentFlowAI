@@ -1,7 +1,3 @@
-// Tiny client-only wrappers around framer-motion. These exist so the
-// landing page (a server component) can use motion-based animations
-// without having to mark the entire file as "use client".
-
 "use client";
 
 import { motion, type HTMLMotionProps } from "framer-motion";
@@ -30,7 +26,6 @@ export function FadeIn({ children, delay = 0, y = 16, duration = 0.5, className,
   );
 }
 
-// For above-the-fold elements that animate in on mount.
 export function HeroFade({ children, delay = 0, y = 16, duration = 0.5, className, ...rest }: FadeProps) {
   return (
     <motion.div
@@ -69,8 +64,6 @@ export function BlurReveal({
   );
 }
 
-// Stagger container — children fade/translate in sequence when the container
-// enters the viewport. Pair with <StaggerItem>.
 export function StaggerContainer({
   children,
   delay = 0,

@@ -1,12 +1,3 @@
-// GET /api/notifications/preferences[?token=]  — fetch preferences
-// PUT /api/notifications/preferences[?token=]  — save preferences (validates +
-//   writes through the cache). Returns the stored shape.
-//
-// Auth: session (apiUser) OR a valid ?token=<unsubscribeToken> (so the
-// preferences link in every email works for logged-out recipients). Both paths
-// resolve the same userId; the token path is ownership-verified by the token
-// itself (never accepts a bare userId). The body is zod-validated.
-
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiUser } from "@/lib/auth/api";

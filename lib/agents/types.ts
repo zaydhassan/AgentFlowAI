@@ -1,18 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — core types
-// ============================================================
-// Pure types only (no runtime, no server-only) so they can be imported from
-// client + server. The runtime itself (lib/agents/runtime.ts) is server-only.
-//
-// Design: the runtime is a thin LangGraph orchestration layer over a plugin
-// registry of AgentDefinitions. Adding a new agent = registerAgent(...) with a
-// new AgentDefinition; the runtime rebuilds the graph from the registry without
-// any code change. See lib/agents/registry.ts + lib/agents/graph-builder.ts.
-
-// The AgentToolGateway interface lives in lib/mcp/types (pure, no server-only)
-// so this pure types file can reference it without a runtime/server cycle. The
-// concrete class is constructed inside the server-only runtime (lib/agents/
-// runtime.ts) and passed in as ctx.tools.
 import type { AgentToolGateway } from "@/lib/mcp/types";
 
 // The six initial agents. The AgentId union is kept open-ended via string so
@@ -27,8 +12,6 @@ export type InitialAgentId =
 
 export type AgentId = InitialAgentId | (string & {});
 
-// ─────────────────────────── subtasks ──────────────────────────────────────
-
 /** Which worker agent a subtask is routed to. */
 export type WorkerAgent = "research" | "memory" | "reasoning";
 
@@ -41,8 +24,6 @@ export interface Subtask {
   /** Inputs copied from the run's upstream workflow node, if any. */
   input?: unknown;
 }
-
-// ─────────────────────────── agent results ──────────────────────────────────
 
 export interface AgentResult {
   subtaskId?: string;
@@ -62,15 +43,11 @@ export interface ReviewOutcome {
   confidence: number;
 }
 
-// ─────────────────────────── execution plan ─────────────────────────────────
-
 export interface ExecutionPlan {
   subtasks: Subtask[];
   /** Human-readable rationale the Planner emits for observability. */
   rationale: string;
 }
-
-// ─────────────────────────── tool permissions ───────────────────────────────
 
 // The initial, known tool ids. Kept as its own union so the closed set is
 // documented, while ToolId below stays open-ended for MCP + future tools.
@@ -104,8 +81,6 @@ export interface ToolPermission {
    */
   mcp?: { serverId?: string; toolName?: string };
 }
-
-// ─────────────────────────── observability / tracing ────────────────────────
 
 export type TraceKind =
   | "agent:start"
@@ -171,7 +146,6 @@ export interface RunTrace {
   error?: string;
 }
 
-// ─────────────────────────── streaming events ───────────────────────────────
 // Emitted by the runtime as an async generator (SSE on the API side). Mirrors
 // the execution engine's ExecutionEvent contract shape.
 
@@ -222,8 +196,6 @@ export interface AgentEvent {
   };
 }
 
-// ─────────────────────────── run options ────────────────────────────────────
-
 export interface AgentRunOptions {
   runId: string;
   objective: string;
@@ -263,8 +235,6 @@ export interface AgentRunResult {
   error?: string;
 }
 
-// ─────────────────────────── agent definition ────────────────────────────────
-
 /**
  * A pluggable agent. The runtime builds the LangGraph StateGraph by iterating
  * registered AgentDefinitions — adding a new agent never touches the runtime.
@@ -288,7 +258,6 @@ export interface AgentDefinition {
   run: (ctx: AgentRunContext, state: AgentState) => Promise<Partial<AgentState>>;
 }
 
-// ─────────────────────────── run context ────────────────────────────────────
 // Passed into every agent invocation. Carries the scoped tool gateways and
 // observability hooks. Defined here as an interface (the concrete impl lives in
 // runtime.ts); agents import only the type.
@@ -345,7 +314,6 @@ export interface AgentRunContext {
   approval?: { approved: boolean; feedback?: string } | null;
 }
 
-// ─────────────────────────── state shape ─────────────────────────────────────
 // The LangGraph Annotation is constructed in state.ts. This interface is the
 // plain object view agents read/write. Keep fields additive only.
 

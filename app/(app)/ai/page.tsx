@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Textarea } from "@/components/ui/input";
-import { generateWorkflowFromPrompt } from "@/lib/mock/ai";
+import { streamSSE, type SSEHandle } from "@/lib/workflow/sse-client";
 import { copilotSuggestions } from "@/lib/mock/data";
+import type { NLPlan } from "@/lib/mock/ai";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -29,17 +30,43 @@ const agents = [
 
 export default function AICopilotPage() {
   const [prompt, setPrompt] = useState(EXAMPLES[0]);
-  const [result, setResult] = useState<ReturnType<typeof generateWorkflowFromPrompt> | null>(null);
+  const [streaming, setStreaming] = useState("");
+  const [plan, setPlan] = useState<NLPlan | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const handle = useRef<SSEHandle | null>(null);
 
   const run = () => {
+    if (!prompt.trim() || busy) return;
+    handle.current?.abort();
     setBusy(true);
-    setResult(null);
-    setTimeout(() => {
-      setResult(generateWorkflowFromPrompt(prompt));
-      setBusy(false);
-    }, 700);
+    setError(null);
+    setStreaming("");
+    setPlan(null);
+    let text = "";
+    handle.current = streamSSE("/api/ai/generate", { prompt }, {
+      onMessage: (data) => {
+        const d = data as { type?: string; text?: string; plan?: NLPlan };
+        if (d.type === "text" && d.text) {
+          text += d.text;
+          setStreaming(text);
+        } else if (d.type === "plan" && d.plan) {
+          setPlan(d.plan);
+        }
+      },
+      onEvent: (name) => {
+        if (name === "done") setBusy(false);
+        if (name === "error") setBusy(false);
+      },
+      onError: (err) => {
+        setBusy(false);
+        setError(err.message || "Generation failed. Try again.");
+      },
+      onClose: () => setBusy(false),
+    });
   };
+
+  const reasoning = streaming || plan?.reasoning || "";
 
   return (
     <div className="animate-float-up">
@@ -77,39 +104,51 @@ export default function AICopilotPage() {
                 {busy ? <><Icon name="LoaderCircle" className="h-4 w-4 animate-spin" /> Planning your workflow…</> : <><Icon name="Sparkles" className="h-4 w-4" /> Generate workflow</>}
               </Button>
 
-              {result && (
+              {error && (
+                <div className="mt-5 rounded-lg border border-danger/30 bg-danger/5 p-3 text-xs text-danger animate-float-up">
+                  <Icon name="ShieldAlert" className="mr-1.5 inline h-3.5 w-3.5" />{error}
+                </div>
+              )}
+
+              {(reasoning || plan) && !error && (
                 <div className="mt-5 space-y-3 animate-float-up">
-                  <div className="rounded-lg border border-ai/30 bg-ai/5 p-3">
-                    <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ai">
-                      <Icon name="Brain" className="h-3 w-3" /> Reasoning
+                  {reasoning && (
+                    <div className="rounded-lg border border-ai/30 bg-ai/5 p-3">
+                      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ai">
+                        <Icon name="Brain" className="h-3 w-3" /> Reasoning
+                      </div>
+                      <p className="text-xs leading-relaxed text-fg-muted">{reasoning}</p>
                     </div>
-                    <p className="text-xs leading-relaxed text-fg-muted">{result.reasoning}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg border border-border bg-surface-2/60 p-3 text-center">
-                      <div className="text-2xl font-semibold text-brand-gradient">{result.nodes.length}</div>
-                      <div className="text-[10px] text-fg-subtle">nodes generated</div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-surface-2/60 p-3 text-center">
-                      <div className="text-2xl font-semibold text-brand-gradient">{result.edges.length}</div>
-                      <div className="text-[10px] text-fg-subtle">connections</div>
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-border bg-surface-2/60 p-3">
-                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">Execution plan</div>
-                    <ol className="space-y-1.5">
-                      {result.plan.map((p, i) => (
-                        <li key={i} className="flex gap-2 text-xs">
-                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-brand-soft text-brand text-[10px]">{i + 1}</span>
-                          <span className="text-fg-muted">{p}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href="/workflows/wf_invoice"><Button size="sm" className="flex-1"><Icon name="Workflow" className="h-3.5 w-3.5" /> Open in builder</Button></Link>
-                    <Button size="sm" variant="secondary" onClick={() => setResult(null)}>Discard</Button>
-                  </div>
+                  )}
+                  {plan && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-border bg-surface-2/60 p-3 text-center">
+                          <div className="text-2xl font-semibold text-brand-gradient">{plan.nodes.length}</div>
+                          <div className="text-[10px] text-fg-subtle">nodes generated</div>
+                        </div>
+                        <div className="rounded-lg border border-border bg-surface-2/60 p-3 text-center">
+                          <div className="text-2xl font-semibold text-brand-gradient">{plan.edges.length}</div>
+                          <div className="text-[10px] text-fg-subtle">connections</div>
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-border bg-surface-2/60 p-3">
+                        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">Execution plan</div>
+                        <ol className="space-y-1.5">
+                          {plan.plan.map((p, i) => (
+                            <li key={i} className="flex gap-2 text-xs">
+                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-brand-soft text-brand text-[10px]">{i + 1}</span>
+                              <span className="text-fg-muted">{p}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href="/workflows/new"><Button size="sm" className="flex-1"><Icon name="Workflow" className="h-3.5 w-3.5" /> Open in builder</Button></Link>
+                        <Button size="sm" variant="secondary" onClick={() => { setPlan(null); setStreaming(""); }}>Discard</Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -138,7 +177,15 @@ export default function AICopilotPage() {
 
       {/* Copilot suggestions */}
       <Card className="mt-4">
-        <CardHeader><CardTitle>Copilot Suggestions</CardTitle><CardDescription>Continuous optimization across all workflows</CardDescription></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Copilot Suggestions</CardTitle>
+              <CardDescription>Continuous optimization across all workflows</CardDescription>
+            </div>
+            <Badge tone="warning"><Icon name="FlaskConical" className="mr-1 h-3 w-3" /> Demo</Badge>
+          </div>
+        </CardHeader>
         <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {copilotSuggestions.map((s) => (
             <div key={s.id} className="rounded-lg border border-border bg-surface-2/40 p-3 card-hover">

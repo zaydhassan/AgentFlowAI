@@ -1,8 +1,3 @@
-// /ai/memory — Long-term memory dashboard. Server component fetches the
-// user's memories, stats, and collections (client-safe shapes — never the
-// embedding vector) and hands them to the client manager for search/add/
-// delete/maintenance. Already linked in the sidebar — no nav change.
-
 import { requireUser } from "@/lib/auth/session";
 import { repository, embeddingConfigured } from "@/lib/memory";
 import { PageHeader } from "@/components/layout/page-header";

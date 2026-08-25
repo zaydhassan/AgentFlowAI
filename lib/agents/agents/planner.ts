@@ -1,15 +1,3 @@
-// ============================================================
-// Planner Agent
-// ============================================================
-// Analyzes the operator's objective, retrieves workspace memory for context,
-// decomposes the objective into subtasks, and assigns each to a worker agent
-// (research / memory / reasoning). The graph routes from the planner to the
-// three workers in parallel.
-//
-// Per the brief: "Planner retrieves context." Memory recall is the planner's
-// only memory touch — it goes through the memory gateway (workspace-isolated,
-// permission-checked), never the MemoryEngine directly.
-
 import "server-only";
 import type {
   AgentDefinition,
@@ -31,13 +19,12 @@ export const plannerAgent: AgentDefinition = {
   tools: [
     { tool: "llm" },
     { tool: "memory.recall" },
-    { tool: "mcp.invoke" }, // MCP: inspect available tools, pick one, invoke, fold output in.
+    { tool: "mcp.invoke" },
   ],
   async run(ctx, state): Promise<Partial<AgentState>> {
     ctx.trace("agent:start", "Planning", { detail: "Planning" });
     ctx.reason("Retrieve workspace context from memory");
 
-    // 1. Recall relevant context (workspace-isolated via the gateway).
     let context = state.context ?? "";
     try {
       const hits = await ctx.memory.recall(state.objective, { topK: 5 });
@@ -86,7 +73,6 @@ export const plannerAgent: AgentDefinition = {
       }
     }
 
-    // 2. Ask the model for a structured plan.
     ctx.reason("Decompose objective into subtasks");
     const system = systemPromptFor("planner", { objective: state.objective, guidance: ctx.guidance });
     const user = buildPlannerUserPrompt(state, context);
@@ -166,13 +152,6 @@ function pickAssignee(i: number): WorkerAgent {
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
-
-// ─────────────────────────── MCP tool selection ─────────────────────────────
-// Asks the model to pick a single MCP tool from the workspace catalog and
-// produce valid arguments for it, given the objective + current context. The
-// returned data is folded into the planning context by the caller. Returns null
-// when the model opts out (skip) or returns something unusable — the planner
-// then proceeds without an MCP augmentation, preserving backward compatibility.
 
 async function selectMcpTool(
   ctx: AgentRunContext,

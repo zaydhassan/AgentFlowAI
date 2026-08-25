@@ -1,9 +1,5 @@
 "use server";
 
-// Contact form server action. Validates input and routes the message through
-// the shared email transport (lib/resend.ts) to the business inbox. In dev
-// (no RESEND_API_KEY) the transport writes the message to tmp/emails/ — so the
-// submission is always observable and never silently dropped.
 import { sendEmail } from "@/lib/resend";
 import { site } from "@/lib/site";
 

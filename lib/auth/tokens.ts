@@ -1,7 +1,3 @@
-// Email-verification and password-reset token helpers.
-// Stores single-use, expiring tokens in the Auth.js VerificationToken table,
-// which is the same table Auth.js uses for its magic-link flow.
-
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
 

@@ -1,10 +1,3 @@
-// Graph serialization helpers. The `graph` column stores a single JSON object:
-// { nodes, edges, viewport }. Comments, sticky notes, and groups are custom
-// node types inside `nodes` — no separate tables. Everything here is
-// defensive: it tolerates partial/malformed input so a bad PATCH never 500s.
-//
-// Pure utility — safe to import from both client and server components.
-
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
 
 export interface Graph {

@@ -8,10 +8,6 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { Icon } from "@/components/ui/icon";
 import { friendlyAuthError } from "@/lib/auth/errors";
 
-// Signup error landing — the public /signup/error route declared in auth.config.
-// Mirrors /login/error but with sign-up-appropriate copy and a primary "Try
-// again" CTA back to /signup.
-
 function ErrorBody() {
   const params = useSearchParams();
   const code = params.get("error");

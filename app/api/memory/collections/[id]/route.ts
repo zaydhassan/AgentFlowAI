@@ -1,7 +1,3 @@
-// DELETE /api/memory/collections/[id] — delete a collection. Owner-only;
-// a collection belonging to another user is reported as 404. Memories in it
-// are kept (their collectionId is set to null via onDelete: SetNull).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { repository } from "@/lib/memory";

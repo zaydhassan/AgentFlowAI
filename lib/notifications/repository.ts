@@ -1,14 +1,3 @@
-// =============================================================================
-// Notification repository — the ONLY place that touches the Notification /
-// NotificationPreference / NotificationDelivery / NotificationDigest tables.
-// =============================================================================
-// Every method is user-scoped (userId is always the isolation boundary). The
-// engine and API routes depend on this, never on Prisma directly, for
-// notifications. Mirrors the pattern in lib/payments/repository.ts and
-// lib/integrations/repository.ts.
-//
-// Server-only.
-
 import "server-only";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
@@ -24,8 +13,6 @@ import type {
 } from "@/lib/notifications/types";
 import { DEFAULT_PREFERENCES } from "@/lib/notifications/types";
 import type { Prisma } from "@prisma/client";
-
-// ─────────────────────────── notifications ───────────────────────────────────
 
 export interface ListFilter {
   category?: NotificationCategory;
@@ -225,8 +212,6 @@ export async function listDigestEligible(
   return rows.map(toNotificationRow);
 }
 
-// ─────────────────────────── deliveries ──────────────────────────────────────
-
 /** Create a delivery row (pending). */
 export async function createDelivery(args: {
   notificationId: string;
@@ -283,8 +268,6 @@ export async function updateDelivery(
     },
   });
 }
-
-// ─────────────────────────── preferences ─────────────────────────────────────
 
 /** Get a user's preferences, applying defaults when no row exists. */
 export async function getPreferencesRow(userId: string): Promise<NotificationPreferences & { unsubscribeToken: string | null }> {
@@ -387,8 +370,6 @@ export async function getPreferencesByToken(
   return row;
 }
 
-// ─────────────────────────── digests ─────────────────────────────────────────
-
 /** Create a digest row (pending). */
 export async function createDigest(args: {
   userId: string;
@@ -453,8 +434,6 @@ export async function digestExists(
   return !!row;
 }
 
-// ─────────────────────────── templates registry ──────────────────────────────
-
 /** Upsert the built-in template registry rows (idempotent — run on boot). */
 export async function seedTemplates(): Promise<void> {
   const { NOTIFICATION_EVENTS } = await import("@/lib/notifications/types");
@@ -478,8 +457,6 @@ export async function seedTemplates(): Promise<void> {
     });
   }
 }
-
-// ─────────────────────────── shapes ──────────────────────────────────────────
 
 export interface NotificationRow {
   id: string;
@@ -554,8 +531,6 @@ function toNotificationRow(row: DbNotification): NotificationRow {
   };
 }
 
-// ─────────────────────────── helpers ─────────────────────────────────────────
-
 function isUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
@@ -581,7 +556,6 @@ export function buildDedupKey(
   return crypto.createHash("sha256").update(core).digest("hex");
 }
 
-// ─────────────────────────── namespace bundle ────────────────────────────────
 // The `repository` object bundles every data-access function so callers import
 // a single binding (mirrors lib/memory + lib/integrations). The functions are
 // hoisted (function declarations) so this object is safe to define at the end.

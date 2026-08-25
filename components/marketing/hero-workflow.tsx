@@ -1,13 +1,5 @@
 "use client";
 
-// Floating animated workflow canvas for the hero (right side).
-// NOT an image — built from real UI components inside an SVG that scales
-// with the viewport. Nodes float, pulse, glow; connectors are animated SVG
-// paths with traveling pulses; the whole canvas tilts subtly with the mouse.
-//
-// Everything is transform/opacity-only motion (no React rerenders) so it
-// stays cheap alongside the rest of the hero.
-
 import { useMemo } from "react";
 import {
   motion,
@@ -35,7 +27,6 @@ const NODES: Node[] = [
   { icon: "Database", label: "Database", sub: "upsert row", color: "#34d399" },
 ];
 
-// Viewbox coordinates for the canvas. Nodes are laid out in a gentle zig-zag.
 const VB_W = 420;
 const VB_H = 600;
 const NW = 168;
@@ -59,7 +50,6 @@ function edgePath(i: number): string {
 }
 
 export function HeroWorkflow() {
-  // Mouse parallax — map pointer position to a subtle tilt.
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const rx = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), {

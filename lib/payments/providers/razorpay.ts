@@ -1,20 +1,3 @@
-// RazorpayProvider — the ACTIVE payment provider implementation behind the
-// PaymentProvider interface. Uses the official `razorpay` SDK. Server-only —
-// the key_secret and webhook secret never reach the client; only the public
-// NEXT_PUBLIC_RAZORPAY_KEY_ID (the checkout.js key_id) is browser-safe.
-//
-// Razorpay model recap (differs from Stripe):
-//  - Checkout is a frontend checkout.js modal keyed off a public key_id + a
-//    backend order_id, with BACKEND HMAC-SHA256 signature verification of
-//    `order_id|payment_id` (not a server-redirect session).
-//  - There is no hosted Customer Portal. Card update is done in-app via a
-//    registration checkout; "Manage" is replaced by cancel/pause/resume/downgrade.
-//  - Subscriptions support pause/resume and cancel-at-cycle-end, but CANNOT be
-//    un-cancelled once a cancellation is scheduled.
-//
-// All Prisma writes go through lib/payments/repository (provider-aware upserts,
-// idempotency). The provider reads a couple of rows directly for lookups.
-
 import "server-only";
 import crypto from "node:crypto";
 import Razorpay from "razorpay";
@@ -40,8 +23,6 @@ import type {
   WebhookEvent,
   Interval,
 } from "@/lib/payments/types";
-
-// --- Provider-local payload shapes (the SDK returns loosely-typed objects) ---
 
 interface RazorpaySubscriptionEntity {
   id: string;
@@ -134,8 +115,6 @@ export class RazorpayProvider implements PaymentProvider {
     return getRazorpay();
   }
 
-  // --- Plan provisioning ----------------------------------------------------
-
   /** Resolve a Razorpay plan id (env → cache → auto-create). */
   private async resolvePlanId(plan: PaidPlan, interval: Interval): Promise<string> {
     const env = envPlanId(plan, interval);
@@ -163,8 +142,6 @@ export class RazorpayProvider implements PaymentProvider {
     return created.id;
   }
 
-  // --- Customer provisioning -------------------------------------------------
-
   private async ensureCustomer(userId: string, email: string | null, name: string | null): Promise<string> {
     const u = await prisma.user.findUnique({
       where: { id: userId },
@@ -183,8 +160,6 @@ export class RazorpayProvider implements PaymentProvider {
     await repository.customers.linkToUser("razorpay", userId, customer.id);
     return customer.id;
   }
-
-  // --- Checkout -------------------------------------------------------------
 
   async createCheckout(init: CheckoutInit): Promise<CheckoutSession> {
     if (init.plan === "free" || init.plan === "enterprise") {
@@ -252,8 +227,6 @@ export class RazorpayProvider implements PaymentProvider {
     }
   }
 
-  // --- Payment verification (backend-only HMAC) -----------------------------
-
   async verifyPayment(
     v: PaymentVerification,
     ctx?: { userId?: string; priorSubscriptionId?: string | null },
@@ -311,8 +284,6 @@ export class RazorpayProvider implements PaymentProvider {
     return { ok: true, subscriptionId: subId, userId };
   }
 
-  // --- Payment method (display) ---------------------------------------------
-
   async getPaymentMethod(userId: string): Promise<PaymentMethodData | null> {
     // Razorpay has no hosted portal; we surface the card synced onto the
     // Subscription row by the webhook (subscription.charged reads the payment).
@@ -327,8 +298,6 @@ export class RazorpayProvider implements PaymentProvider {
       address: null,
     };
   }
-
-  // --- Subscription lifecycle ------------------------------------------------
 
   async getSubscriptionState(subId: string): Promise<(ProviderSubscriptionState & { customerId: string | null; planId: string | null }) | null> {
     const rzp = this.client();
@@ -410,8 +379,6 @@ export class RazorpayProvider implements PaymentProvider {
       "Razorpay does not expose a hosted card-update flow. To change your card, cancel and restart your subscription, or contact support.",
     );
   }
-
-  // --- Webhooks -------------------------------------------------------------
 
   verifyWebhookSignature(rawBody: string, headers: Headers): { ok: boolean; event?: WebhookEvent } {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -524,8 +491,6 @@ export class RazorpayProvider implements PaymentProvider {
     await repository.invoices.upsert("razorpay", userId, toProviderInvoice(inv));
   }
 
-  // --- Helpers --------------------------------------------------------------
-
   private async fetchInvoice(invoiceId: string): Promise<RazorpayInvoiceEntity | null> {
     try {
       return (await this.client().invoices.fetch(invoiceId)) as RazorpayInvoiceEntity;
@@ -556,8 +521,6 @@ export class RazorpayProvider implements PaymentProvider {
     }
   }
 }
-
-// --- Module singletons / helpers -------------------------------------------
 
 let _rzp: Razorpay | null = null;
 function getRazorpay(): Razorpay {

@@ -1,32 +1,3 @@
-// =============================================================================
-// Notification Engine — the single entry point for generating + delivering
-// notifications.
-// =============================================================================
-// notify(event, payload, { userId })
-//   The emit path. Creates the in-app Notification row (always — the feed is the
-//   dashboard source of truth), then routes the email channel per the user's
-//   preferences: instant → enqueue a delivery now (held during quiet hours);
-//   hourly/daily/weekly → mark the row digest-eligible and let the scheduler
-//   batch it. Deduped per (user, event, entity, day) so the same event never
-//   produces two notifications. Never throws on the producer's hot path — a
-//   failure here is logged and swallowed so it can't break the calling seam
-//   (e.g. a workflow run).
-//
-// deliverDelivery(deliveryId, notificationId)
-//   The worker path. Renders the template (lazy), sends via the resolved
-//   provider, and audits the result on the NotificationDelivery row. Idempotent:
-//   a delivery already sent/delivered/suppressed/bounced is skipped. Transient
-//   failures throw so the queue retries with exponential backoff; permanent
-//   failures (bounce/suppress) are recorded and not retried.
-//
-// buildAndSendDigest(userId, frequency, periodStart, periodEnd)
-//   The digest path. Builds charts-ready data from real DB events, renders the
-//   digest email, sends it, and records the run on a NotificationDigest row.
-//
-// Provider-agnostic: the engine talks to NotificationProvider (lib/notifications
-// providers), never to Resend/SMTP directly. Adding a channel = a new provider
-// file + one factory line. Server-only.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { repository, buildDedupKey } from "@/lib/notifications/repository";
@@ -39,6 +10,7 @@ import { enqueueDelivery } from "@/lib/notifications/queue";
 import { getProvider, providerConfigured } from "@/lib/notifications/providers";
 import { renderEvent, renderDigestEmail } from "@/lib/notifications/templates";
 import { buildDigestData, computePeriod } from "@/lib/notifications/scheduler";
+import { requireEnv } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import {
   NOTIFICATION_EVENTS,
@@ -51,8 +23,6 @@ import {
   type OutboundMessage,
   type TemplateContext,
 } from "@/lib/notifications/types";
-
-// ─────────────────────────── notify (emit) ───────────────────────────────────
 
 /**
  * Generate a notification for an event. The producer-facing entry point — call
@@ -76,18 +46,15 @@ export async function notify(
     const prefs = await getPreferences(userId);
     const emailWanted = emailEnabledForEvent(prefs, meta.preferenceFlag);
 
-    // Title/body resolution: payload override → event meta title.
     const title = payload.title ?? meta.title;
     const body = payload.body ?? meta.description;
 
-    // Dedup: never create the same notification twice per day per entity.
     const dedupKey = buildDedupKey(userId, event, payload);
     const existing = await repository.findNotificationByDedup(userId, dedupKey);
     if (existing) {
       return { notificationId: existing.id, enqueued: false, deduplicated: true, reason: "deduplicated" };
     }
 
-    // Routing: instant → send now (held in quiet hours); digest freq → batch.
     const useDigest = isDigestFrequency(prefs.frequency) && emailWanted;
     const digestEligible = useDigest;
 
@@ -110,16 +77,13 @@ export async function notify(
       return { notificationId: null, enqueued: false, deduplicated: true, reason: "deduplicated" };
     }
 
-    // No email wanted at all → in-app only.
     if (!emailWanted) {
       return { notificationId: created.id, enqueued: false, deduplicated: false, reason: "preference-disabled" };
     }
-    // Digest frequency → the scheduler batches; no individual delivery now.
     if (useDigest) {
       return { notificationId: created.id, enqueued: false, deduplicated: false, reason: `digest:${prefs.frequency}` };
     }
 
-    // Instant → create a pending delivery + enqueue (delayed if in quiet hours).
     const delayMs = computeQuietHoursDelay(prefs.quietHoursStart, prefs.quietHoursEnd, prefs.timezone);
     const deliveryId = await repository.createDelivery({
       notificationId: created.id,
@@ -162,8 +126,6 @@ export async function notify(
   }
 }
 
-// ─────────────────────────── deliver (worker) ────────────────────────────────
-
 /** Terminal statuses — a delivery in any of these is skipped (idempotency). */
 const TERMINAL = new Set(["sent", "delivered", "suppressed", "bounced"]);
 
@@ -202,8 +164,7 @@ export async function deliverDelivery(deliveryId: string, notificationId: string
     return;
   }
 
-  // Render the template (lazy-loaded by category).
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const appUrl = requireEnv("APP_URL", "http://localhost:3000");
   const unsubscribeToken = await repository.ensureUnsubscribeToken(user.id);
   const ctx: TemplateContext = {
     user: { id: user.id, name: user.name, email: user.email },
@@ -230,7 +191,6 @@ export async function deliverDelivery(deliveryId: string, notificationId: string
     deliveryId,
   };
 
-  // Attempt the send (increment attempts first so the audit reflects the try).
   await repository.updateDelivery(deliveryId, { status: "queued", incrementAttempts: true });
   let result;
   try {
@@ -252,7 +212,6 @@ export async function deliverDelivery(deliveryId: string, notificationId: string
     return;
   }
 
-  // Failed. Record the outcome.
   await repository.updateDelivery(deliveryId, {
     status: result.status,
     error: result.error ?? null,
@@ -266,8 +225,6 @@ export async function deliverDelivery(deliveryId: string, notificationId: string
   }
   // bounced / suppressed → leave as terminal; do not throw.
 }
-
-// ─────────────────────────── digest (worker) ─────────────────────────────────
 
 /**
  * Build + send one user's digest for a frequency/period. Called by the queue
@@ -283,10 +240,8 @@ export async function buildAndSendDigest(
   const period = { start: periodStart, end: periodEnd, label: frequency };
   const prefs = await getPreferences(userId);
 
-  // Build the charts-ready payload from real DB events.
   const data: DigestData = await buildDigestData(userId, frequency, period);
 
-  // Record the digest run (pending), with the summary payload.
   const digestId = await repository.createDigest({
     userId,
     frequency,
@@ -301,7 +256,6 @@ export async function buildAndSendDigest(
     },
   });
 
-  // Opt-out / empty-window skips (weekly sends as a report even when quiet).
   const optedIn = prefs.frequency === frequency &&
     (frequency === "hourly" || (frequency === "daily" && prefs.dailySummary) || (frequency === "weekly" && prefs.weeklySummary));
   if (!optedIn) {
@@ -319,7 +273,7 @@ export async function buildAndSendDigest(
     return;
   }
 
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const appUrl = requireEnv("APP_URL", "http://localhost:3000");
   const unsubscribeToken = await repository.ensureUnsubscribeToken(user.id);
   const rendered = await renderDigestEmail({
     user: { id: user.id, name: user.name, email: user.email },
@@ -359,8 +313,6 @@ export async function buildAndSendDigest(
   }
 }
 
-// ─────────────────────────── quiet hours ─────────────────────────────────────
-
 /**
  * If "now" (in the user's timezone) falls inside the quiet-hours window, return
  * the milliseconds until the window ends; otherwise 0. Handles overnight windows
@@ -386,7 +338,6 @@ export function computeQuietHoursDelay(
 function tzNow(timezone: string | null): Date {
   if (!timezone) return new Date();
   try {
-    // Current time in the user's zone, as a Date labeled with the wall-clock.
     const fmt = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       year: "numeric", month: "2-digit", day: "2-digit",
@@ -406,8 +357,6 @@ function parseHHmm(hhmm: string, ref: Date): Date {
   d.setHours(h ?? 0, m ?? 0, 0, 0);
   return d;
 }
-
-// ─────────────────────────── helpers ─────────────────────────────────────────
 
 /** Trigger a digest for the current user on demand (dev/admin from the API). */
 export async function triggerDigestForUser(

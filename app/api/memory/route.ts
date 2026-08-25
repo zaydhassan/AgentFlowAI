@@ -1,9 +1,3 @@
-// GET  /api/memory            — list memories (?scope=&workflowId=&collectionId=&q=&limit=)
-// POST /api/memory            — create a memory manually ({content, scope, importance, collectionId?, metadata?})
-//
-// All responses are client-safe: the embedding vector is never returned (the
-// repository strips it). Every read/write is scoped to the authenticated user.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { memoryEngine, repository, resolveOrgId, type MemoryScope } from "@/lib/memory";

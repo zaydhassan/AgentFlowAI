@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { SecurityPillarCard } from "@/components/marketing/security-pillar-card";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Security — AgentFlow AI",
@@ -76,7 +77,7 @@ export default function SecurityPage() {
               within 24 hours, validate, and credit you (or keep you anonymous) on fix.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="mailto:security@agentflow.ai"><Button variant="secondary" size="md">security@agentflow.ai</Button></Link>
+              <Link href={`mailto:${site.legal.security}`}><Button variant="secondary" size="md">{site.legal.security}</Button></Link>
             </div>
             <p className="mt-3 text-xs text-fg-subtle">
               Please don&apos;t test on production accounts or customer data. Provide a PoC in your report.

@@ -1,11 +1,3 @@
-// Pluggable AI provider. When an LLM key is configured (OPENAI_API_KEY or
-// ANTHROPIC_API_KEY), streams from the real model over fetch + SSE. Otherwise
-// delegates to the enhanced deterministic engine. Mirrors the Stripe
-// "configured vs dev-fallback" pattern: the UX is the same either way.
-//
-// No SDK dependency — we call the OpenAI / Anthropic REST APIs directly with
-// fetch, which keeps this module dependency-free and hermetic to install.
-
 import "server-only";
 import { getNodeDef } from "@/lib/nodes";
 import type { WorkflowNode, WorkflowEdge, CopilotSuggestion } from "@/lib/types";
@@ -42,6 +34,12 @@ const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const AI_MODEL = process.env.AI_MODEL;
 
+// Sampling + length knobs shared by both providers so OpenAI and Anthropic
+// behave consistently. `max_tokens` caps streamed output (and cost); without
+// it OpenAI could stream indefinitely where Anthropic was capped at 1024.
+const AI_TEMPERATURE = 0.4;
+const AI_MAX_TOKENS = 1024;
+
 export const aiConfigured = Boolean(OPENAI_KEY || ANTHROPIC_KEY);
 
 export function aiProvider(): "openai" | "anthropic" | "deterministic" {
@@ -54,8 +52,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ─────────────────────────── real LLM streaming ───────────────────────────
-
 async function* streamOpenAI(messages: ChatMessage[], model: string, signal?: AbortSignal): AsyncGenerator<string> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -64,7 +60,7 @@ async function* streamOpenAI(messages: ChatMessage[], model: string, signal?: Ab
       "Content-Type": "application/json",
       Authorization: `Bearer ${OPENAI_KEY}`,
     },
-    body: JSON.stringify({ model, stream: true, messages, temperature: 0.4 }),
+    body: JSON.stringify({ model, stream: true, messages, temperature: AI_TEMPERATURE, max_tokens: AI_MAX_TOKENS }),
   });
   if (!res.ok || !res.body) throw new Error(`OpenAI error ${res.status}: ${await safeText(res)}`);
 
@@ -104,7 +100,7 @@ async function* streamAnthropic(messages: ChatMessage[], system: string, model: 
       "x-api-key": ANTHROPIC_KEY!,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ model, system, stream: true, max_tokens: 1024, messages: userMsgs, temperature: 0.4 }),
+    body: JSON.stringify({ model, system, stream: true, max_tokens: AI_MAX_TOKENS, messages: userMsgs, temperature: AI_TEMPERATURE }),
   });
   if (!res.ok || !res.body) throw new Error(`Anthropic error ${res.status}: ${await safeText(res)}`);
 
@@ -152,8 +148,6 @@ async function safeText(res: Response): Promise<string> {
   }
 }
 
-// ─────────────────────────── public API ───────────────────────────────────
-
 /**
  * One-shot completion for AI nodes during workflow execution (used by the
  * memory-aware execution branch). Streams internally, returns the full text.
@@ -170,14 +164,13 @@ export async function completeText(
     const { text } = deterministicComplete(system, user);
     return { text, tokensUsed: Math.ceil((system.length + user.length + text.length) / 4) };
   }
-  try {
-    const text = await collect(streamLLM(system, user, signal));
-    return { text, tokensUsed: Math.ceil((system.length + user.length + text.length) / 4) };
-  } catch (err) {
-    console.error("[ai] completeText failed, falling back", err);
-    const { text } = deterministicComplete(system, user);
-    return { text, tokensUsed: Math.ceil((system.length + user.length + text.length) / 4) };
-  }
+  // A key is configured, so a real model call is expected. Surface failures
+  // (bad key, quota, network) to the caller instead of masking them with
+  // deterministic output — silently serving the offline fallback here would
+  // make a broken AI key look like a successful workflow run. The execution
+  // engine and agent runtime catch this and record a node/agent failure.
+  const text = await collect(streamLLM(system, user, signal));
+  return { text, tokensUsed: Math.ceil((system.length + user.length + text.length) / 4) };
 }
 
 /** Streaming chat for the Copilot panel. Yields token strings. */
@@ -191,12 +184,9 @@ export async function* copilotChat(question: string, graph: { nodes: WorkflowNod
     }
     return;
   }
-  try {
-    yield* streamLLM(COPILOT_SYSTEM, user, signal);
-  } catch (err) {
-    console.error("[ai] copilot stream failed, falling back", err);
-    for (const tok of tokenize(deterministicCopilot(question))) yield tok;
-  }
+  // Configured key: surface real failures (the route emits an SSE error event)
+  // rather than silently substituting the offline fallback for model output.
+  yield* streamLLM(COPILOT_SYSTEM, user, signal);
 }
 
 /** Stream a plain-English explanation of the workflow. */
@@ -209,12 +199,9 @@ export async function* explainWorkflow(graph: { nodes: WorkflowNode[]; edges: Wo
     }
     return;
   }
-  try {
-    yield* streamLLM(EXPLAIN_SYSTEM, `Explain this workflow:\n${ctx}`, signal);
-  } catch (err) {
-    console.error("[ai] explain stream failed, falling back", err);
-    for (const tok of tokenize(deterministicExplain(graph.nodes, graph.edges))) yield tok;
-  }
+  // Configured key: surface real failures rather than silently substituting
+  // the offline fallback for model output.
+  yield* streamLLM(EXPLAIN_SYSTEM, `Explain this workflow:\n${ctx}`, signal);
 }
 
 /** NL → streaming plan + graph. Yields text chunks then a final plan. */
@@ -230,17 +217,12 @@ export async function* generateWorkflow(prompt: string, signal?: AbortSignal): A
   }
 
   let full = "";
-  try {
-    for await (const tok of streamLLM(GENERATE_SYSTEM, `${prompt}\n\n${NODE_LIBRARY_DIGEST}`, signal)) {
-      full += tok;
-      yield { type: "text", text: tok };
-    }
-  } catch (err) {
-    console.error("[ai] generate stream failed, falling back", err);
-    const { text, plan } = deterministicGenerate(prompt);
-    yield { type: "text", text };
-    yield { type: "plan", plan };
-    return;
+  // Configured key: surface transport failures (the route emits an SSE error
+  // event). A non-throwing but unusable response (no parseable nodes) is still
+  // salvaged by parseGeneratePlan's content fallback below.
+  for await (const tok of streamLLM(GENERATE_SYSTEM, `${prompt}\n\n${NODE_LIBRARY_DIGEST}`, signal)) {
+    full += tok;
+    yield { type: "text", text: tok };
   }
 
   const plan = parseGeneratePlan(full, prompt);
@@ -258,16 +240,13 @@ export async function analyzeWorkflow(
   if (!aiConfigured) {
     return { suggestions: deterministicAnalyze(graph.nodes, graph.edges, failedNode) };
   }
-  try {
-    const raw = await collect(streamLLM(ANALYZE_SYSTEM, `${ctx}${failed}`, signal));
-    const json = extractJson(raw);
-    const suggestions = (json?.suggestions as CopilotSuggestion[] | undefined) ?? [];
-    if (suggestions.length === 0) return { suggestions: deterministicAnalyze(graph.nodes, graph.edges, failedNode) };
-    return { suggestions: suggestions.slice(0, 8).map((s, i) => ({ ...s, id: s.id ?? `ai-${i}` })) };
-  } catch (err) {
-    console.error("[ai] analyze failed, falling back", err);
-    return { suggestions: deterministicAnalyze(graph.nodes, graph.edges, failedNode) };
-  }
+  // Configured key: surface transport failures to the caller. A successful
+  // call with no usable suggestions still degrades to deterministic below.
+  const raw = await collect(streamLLM(ANALYZE_SYSTEM, `${ctx}${failed}`, signal));
+  const json = extractJson(raw);
+  const suggestions = (json?.suggestions as CopilotSuggestion[] | undefined) ?? [];
+  if (suggestions.length === 0) return { suggestions: deterministicAnalyze(graph.nodes, graph.edges, failedNode) };
+  return { suggestions: suggestions.slice(0, 8).map((s, i) => ({ ...s, id: s.id ?? `ai-${i}` })) };
 }
 
 /** Next-node recommendations. */
@@ -281,21 +260,15 @@ export async function recommendNodes(
   if (!aiConfigured) {
     return { nodes: deterministicRecommend(selectedType, graph.nodes) };
   }
-  try {
-    const raw = await collect(streamLLM(RECOMMEND_SYSTEM, `${ctx}${sel}\n\n${NODE_LIBRARY_DIGEST}`, signal));
-    const json = extractJson(raw);
-    const nodes = (json?.nodes as { type: string; reason: string }[] | undefined) ?? [];
-    // validate types exist in the library
-    const valid = nodes.filter((n) => Boolean(getNodeDef(n.type)));
-    if (valid.length === 0) return { nodes: deterministicRecommend(selectedType, graph.nodes) };
-    return { nodes: valid.slice(0, 5) };
-  } catch (err) {
-    console.error("[ai] recommend failed, falling back", err);
-    return { nodes: deterministicRecommend(selectedType, graph.nodes) };
-  }
+  // Configured key: surface transport failures to the caller. A successful
+  // call with no valid node recommendations still degrades to deterministic.
+  const raw = await collect(streamLLM(RECOMMEND_SYSTEM, `${ctx}${sel}\n\n${NODE_LIBRARY_DIGEST}`, signal));
+  const json = extractJson(raw);
+  const nodes = (json?.nodes as { type: string; reason: string }[] | undefined) ?? [];
+  const valid = nodes.filter((n) => Boolean(getNodeDef(n.type)));
+  if (valid.length === 0) return { nodes: deterministicRecommend(selectedType, graph.nodes) };
+  return { nodes: valid.slice(0, 5) };
 }
-
-// ─────────────────────────── helpers ──────────────────────────────────────
 
 async function collect(gen: AsyncGenerator<string>): Promise<string> {
   let out = "";
@@ -309,7 +282,6 @@ function extractJson(text: string): Record<string, unknown> | null {
   const candidate = fence ? fence[1] : text;
   const start = candidate.indexOf("{");
   if (start === -1) return null;
-  // find matching brace
   let depth = 0;
   for (let i = start; i < candidate.length; i++) {
     const c = candidate[i];
@@ -340,7 +312,7 @@ function parseGeneratePlan(text: string, prompt: string): NLPlan {
 
   rawNodes.forEach((raw, i) => {
     const def = getNodeDef(raw.type);
-    if (!def) return; // skip unknown types
+    if (!def) return;
     const id = `g${i + 1}`;
     const col = i % 3;
     const row = Math.floor(i / 3);

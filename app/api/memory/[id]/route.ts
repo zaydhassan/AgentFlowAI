@@ -1,6 +1,3 @@
-// DELETE /api/memory/[id] — delete a memory. Owner-only: a memory belonging
-// to another user is reported as 404 (no information leak).
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { repository } from "@/lib/memory";

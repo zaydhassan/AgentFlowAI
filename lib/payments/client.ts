@@ -1,14 +1,5 @@
 "use client";
 
-// Browser-side Razorpay checkout helper. Loads checkout.js once, then opens the
-// modal with a public key_id + a backend-issued order_id. The secret-based
-// signature verification is server-only (lib/payments/providers/razorpay.ts);
-// this module never imports or touches RAZORPAY_KEY_SECRET.
-//
-// Also re-exports the client-safe subset of the payments types so client
-// components import from "@/lib/payments/client" rather than the server-only
-// "@/lib/payments" barrel.
-
 import type {
   CheckoutSession,
   Interval,

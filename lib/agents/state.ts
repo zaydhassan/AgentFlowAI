@@ -1,18 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — LangGraph shared state (Annotation)
-// ============================================================
-// The graph state shared by every agent node. Reducers define how parallel
-// branches merge:
-//  - `results` uses an object-merge reducer so the research/memory/reasoning
-//    agents (which run in parallel) can each write their subtask results without
-//    clobbering each other.
-//  - `trace`, `reasoning`, `errors`, `memories` use concat reducers so parallel
-//    branches append rather than overwrite.
-//  - scalar fields (objective, plan, review, finalAnswer, iterations) use a
-//    last-writer-wins reducer.
-//
-// Server-only — pulls LangGraph (a server dependency).
-
 import "server-only";
 import { Annotation } from "@langchain/langgraph";
 import type {

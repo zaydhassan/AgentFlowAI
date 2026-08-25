@@ -1,13 +1,3 @@
-// Replay / retry a single node from a past execution.
-//
-// Re-executes ONE node in isolation, seeded with its recorded upstream inputs
-// (the persisted ExecutionStep `input`), and streams the same ExecutionEvent
-// shape the run engine produces — including the inspection payload (config,
-// input, output, prompt, memories). Powers "replay failed node" and "retry
-// individual node" with real server-side re-execution (no client-side fake).
-//
-// Stateless + non-mutating: a replay does NOT persist a new step or alter the
-// execution row — it's a pure debug view of what the node would produce now.
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
 import { normalizeGraph } from "@/lib/workflow/graph";
@@ -27,7 +17,6 @@ export async function POST(_req: Request, { params }: Params) {
   const { user } = u;
   const { id, eid, nodeId } = await params;
 
-  // Ownership + existence.
   const wf = await prisma.workflow.findUnique({ where: { id }, select: { ownerId: true, graph: true } });
   if (!wf || wf.ownerId !== user.id) return new Response(JSON.stringify({ error: "Not found." }), { status: 404, headers: { "Content-Type": "application/json" } });
 

@@ -1,34 +1,5 @@
 "use client";
 
-// Reusable dropdown/popover/menu primitive.
-//
-// Why this exists: the app's dropdowns (top-nav notifications, the shared
-// profile/UserMenu) each rolled their own open/close state with a full-viewport
-// invisible overlay to fake outside-click detection. That overlay is a custom
-// hack (no Radix/shadcn is installed, so we can't use DismissableLayer), and it
-// had two real problems: (1) it didn't always capture clicks (stacking-context
-// issues with backdrop-blur), so outside clicks didn't close the menu; and
-// (2) there was no coordination between dropdowns, so two could be open at once.
-//
-// This hook replaces the overlay hack with document-level pointer/keydown
-// listeners and adds a global "only one dropdown open at a time" registry so
-// opening one dropdown closes any other. It is the single place future
-// dropdowns should call into.
-//
-// Behaviour guarantees (see the matching task requirements):
-//  - Outside click closes the open dropdown.                     (#1, #4)
-//  - Escape closes the open dropdown and returns focus to trigger. (#2, #7)
-//  - Opening one dropdown closes any other (global registry).      (#3)
-//  - Clicking inside the panel does NOT close it (only menu actions,
-//    which call setOpen(false)/close themselves, do).             (#5)
-//  - Every listener is removed on unmount / when closed.           (#6)
-//
-// Usage:
-//   const { open, setOpen, close, toggle, panelRef, triggerRef } =
-//     useDropdown<HTMLButtonElement>("user-menu");
-//   <button ref={triggerRef} onClick={toggle} aria-expanded={open} ... />
-//   {open && <div ref={panelRef} role="menu">...</div>}
-
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type DropdownOptions = {
@@ -36,7 +7,6 @@ export type DropdownOptions = {
   returnFocusOnEscape?: boolean;
 };
 
-// ─── Global single-open registry ─────────────────────────────────────────────
 // Module-scoped so dropdowns anywhere in the tree coordinate without a shared
 // parent or React context. When a dropdown opens it claims `activeId`; every
 // other open dropdown is told to close silently (without clearing the registry,

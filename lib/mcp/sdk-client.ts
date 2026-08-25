@@ -1,15 +1,3 @@
-// =============================================================================
-// MCP SDK client — thin wrapper over @modelcontextprotocol/sdk Client
-// =============================================================================
-// The ONLY module that imports the SDK Client. Everything above it
-// (connection-manager, discovery, tool-registry, gateway, engine action) talks
-// to McpSdkClient, so swapping/upgrade the SDK = edits here alone. Wires SDK
-// progress notifications → our onProgress callback, honours AbortSignal like
-// the agent LLM closures (lib/agents/runtime.ts), and estimates tokens from the
-// returned content length (rough chars/4 heuristic, no external tokenizer).
-//
-// Server-only.
-
 import "server-only";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";

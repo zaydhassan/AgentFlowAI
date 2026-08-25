@@ -1,9 +1,3 @@
-// Enhanced deterministic AI fallback — used when no LLM key is configured.
-// Reuses the proven NL-planning heuristics from lib/mock/ai.ts and adds
-// graph-aware explain / analyze / recommend that reason over the live canvas.
-// Everything here is offline and instant; the provider streams these results
-// token-by-token so the UX is indistinguishable from a real model.
-
 import "server-only";
 import { generateWorkflowFromPrompt, mockCopilotReply, selfHealSuggestions } from "@/lib/mock/ai";
 import { getNodeDef, NODE_LIBRARY } from "@/lib/nodes";
@@ -136,7 +130,6 @@ export function deterministicRecommend(selectedType: string | null, nodes: Workf
     if (cat === "files") addIf("ai.claude", "Extract structured fields from the document with an LLM.");
     if (cat === "database") addIf("util.transform", "Shape the query result into the next step's expected schema.");
   }
-  // Universal useful additions
   addIf("util.condition", "Route failures vs. successes.");
   addIf("memory.store", "Persist a value for later runs.");
   addIf("ai.router", "Pick the best model per step.");
@@ -147,7 +140,6 @@ export function deterministicRecommend(selectedType: string | null, nodes: Workf
   return out.slice(0, 5);
 }
 
-// ── helpers ──
 function topologicalSummary(nodes: WorkflowNode[], edges: WorkflowEdge[]): WorkflowNode[] {
   const adj = new Map<string, string[]>();
   const indeg = new Map<string, number>();
@@ -175,7 +167,6 @@ function topologicalSummary(nodes: WorkflowNode[], edges: WorkflowEdge[]): Workf
   return order.map((id) => nodes.find((n) => n.id === id)!).filter(Boolean);
 }
 
-// Split a finished string into small word tokens for a streaming feel.
 export function tokenize(text: string): string[] {
   return text.split(/(\s+)/).filter((t) => t.length > 0);
 }

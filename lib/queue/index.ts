@@ -1,27 +1,3 @@
-// =============================================================================
-// Queue — production-ready background-job layer (BullMQ + Redis)
-// =============================================================================
-// Resolution order for `getQueue(name)`:
-//   1. QUEUE_ENABLED=false / no REDIS_URL → NoopQueueProvider (enqueue returns
-//      { queued: false }, so callers run synchronously — graceful fallback).
-//   2. REDIS_URL set                    → RedisQueueProvider (BullMQ). If Redis
-//      is unreachable at runtime, `enqueue()` catches and returns
-//      { queued: false } (runtime graceful fallback); a worker, once started,
-//      reconnects automatically via ioredis' retryStrategy.
-//
-// Redis connection: reuses the app's existing REDIS_URL (the same Redis the
-// cache layer in lib/cache uses). Per BullMQ's requirement the connection uses
-// `maxRetriesPerRequest: null` (incompatible with the cache's retry-on-request
-// connection), so the queue keeps its own connection pool. The producer (Queue)
-// shares one memoized connection; each Worker gets its own (BullMQ best
-// practice — a worker's blocking commands must not stall the producer).
-//
-// BullMQ + ioredis are imported LAZILY (dynamic import inside the provider
-// methods / connection helpers), so importing `enqueueEmbedding()` (used by the
-// memory engine) never loads them until a queue is actually exercised. The
-// `import type` lines below are erased at runtime — they add no eager load.
-// Server-only.
-
 import "server-only";
 // Type-only (erased at runtime): give the BullMQ/ioredis surfaces real types
 // without eager-loading the packages. Runtime imports happen in the methods.
@@ -48,7 +24,6 @@ export type {
   QueueSnapshotEntry,
 } from "./types";
 
-// ─────────────────────────── Redis connection ────────────────────────────────
 // Producer connection (shared). Worker connections are created per-worker.
 let _producerRedis: Redis | null = null;
 let _producerPromise: Promise<Redis> | null = null;
@@ -115,7 +90,6 @@ function coerceKeep(v: number | boolean | object | undefined): number | boolean 
   return typeof v === "object" ? undefined : v;
 }
 
-// ─────────────────────────── helpers ─────────────────────────────────────────
 // Map generic JobOptions → BullMQ JobsOptions.
 function toBullOpts(opts: JobOptions | undefined): JobsOptions {
   return {
@@ -139,7 +113,6 @@ function fromBullOpts(opts: JobsOptions): JobOptions {
   };
 }
 
-// ─────────────────────────── NoopQueueProvider ───────────────────────────────
 // Active when the queue is disabled. `enqueue` returns { queued: false } so the
 // caller (e.g. the memory engine) runs the work synchronously — identical to
 // pre-queue behavior. Zero overhead.
@@ -160,7 +133,6 @@ class NoopQueueProvider implements QueueProvider {
   async close(): Promise<void> {}
 }
 
-// ─────────────────────────── RedisQueueProvider (BullMQ) ─────────────────────
 class RedisQueueProvider implements QueueProvider {
   readonly id = "bullmq";
   readonly active = true;
@@ -311,7 +283,6 @@ class RedisQueueProvider implements QueueProvider {
   }
 }
 
-// ─────────────────────────── factory ─────────────────────────────────────────
 const _providers = new Map<string, QueueProvider>();
 
 /** Return the provider for a logical queue (memoized per name). */
@@ -341,7 +312,6 @@ export async function __resetQueueForTests(): Promise<void> {
   _producerPromise = null;
 }
 
-// ─────────────────────────── memory-embedding helper ─────────────────────────
 /** Logical queue name for memory-embedding jobs. Shared with the worker. */
 export const MEMORY_EMBEDDING_QUEUE = "memory-embedding";
 

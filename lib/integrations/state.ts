@@ -1,12 +1,3 @@
-// OAuth state cookie — HMAC-signed, short-lived, HttpOnly. Carries the PKCE
-// verifier + which provider/user/account the flow is for, so the callback
-// handler is stateless (no server-side session table for pending flows) and
-// tamper-proof. The provider puts a random `nonce` into the OAuth `state`
-// query param; the cookie binds that nonce to the rest of the payload.
-//
-// Server-only: signing uses AUTH_SECRET. Routes set/read the cookie via
-// NextResponse/Request cookies; this module only produces + verifies the value.
-
 import "server-only";
 import crypto from "node:crypto";
 import type { OAuthStatePayload } from "./types";

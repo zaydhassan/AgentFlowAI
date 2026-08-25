@@ -1,7 +1,3 @@
-// Validation schemas for the profile-management flows (settings → Profile).
-// Mirrors the password rules in lib/validation/auth.ts so the strength
-// requirement is consistent across signup, reset, and change-password.
-
 import { z } from "zod";
 
 export const UpdateProfileSchema = z.object({

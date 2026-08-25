@@ -1,11 +1,3 @@
-// Structural diff between two workflow graphs. Pure, dependency-free, safe to
-// import from both client and server. Only STRUCTURAL fields are compared —
-// transient runtime state (status, logs, durationMs, tokensUsed, cost, retries,
-// breakpoint) is execution state, not graph definition, so it's deliberately
-// ignored. A run that left a node "succeeded" must not show up as a graph diff.
-//
-// Used by the version compare API + the compare modal to render a visual diff.
-
 import type { Graph } from "@/lib/workflow/graph";
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
 

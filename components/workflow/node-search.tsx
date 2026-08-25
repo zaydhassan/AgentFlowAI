@@ -37,7 +37,8 @@ export function NodeSearch({
     return all.filter((n) => n.label.toLowerCase().includes(t) || n.type.includes(t) || n.desc.toLowerCase().includes(t)).slice(0, 12);
   }, [q]);
 
-  useEffect(() => { setActive(0); }, [q]);
+  // `active` selection resets alongside `q` — done in the input onChange below
+  // (the only place `q` changes), so no reset effect is needed.
 
   const pick = (type: string) => { onPick(type); onClose(); };
 
@@ -53,7 +54,7 @@ export function NodeSearch({
           <input
             ref={inputRef}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => { setQ(e.target.value); setActive(0); }}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
               else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
@@ -65,7 +66,7 @@ export function NodeSearch({
           <kbd className="rounded border border-border bg-surface-3 px-1.5 py-0.5 text-[10px] text-fg-subtle">esc</kbd>
         </div>
         <div className="max-h-80 overflow-y-auto p-1.5">
-          {results.length === 0 && <div className="px-3 py-6 text-center text-xs text-fg-subtle">No nodes match "{q}".</div>}
+          {results.length === 0 && <div className="px-3 py-6 text-center text-xs text-fg-subtle">No nodes match &ldquo;{q}&rdquo;.</div>}
           {results.map((n, i) => (
             <button
               key={n.type}

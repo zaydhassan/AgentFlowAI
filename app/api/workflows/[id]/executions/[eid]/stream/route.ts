@@ -1,14 +1,3 @@
-// Live SSE stream of execution events for an in-flight run.
-//
-// The builder already consumes the run stream from the client that started the
-// run. This route lets a SECOND client (e.g. the executions/[id] page opened
-// mid-run, or a future observability view) tail the same live events without
-// re-triggering the run. It subscribes to the in-process event bus
-// (lib/execution/event-bus.ts) and reuses sseStream framing.
-//
-// For a run that is not currently in flight, it returns a short terminal
-// stream (`not-live` → done) so the client can fall back to the persisted
-// timeline at GET /api/workflows/[id]/executions/[eid].
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
 import { getRun } from "@/lib/execution/engine";

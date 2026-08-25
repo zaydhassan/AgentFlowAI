@@ -1,10 +1,3 @@
-// POST /api/payments/payment-method — open in-app management of the payment
-// method. Returns a { url } the client redirects to:
-//   - Stripe: Customer Portal URL.
-//   - Razorpay: a hosted card-registration link (no portal exists).
-//
-// Authenticated users only.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { appUrl, getPaymentProvider } from "@/lib/payments";

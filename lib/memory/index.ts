@@ -1,9 +1,3 @@
-// Server facade for the memory engine. Re-exports the public server API the
-// execution engine + API routes use, plus the client-safe types. Mirrors the
-// lib/integrations/index.ts + lib/payments/index.ts facade pattern.
-//
-// Server-only.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { embeddingConfigured } from "./embeddings";
@@ -46,7 +40,6 @@ export function getMemoryEngine() {
   return memoryEngine;
 }
 
-// ─────────────────────────── workspace resolution ──────────────────────────
 // Per-process cache of userId → primary orgId (the user's earliest membership).
 // Used to scope "workspace" memory. Null when the user has no org — workspace
 // scope then falls back to user-scoped isolation.

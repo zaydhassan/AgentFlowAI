@@ -1,11 +1,3 @@
-// =============================================================================
-// Rate Limiting — in-memory limiter (the graceful fallback + Edge runtime impl)
-// =============================================================================
-// Pure JS: Map + Date.now only. NO Node APIs, NO ioredis. Safe in the Edge
-// middleware bundle. Implements all three algorithms with Sliding Window as the
-// default. Used directly by the Edge middleware and as the per-request fallback
-// inside the Redis limiter when Redis is unreachable.
-
 import type { LimitPolicy, RateLimitInput, RateLimitResult, RateLimiter } from "./types";
 
 const ok = (p: LimitPolicy, remaining: number, resetAt: number): RateLimitResult => ({

@@ -1,7 +1,3 @@
-// Full Auth.js v5 init. Server-only. Wires the PrismaAdapter to persist
-// users/accounts/sessions, and augments the JWT with the AgentFlow-specific
-// session shape (role, orgId, stripeCustomerId).
-
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
@@ -12,7 +8,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   callbacks: {
     ...authConfig.callbacks,
-    // Persist custom fields onto the JWT.
     async jwt({ token, user, trigger, session }) {
       // First call: user was just created/fetched by authorize() or OAuth.
       if (user) {

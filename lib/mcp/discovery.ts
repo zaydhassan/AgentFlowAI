@@ -1,17 +1,3 @@
-// =============================================================================
-// MCP discovery engine
-// =============================================================================
-// Pulls tools/resources/prompts/capabilities from a connected server and
-// persists them into the cache (McpCapability + McpToolCache). Called:
-//   • on explicit discovery (POST /servers/[id]/discover)
-//   • after a health-check connect (POST /servers/[id]/test)
-//   • on reconnect (registered as the connection manager's onReconnect handler)
-// Caching the metadata is what lets the inspector dropdown, the planner's
-// ctx.tools.list(), and the engine's tool resolution run without a live round
-// trip to every server. Stale cache rows are pruned each refresh.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "./repository";
 import { getConnection, setOnReconnect, type McpConnection } from "./connection-manager";
@@ -130,7 +116,6 @@ export async function refresh(serverId: string, userId: string): Promise<Discove
   return discover(serverId, userId);
 }
 
-// ─────────────────────────── reconnect wiring ───────────────────────────────
 // Register once at module load so the connection manager re-syncs metadata
 // after a transport comes back. Guarded: discovery errors never propagate into
 // the connection path (the connection is already usable; the next explicit

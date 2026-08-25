@@ -1,10 +1,5 @@
 "use client";
 
-// /notifications/preferences?token=<unsubscribeToken> — public, token-authenticated
-// notification preferences. Linked from the footer of every email so recipients
-// (who may be logged out) can manage what they receive. No session required;
-// ownership is verified by the token server-side.
-
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEFAULT_PREFERENCES, FREQUENCIES, PREFERENCE_TOGGLES, type NotificationPreferences } from "@/lib/notifications/client";

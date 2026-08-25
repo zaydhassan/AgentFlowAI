@@ -1,22 +1,3 @@
-// =============================================================================
-// Agent Tool Gateway — the ctx.tools surface (the ONLY way agents touch MCP)
-// =============================================================================
-// Mirrors AgentMemoryGateway (lib/agents/memory.ts): permission-checked against
-// the agent's declared tools, workspace-isolated, and audited. Agents never
-// import the MCP SDK, never touch the connection pool, never see credentials.
-//
-//   ctx.tools.can("mcp.invoke")  ctx.tools.ensure("mcp.invoke")
-//   ctx.tools.list()             → allow-filtered workspace tool descriptors
-//   ctx.tools.invoke(ref, args)  → resolve → connect → callTool → audit + memory
-//
-// Reuses PermissionError from lib/agents/memory so wrapAgent's non-retryable
-// classification (runtime.ts) works unchanged — a permission violation is NOT
-// retried. Transport/cancellation errors DO propagate (so the runtime's retry
-// wrapper can retry them); tool-level errors (isError:true) do NOT throw — they
-// come back as McpCallResult.isError, per the interface contract.
-//
-// Server-only.
-
 import "server-only";
 import { getConnection, McpNotFoundError, McpServerDisabledError } from "./connection-manager";
 import { resolveTool, ToolNotFoundError } from "./tool-registry";

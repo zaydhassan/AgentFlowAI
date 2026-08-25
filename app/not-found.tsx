@@ -1,7 +1,3 @@
-// Global 404 — a branded, useful not-found page (not a stub). Rendered by
-// Next.js for any unmatched route. Offers the most likely destinations so a
-// lost visitor is one click from something real.
-
 import Link from "next/link";
 import { MarketingPage } from "@/components/marketing/page-shell";
 import { Button } from "@/components/ui/button";

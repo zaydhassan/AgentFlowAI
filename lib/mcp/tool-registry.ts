@@ -1,19 +1,3 @@
-// =============================================================================
-// MCP tool registry — workspace-aggregated, allow-filtered tool resolution
-// =============================================================================
-// Reads the cached metadata (McpToolCache) across a workspace's servers and
-// applies each server's allow/deny list (lib/mcp/permissions.ts) so only
-// permitted tools are ever exposed — to the agent gateway, to the node
-// inspector dropdown, and to the engine action. This is the security boundary
-// between "what the server advertises" and "what this workspace may use".
-//
-// resolveTool() turns a composite id "<serverId>::<toolName>" (or an explicit
-// ref) into the concrete { serverId, toolName, schema } the gateway/engine
-// needs to invoke, after re-checking the allow/deny policy. It never touches
-// credentials or the connection pool.
-//
-// Server-only.
-
 import "server-only";
 import { repository } from "./repository";
 import { isAllowed } from "./permissions";

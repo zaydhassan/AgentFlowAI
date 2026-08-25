@@ -1,4 +1,3 @@
-// AI Cost Optimizer — public barrel.
 export {
   PROVIDERS,
   getProvider,

@@ -1,21 +1,3 @@
-// =============================================================================
-// Digest scheduler — builds charts-ready digest payloads from real DB events
-// and decides which digests are due. The actual send (render + provider + audit)
-// lives in the engine's buildAndSendDigest(); this module owns *what* to send
-// and *when*, the engine owns *how*.
-// =============================================================================
-// Periods (UTC):
-//   hourly  — the previous clock hour
-//   daily   — yesterday (00:00 → 24:00)
-//   weekly  — the last 7 days ending at the start of today
-//
-// runDueDigests() is called from the worker's "tick" heartbeat (every 15 min,
-// self-perpetuating) AND from the /api/notifications/digest/run cron route. It
-// is idempotent: a digest for a given (user, frequency, period) is enqueued at
-// most once (repository.digestExists guards duplicates).
-//
-// Server-only.
-
 import "server-only";
 import { prisma } from "@/lib/db";
 import { repository } from "@/lib/notifications/repository";
@@ -30,8 +12,6 @@ import type {
   DigestStat,
   NotificationSeverity,
 } from "@/lib/notifications/types";
-
-// ─────────────────────────── period math ─────────────────────────────────────
 
 export interface Period {
   start: Date;
@@ -56,7 +36,6 @@ export function computePeriod(frequency: "hourly" | "daily" | "weekly", now: Dat
     const start = new Date(todayStart.getTime() - 7 * 86_400_000);
     return { start, end: todayStart, label: "Last 7 days" };
   }
-  // daily — yesterday
   const todayStart = startOfDay(now);
   const start = new Date(todayStart.getTime() - 86_400_000);
   return { start, end: todayStart, label: "Yesterday" };
@@ -75,8 +54,6 @@ async function safeCount(fn: () => Promise<number>): Promise<number> {
     return 0;
   }
 }
-
-// ─────────────────────────── build digest data ───────────────────────────────
 
 /**
  * Build the charts-ready DigestData payload for a user + period, from real DB
@@ -144,7 +121,6 @@ export async function buildDigestData(
   });
   const creditsRemaining = Math.max(0, creditLimit - (usage?.aiCredits ?? 0));
 
-  // ── stat tiles ──
   const stats: DigestStat[] = [
     { label: "Workflows completed", value: succeeded.toLocaleString() },
     { label: "Success rate", value: `${successRate}%` },
@@ -155,7 +131,6 @@ export async function buildDigestData(
     { label: "Credits left", value: creditsRemaining.toLocaleString() },
   ];
 
-  // ── highlight checkmarks (the brief's "Yesterday ✔ …" list) ──
   const highlights: { icon: string; text: string; tone: NotificationSeverity }[] = [
     { icon: "CheckCircle2", text: `${succeeded.toLocaleString()} workflow${succeeded === 1 ? "" : "s"} completed`, tone: "success" },
     { icon: "TrendingUp", text: `${successRate}% success rate`, tone: settled > 0 ? "success" : "info" },
@@ -166,7 +141,6 @@ export async function buildDigestData(
     ...(failed > 0 ? [{ icon: "AlertTriangle", text: `${failed} run${failed === 1 ? "" : "s"} failed`, tone: "error" as NotificationSeverity }] : []),
   ];
 
-  // ── weekly chart (7-day executions) ──
   let chart: DigestChartPoint[] | undefined;
   if (frequency === "weekly" && chartRows.length > 0) {
     const buckets = new Map<string, DigestChartPoint>();
@@ -188,7 +162,6 @@ export async function buildDigestData(
     chart = [...buckets.values()];
   }
 
-  // ── top workflows ──
   type WfGroup = { workflowId: string; _count: { _all: number } };
   type WfStatusGroup = { workflowId: string; status: string; _count: { _all: number } };
   let topWorkflows: DigestData["topWorkflows"];
@@ -239,8 +212,6 @@ export async function buildDigestData(
   };
 }
 
-// ─────────────────────────── due-digest dispatch ─────────────────────────────
-
 /**
  * Find digests that are due now (across all users) and enqueue them. Called from
  * the worker "tick" heartbeat and the cron route. Idempotent per
@@ -267,8 +238,6 @@ export async function runDueDigests(now: Date = new Date()): Promise<{ enqueued:
   }
   return { enqueued };
 }
-
-// ─────────────────────────── helpers ─────────────────────────────────────────
 
 async function userName(userId: string): Promise<string | null> {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });

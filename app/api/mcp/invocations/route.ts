@@ -1,5 +1,3 @@
-// GET /api/mcp/invocations?serverId=&status=&workflowId=&limit= — audit trail.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { listInvocations } from "@/lib/mcp";

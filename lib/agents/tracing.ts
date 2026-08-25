@@ -1,23 +1,3 @@
-// ============================================================
-// Multi-Agent Runtime — execution tracing
-// ============================================================
-// Single source of truth for observability. The TraceCollector accumulates
-// TraceEvents and per-agent timeline entries as the run progresses, and exposes
-// the brief's required views:
-//   • Agent timeline  — timeline()
-//   • Agent latency   — per-entry durationMs
-//   • Token usage     — per-entry + run total
-//   • Reasoning path  — reasoningPath()
-//   • Execution graph — graph snapshot from the builder
-//   • Retries         — per-entry retry count + retry events
-//   • Failures        — per-entry status + error + run total
-//
-// It is also an EventEmitter for streaming: each trace() call optionally
-// emits an AgentEvent to a caller-supplied sink so the API route can stream
-// events to the client in real time.
-//
-// Server-only.
-
 import "server-only";
 import type {
   AgentEvent,
@@ -108,7 +88,6 @@ export class TraceCollector {
     };
     this.events.push(ev);
 
-    // Update aggregates from the event.
     if (kind === "agent:retry") this.retries++;
     if (kind === "agent:fail") this.failures++;
     if (extra?.tokensUsed) this.totalTokens += extra.tokensUsed;
@@ -239,7 +218,6 @@ export class TraceCollector {
   }
 }
 
-// ─────────────────────────── helpers ────────────────────────────────────────
 // The planner/reviewer store their structured output in state as real objects,
 // but trace events are strings; these parse them back for the stream's
 // plan/review fields. They tolerate plain JSON or a JSON blob inside text.

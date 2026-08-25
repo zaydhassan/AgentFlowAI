@@ -1,13 +1,3 @@
-// Client-safe types for the Executions list + detail pages.
-//
-// Pure types only — no `server-only`, no Prisma import — so the client hooks
-// and pages can import them without pulling the server engine into the browser
-// bundle. Mirrors the lib/observability/types.ts split. The server-only mapping
-// in lib/executions/summary.ts produces exactly these shapes.
-
-// `ExecutionEvent["totals"]` — final-run summary, carried on the `complete` event.
-// Re-declared here (not imported from the server-only engine) so this module
-// stays client-safe. Keep in sync with lib/execution/engine.ts.
 export interface ExecutionTotals {
   durationMs: number;
   totalTokens: number;
@@ -86,7 +76,6 @@ export interface ExecutionsList {
   counts: ExecutionCounts;
 }
 
-// ── Live (in-flight) state built client-side from the SSE stream ──
 // Unlike the persisted ExecutionStepRow, a live step accumulates logs/reasoning
 // as arrays as events arrive, and carries the inspection payload when the node
 // succeeds/fails (so the Inspect panel can show it mid-run before persistence).

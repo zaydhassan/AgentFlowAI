@@ -1,12 +1,3 @@
-// Trust strip — "Built for modern AI automation".
-// Premium monochrome logo set (Linear/Vercel/Stripe register): uniform muted
-// wordmarks that brighten + lift to brand color on hover. Rendered as an
-// infinite auto-scrolling marquee that pauses on hover. Pure CSS animation
-// keeps this a server component. Logos are stylized fictional wordmarks (no
-// third-party trademarks); marks render in `currentColor` so the whole logo
-// is one tone. The track is duplicated so translateX(-50%) loops seamlessly;
-// spacing uses right margin (not flex gap) to keep the seam continuous.
-
 type Shape = "hex" | "ring" | "tri" | "dot" | "wave" | "grid" | "orb" | "stack";
 
 const COMPANIES: { name: string; shape: Shape }[] = [

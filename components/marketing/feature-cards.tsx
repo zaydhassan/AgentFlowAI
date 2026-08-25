@@ -1,10 +1,5 @@
 "use client";
 
-// Premium feature cards for the homepage. Each card has a glowing icon,
-// category label, title, description, three bullet highlights, and a
-// Learn More link. Hover lifts the card, glows its border, and rotates the
-// icon (handled by the .feature-card / .feature-icon CSS). Entry is staggered.
-
 import Link from "next/link";
 import { StaggerContainer, StaggerItem } from "@/components/marketing/motion";
 import { Icon } from "@/components/ui/icon";

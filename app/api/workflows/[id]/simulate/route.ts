@@ -1,10 +1,3 @@
-// Workflow Simulation Mode — dry-run estimate endpoint.
-//
-// POST { graph? } → a pure SimulationResult. Reuses normalizeGraph +
-// simulateWorkflow. This route ONLY READS the workflow graph (to fall back when
-// no graph is sent); it creates no Execution row, writes nothing, calls no
-// external service, and never touches Usage/credits. Simulation is static
-// analysis — see lib/execution/simulate.ts.
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";

@@ -1,17 +1,5 @@
 "use client";
 
-// Documentation article shell — the Stripe/Vercel/Next.js docs layout.
-//
-// Three columns on wide screens: a sticky left sidebar (category nav with an
-// active indicator), the article body in the middle (breadcrumbs → hero →
-// sections → prev/next), and a sticky right-rail table of contents with
-// scrollspy. The sidebars collapse gracefully: below `xl` the TOC drops out,
-// below `lg` the left sidebar becomes a collapsible "Browse docs" panel.
-//
-// The page (server component) owns the article metadata + body JSX and passes
-// them in; this component owns only the chrome. Body sections MUST render
-// <section id="..."> matching meta.sections so the scrollspy TOC can track them.
-
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";

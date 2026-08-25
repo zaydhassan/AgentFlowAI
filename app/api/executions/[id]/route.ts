@@ -1,10 +1,3 @@
-// GET /api/executions/[id] — one execution + its persisted steps, including the
-// full AI Workflow Debugger inspection payload (nodeType/config/input/output/
-// prompt/memories) per step. Owner-scoped by Execution.ownerId (404, not null,
-// when the run is missing or belongs to another user — no cross-user leak). The
-// client opens a native EventSource to the per-workflow stream route separately
-// to animate an in-flight run; this endpoint is the persisted snapshot.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { getExecution } from "@/lib/executions/summary";

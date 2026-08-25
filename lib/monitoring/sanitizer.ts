@@ -1,19 +1,3 @@
-// =============================================================================
-// Error Monitoring — sanitization layer
-// =============================================================================
-// Runs BEFORE any event leaves the process. Strips passwords, OAuth tokens,
-// API keys, payment secrets, and obvious PII (emails, credit-card numbers,
-// JWTs) from objects Sentry would otherwise serialize (request bodies, headers,
-// form data, error payloads, breadcrumb data, extra context).
-//
-// Strategy: KEY-based scrubbing (any field whose name looks sensitive →
-// "[Filtered]") PLUS value-based scrubbing (any string value that looks like a
-// leaked credential or card → "[Filtered]"). Key-based covers structured
-// payloads; value-based covers secrets embedded in free-form strings/headers.
-//
-// Pure JS — no Node APIs, no Sentry imports. Shared by the server and browser
-// facades. Deep-clones input so the caller's object is never mutated.
-
 /** Field names that indicate a secret value. Case-insensitive, word-ish match. */
 const SENSITIVE_KEY =
   /(^(|.*[_-])(pass(word|phrase)?|pwd|secret|token|apikey|api[_-]?key|authorization|auth|accesstoken|access[_-]?token|refreshtoken|refresh[_-]?token|client[_-]?secret|webhook[_-]?secret|private[_-]?key|signing[_-]?secret|session|cookie|credential|card|cvv|cvc|ssn|sin|iban|account[_-]?number|routing(_|-)?number|iban|otp|one[_-]?time[_-]?pass)(|[_-].*)$)/i;

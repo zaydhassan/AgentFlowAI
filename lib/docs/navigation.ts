@@ -1,13 +1,3 @@
-// Documentation navigation + article metadata — the single source of truth for
-// the /docs sidebar, breadcrumbs, prev/next navigation, the landing category
-// list, and landing-page search.
-//
-// Each article carries the metadata the shared DocsArticle shell needs
-// (category, icon, tone, reading time, and the table-of-contents sections).
-// The page body (overview, code, best practices, …) lives in the page file
-// itself; section <section id="..."> ids MUST match the `sections[].id` here so
-// the scrollspy table of contents can track them.
-
 import type { ConceptTone } from "@/components/marketing/core-concept-card";
 
 export type DocSection = { id: string; title: string };

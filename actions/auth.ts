@@ -1,7 +1,3 @@
-// All "use server" entry points for the auth flows. Called by the client
-// forms via useActionState. Each action returns a typed AuthFormState so the
-// client can render field-level or page-level errors.
-
 "use server";
 
 import { redirect } from "next/navigation";
@@ -50,10 +46,6 @@ async function uniqueOrgSlug(base: string): Promise<string> {
   return slug;
 }
 
-// -----------------------------------------------------------------------------
-// Signup
-// -----------------------------------------------------------------------------
-
 export async function signupAction(
   _prev: AuthFormState,
   formData: FormData,
@@ -94,7 +86,6 @@ export async function signupAction(
     select: { id: true, name: true, email: true },
   });
 
-  // Default org
   const orgName = (workspace && workspace.trim()) || `${name}'s workspace`;
   const slug = await uniqueOrgSlug(slugify(orgName));
   const org = await prisma.organization.create({
@@ -109,7 +100,6 @@ export async function signupAction(
     },
   });
 
-  // Default Free subscription row
   await prisma.subscription.create({
     data: {
       userId: user.id,
@@ -141,15 +131,8 @@ export async function signupAction(
     redirect: false,
   });
 
-  // Send the client to the verify-email screen.
   redirect("/verify-email?pending=1");
 }
-
-// -----------------------------------------------------------------------------
-// Login (wraps the Auth.js credentials provider for use in server actions
-// — the client can also call signIn("credentials", { redirect: false }) via
-// the useSession-aware client signIn helper).
-// -----------------------------------------------------------------------------
 
 export async function loginAction(
   _prev: AuthFormState,
@@ -179,10 +162,6 @@ export async function loginAction(
   // ("Open the dashboard"), so they enter the app from there.
   redirect("/");
 }
-
-// -----------------------------------------------------------------------------
-// Forgot password
-// -----------------------------------------------------------------------------
 
 export async function forgotPasswordAction(
   _prev: AuthFormState,
@@ -222,10 +201,6 @@ export async function forgotPasswordAction(
       "If an account exists for that email, we've sent a password reset link. Check your inbox.",
   };
 }
-
-// -----------------------------------------------------------------------------
-// Reset password
-// -----------------------------------------------------------------------------
 
 export async function resetPasswordAction(
   _prev: AuthFormState,
@@ -273,14 +248,9 @@ export async function resetPasswordAction(
   await prisma.user.update({ where: { email }, data: { passwordHash } });
   await prisma.verificationToken.delete({ where: { token } });
 
-  // Auto sign-in.
   await signIn("credentials", { email, password, redirect: false });
   redirect("/dashboard");
 }
-
-// -----------------------------------------------------------------------------
-// Verify email
-// -----------------------------------------------------------------------------
 
 export async function verifyEmailAction(token: string): Promise<AuthFormState> {
   if (!token) {

@@ -1,6 +1,3 @@
-// DELETE /api/integrations/accounts/[id] — disconnect: revoke at the provider
-// (best-effort) + delete the local row. Owner-only.
-
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { disconnectAccount } from "@/lib/integrations";

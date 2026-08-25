@@ -1,15 +1,3 @@
-// AI Cost Optimizer — preflight estimator.
-//
-// Computes a per-provider estimate (tokens, latency, cost, confidence) for a
-// workflow graph BEFORE execution, plus cheapest/fastest/balanced
-// recommendations. Reuses the execution engine's deterministic estimators
-// (nodeTokens, nodeDurationMs, topoOrder) so the estimate aligns with what the
-// engine actually accounts on a run — it never invents numbers. Cost is
-// computed from the real per-model pricing in lib/ai/optimizer/providers.ts;
-// any value that cannot be determined is null and renders as "Unknown".
-//
-// Server-only (imports the execution engine, which is server-only).
-
 import "server-only";
 import type { WorkflowNode, WorkflowEdge } from "@/lib/types";
 import { getNodeDef } from "@/lib/nodes";
@@ -199,7 +187,6 @@ export function estimateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     };
   }
 
-  // ── per-node token split (reuses the engine's token estimate) ──
   const nodeTok = new Map<string, { total: number; in: number; out: number }>();
   let totalTokens = 0;
   let totalIn = 0;
@@ -214,7 +201,6 @@ export function estimateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     totalOut += out;
   }
 
-  // ── per-node breakdown (configured provider/model) ──
   const nodes: NodeEstimate[] = aiNodes.map((n) => {
     const provider = providerByNodeType(n.type) ?? PROVIDERS[0];
     const modelId = typeof n.data.config?.model === "string" ? (n.data.config.model as string) : provider.representative.balanced;
@@ -236,7 +222,6 @@ export function estimateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
     };
   });
 
-  // ── current configuration aggregate ──
   const currentCost = nodes.every((n) => n.costUsd != null) ? nodes.reduce((s, n) => s + (n.costUsd ?? 0), 0) : null;
   const currentLatency = criticalPathLatency(graph.nodes, graph.edges, (n) => {
     const ne = nodes.find((x) => x.nodeId === n.id);
@@ -246,7 +231,6 @@ export function estimateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
   const currentConfidence = clamp01(0.82 - 0.08 * unknownModelsCurrent - 0.05);
   const currentNote = currentCost == null ? "Some AI nodes use models with unknown pricing." : undefined;
 
-  // ── per-provider what-if (representative model for the selected strategy) ──
   const tierFor: Record<Strategy, ModelTier> = { cost: "cheap", fast: "fast", balanced: "balanced" };
   const tier = tierFor[strategy];
 
@@ -284,7 +268,6 @@ export function estimateWorkflow(graph: { nodes: WorkflowNode[]; edges: Workflow
 
   const eligible = estimates.filter((e) => e.eligible && e.costUsd != null && e.latencyMs != null);
 
-  // ── recommendations (each uses its own representative tier) ──
   const recForTier = (t: ModelTier, pick: "cost" | "latency"): Recommendation | null => {
     const rows = PROVIDERS.map((p) => {
       const m = findModel(p, p.representative[t])!;
