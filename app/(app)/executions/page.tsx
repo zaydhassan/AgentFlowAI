@@ -123,13 +123,13 @@ export default function ExecutionsPage() {
 
       <Card className="overflow-hidden">
         <div className="grid grid-cols-12 border-b border-border px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">
-          <div className="col-span-3">Run</div>
-          <div className="col-span-2">Status</div>
-          <div className="col-span-2">Trigger</div>
-          <div className="col-span-1">Retries</div>
-          <div className="col-span-2">Duration</div>
-          <div className="col-span-1">Tokens</div>
-          <div className="col-span-1 text-right">Cost</div>
+          <div className="col-span-5 min-w-0 sm:col-span-3">Run</div>
+          <div className="col-span-3 min-w-0 sm:col-span-2">Status</div>
+          <div className="hidden min-w-0 sm:block sm:col-span-2">Trigger</div>
+          <div className="hidden min-w-0 sm:block sm:col-span-1">Retries</div>
+          <div className="col-span-2 min-w-0 sm:col-span-2">Duration</div>
+          <div className="hidden min-w-0 sm:block sm:col-span-1">Tokens</div>
+          <div className="col-span-2 min-w-0 text-right sm:col-span-1">Cost</div>
         </div>
         <div className="divide-y divide-border">
           {list.length === 0 ? (
@@ -141,29 +141,29 @@ export default function ExecutionsPage() {
                 href={`/executions/${e.id}`}
                 className="grid grid-cols-12 items-center px-4 py-3 text-sm hover:bg-surface-2/50 transition-colors"
               >
-                <div className="col-span-3 min-w-0">
+                <div className="col-span-5 min-w-0 sm:col-span-3">
                   <div className="flex items-center gap-2">
                     {e.status === "running" ? (
-                      <Icon name="LoaderCircle" className="h-3.5 w-3.5 animate-spin text-brand" />
+                      <Icon name="LoaderCircle" className="h-3.5 w-3.5 shrink-0 animate-spin text-brand" />
                     ) : (
-                      <Icon name="Activity" className="h-3.5 w-3.5 text-fg-subtle" />
+                      <Icon name="Activity" className="h-3.5 w-3.5 shrink-0 text-fg-subtle" />
                     )}
                     <div className="min-w-0">
                       <div className="truncate font-medium">{e.workflowName}</div>
-                      <div className="font-mono text-[10px] text-fg-subtle">
+                      <div className="truncate font-mono text-[10px] text-fg-subtle">
                         {e.id} · {relativeTime(e.startedAt)}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-3 min-w-0 sm:col-span-2">
                   <Badge tone={tone(e.status)}>{e.status}</Badge>
                 </div>
-                <div className="col-span-2 text-fg-muted">{e.trigger}</div>
-                <div className="col-span-1 text-fg-muted">{e.retried > 0 ? <span className="text-warning">↻{e.retried}</span> : "—"}</div>
-                <div className="col-span-2 tabular-nums text-fg-muted">{e.durationMs ? formatDuration(e.durationMs) : "—"}</div>
-                <div className="col-span-1 tabular-nums text-fg-muted">{e.totalTokens ? e.totalTokens.toLocaleString("en-US") : "—"}</div>
-                <div className="col-span-1 text-right tabular-nums text-fg-muted">{e.totalCost ? formatCurrency(e.totalCost) : "—"}</div>
+                <div className="hidden min-w-0 truncate text-fg-muted sm:block sm:col-span-2">{e.trigger}</div>
+                <div className="hidden min-w-0 text-fg-muted sm:block sm:col-span-1">{e.retried > 0 ? <span className="text-warning">↻{e.retried}</span> : "—"}</div>
+                <div className="col-span-2 min-w-0 truncate tabular-nums text-fg-muted sm:col-span-2">{e.durationMs ? formatDuration(e.durationMs) : "—"}</div>
+                <div className="hidden min-w-0 truncate tabular-nums text-fg-muted sm:block sm:col-span-1">{e.totalTokens ? e.totalTokens.toLocaleString("en-US") : "—"}</div>
+                <div className="col-span-2 min-w-0 truncate text-right tabular-nums text-fg-muted sm:col-span-1">{e.totalCost ? formatCurrency(e.totalCost) : "—"}</div>
               </Link>
             ))
           )}

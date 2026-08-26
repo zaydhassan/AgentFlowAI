@@ -131,24 +131,24 @@ export default function ExecutionDetailPage() {
 
   return (
     <div className="animate-float-up">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/executions" className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-surface-2">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Link href="/executions" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border hover:bg-surface-2">
             <Icon name="ArrowLeft" className="h-4 w-4" />
           </Link>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">{detail.workflowName}</h1>
-              <Badge tone={toneOf(status)}>
+              <h1 className="min-w-0 truncate text-xl font-semibold">{detail.workflowName}</h1>
+              <Badge tone={toneOf(status)} className="shrink-0">
                 {running && <Icon name="LoaderCircle" className="mr-1 h-2.5 w-2.5 animate-spin" />}
                 {status}
               </Badge>
             </div>
-            <div className="font-mono text-[11px] text-fg-subtle">{detail.id} · {relativeTime(detail.startedAt)}</div>
+            <div className="truncate font-mono text-[11px] text-fg-subtle">{detail.id} · {relativeTime(detail.startedAt)}</div>
           </div>
         </div>
-        <Button variant="ai" size="sm" onClick={replay} disabled={replaying || running || steps.length === 0}>
-          {replaying ? <><Icon name="LoaderCircle" className="h-3.5 w-3.5 animate-spin" /> Replaying…</> : <><Icon name="Play" className="h-3.5 w-3.5" /> Replay run</>}
+        <Button variant="ai" size="sm" onClick={replay} disabled={replaying || running || steps.length === 0} className="shrink-0">
+          {replaying ? <><Icon name="LoaderCircle" className="h-3.5 w-3.5 animate-spin" /> <span className="hidden sm:inline">Replaying…</span></> : <><Icon name="Play" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Replay run</span></>}
         </Button>
       </div>
 
@@ -272,9 +272,9 @@ function StepRow({
           className={cn("h-4 w-4", step.status === "running" && "animate-spin", step.status === "retrying" && "animate-spin")}
         />
       </span>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{step.nodeName}</span>
-        <Badge tone={m.tone}>{step.status}</Badge>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="min-w-0 truncate text-sm font-medium">{step.nodeName}</span>
+        <Badge tone={m.tone} className="shrink-0">{step.status}</Badge>
         {step.nodeType && (
           <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">{step.nodeType}</span>
         )}

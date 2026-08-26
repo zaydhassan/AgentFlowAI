@@ -276,6 +276,30 @@ html.light {
   animation: cta-glow 4s ease-in-out infinite;
 }
 
+/* Particle traveling down the auth workflow-viz connectors. Translates a
+   fixed 20px (the connector height) so the motion is transform-only and cheap;
+   pairs with the `motion-reduce:hidden` utility so reduced-motion users get a
+   static connector. */
+@keyframes auth-flow {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(20px); opacity: 0; }
+}
+.auth-flow {
+  animation: auth-flow 2.2s linear infinite;
+}
+
+/* Respect the user's motion preference globally for the ambient auth
+   animations (particle flow + live dot pulse). Entrance animations are
+   gated per-component via framer-motion's useReducedMotion. */
+@media (prefers-reduced-motion: reduce) {
+  .auth-flow,
+  .dot-live {
+    animation: none;
+  }
+}
+
 /* Hairline gradient border used by the CTA ring. */
 .cta-ring {
   background: linear-gradient(120deg, #7c5cff, #22d3ee 55%, #5b8bff);
