@@ -123,6 +123,7 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
       <button
         ref={triggerRef}
         type="button"
+        suppressHydrationWarning
         onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}

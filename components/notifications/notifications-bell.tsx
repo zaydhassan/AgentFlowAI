@@ -53,6 +53,7 @@ export function NotificationsBell() {
     <div className="relative">
       <button
         ref={triggerRef}
+        suppressHydrationWarning
         onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}

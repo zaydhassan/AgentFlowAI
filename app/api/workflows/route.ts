@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { apiUser } from "@/lib/auth/api";
 import { prisma } from "@/lib/db";
-import { EMPTY_GRAPH, normalizeGraph, workflowSummary } from "@/lib/workflow/graph";
-import { WORKFLOW_NAME_MAX, WORKFLOW_DESCRIPTION_MAX, WORKFLOW_TAGS_MAX } from "@/lib/workflow/limits";
-import { cached, cacheInvalidate } from "@/lib/cache";
+import { workflowSummary } from "@/lib/workflow/graph";
+import { createWorkflowForUser } from "@/lib/workflow/create";
+import { cached } from "@/lib/cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,22 +45,7 @@ export async function POST(req: Request) {
     body = {};
   }
 
-  const graph = normalizeGraph(body.graph ?? EMPTY_GRAPH);
-  const name = body.name?.trim() || "Untitled workflow";
+  const wf = await createWorkflowForUser(user.id, body);
 
-  const wf = await prisma.workflow.create({
-    data: {
-      ownerId: user.id,
-      name: name.slice(0, WORKFLOW_NAME_MAX),
-      description: body.description?.slice(0, WORKFLOW_DESCRIPTION_MAX) ?? "",
-      category: body.category ?? "",
-      tags: Array.isArray(body.tags) ? body.tags.slice(0, WORKFLOW_TAGS_MAX) : [],
-      status: body.status === "active" ? "active" : "draft",
-      graph: graph as object,
-    },
-  });
-
-  // A new workflow changes the user's list projection — drop the cached list.
-  await cacheInvalidate(`workflows:list:${user.id}`);
   return NextResponse.json({ id: wf.id }, { status: 201 });
 }

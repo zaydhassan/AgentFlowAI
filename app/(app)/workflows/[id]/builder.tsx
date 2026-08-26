@@ -9,7 +9,6 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
-  Panel,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -19,7 +18,6 @@ import {
   type Edge,
   type Node,
   type NodeChange,
-  type EdgeChange,
   type OnNodesChange,
 } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,9 +40,10 @@ import { Button } from "@/components/ui/button";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { getNodeDef } from "@/lib/nodes";
-import { cn, formatDuration } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { streamSSE } from "@/lib/workflow/sse-client";
 import { useDropdown } from "@/lib/hooks/use-dropdown";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import type { Graph } from "@/lib/workflow/graph";
 import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/lib/types";
 
@@ -64,6 +63,8 @@ export interface InitialWorkflow {
   version: number;
   graph: Graph;
   versions: VersionEntry[];
+  /** Present when the workflow was created from a marketplace template — drives the empty-state copy. */
+  templateOrigin?: { name: string; description: string };
 }
 
 function toFlowNodes(nodes: WorkflowNode[]): Node[] {
@@ -111,7 +112,7 @@ interface Snapshot {
 }
 
 function BuilderInner({ initial }: { initial: InitialWorkflow }) {
-  const { id: workflowId, name: initialName, version: initialVersion, graph: initialGraph, versions: initialVersions } = initial;
+  const { id: workflowId, name: initialName, version: initialVersion, graph: initialGraph, versions: initialVersions, templateOrigin } = initial;
 
   const initialNodes = useMemo(() => toFlowNodes(initialGraph.nodes), [initialGraph]);
   const initialEdges = useMemo<Edge[]>(
@@ -144,6 +145,14 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
   const [simulateGraph, setSimulateGraph] = useState<Graph | null>(null);
   const [ctx, setCtx] = useState<{ x: number; y: number; nodeId: string | null } | null>(null);
   const [diagnoseSignal, setDiagnoseSignal] = useState(0);
+  // Mobile drawer state. The inline panels are shown via CSS (md:/lg:); these
+  // only open the slide-over drawers used below those breakpoints. Gated by
+  // useMediaQuery on render so a desktop viewport can never mount a drawer
+  // (avoids double-mounting CopilotPanel/NodePalette and their effects).
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
+  const isMdPlus = useMediaQuery("(min-width: 768px)");
+  const isXlPlus = useMediaQuery("(min-width: 1280px)");
 
   const [runStatus, setRunStatus] = useState<DockStatus>("idle");
   const [runLog, setRunLog] = useState<string[]>([]);
@@ -210,7 +219,6 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
     setRfNodes((nds) => nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n)));
   }, [setRfNodes]);
 
-  const onRename = useCallback((nodeId: string, label: string) => { snapshot(); patchNode(nodeId, { label }); }, [snapshot, patchNode]);
   const onUpdate = useCallback((nodeId: string, patch: Partial<WorkflowNode["data"]>) => { patchNode(nodeId, patch); }, [patchNode]);
   const toggleBreakpoint = useCallback((nodeId: string) => {
     const n = getNode(nodeId);
@@ -576,82 +584,80 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
 
   const graphContext = useMemo(() => ({ nodes: fromFlowNodes(rfNodes), edges: domainEdges(rfEdges) }), [rfNodes, rfEdges]);
 
+  // "Build with AI" from the palette: on desktop (xl+) just reveal the inline
+  // copilot panel; below xl, also slide in the mobile copilot drawer.
+  const openCopilot = () => {
+    setCopilotOpen(true);
+    if (!isXlPlus) setRightDrawerOpen(true);
+  };
+
+  // Shared copilot/inspector block — rendered both in the desktop right aside
+  // and the mobile right drawer, so the swap animation + tabs live in one place.
+  const renderRightPanel = () => (
+    <AnimatePresence mode="wait">
+      {copilotOpen ? (
+        <motion.div key="copilot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+          <CopilotPanel
+            workflowName={name}
+            graph={graphContext}
+            selectedNode={selectedNode}
+            onGenerate={handleGenerate}
+            onInsertNode={(t) => insertNode(t)}
+            diagnoseSignal={diagnoseSignal}
+          />
+        </motion.div>
+      ) : (
+        <motion.div key="inspector" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+          <div className="flex items-center justify-between border-b border-border p-2">
+            <button onClick={() => setCopilotOpen(true)} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-2 hover:text-fg">
+              <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Copilot
+            </button>
+            <span className="text-[10px] text-fg-subtle">Inspector</span>
+          </div>
+          <Inspector node={selectedNode} onUpdate={onUpdate} onRetry={retryNode} onDelete={deleteNode} onToggleBreakpoint={toggleBreakpoint} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] -m-4 lg:-m-8">
-      <div className="hidden md:flex w-64 shrink-0 border-r border-border bg-bg-soft/60">
-        <NodePalette onAISuggest={() => setCopilotOpen(true)} />
-      </div>
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col -m-4 lg:-m-8">
+      {/* Middle row: Node Library | Canvas | Copilot. Uses normal flex flow —
+          no absolute/floating panels — so the three columns never overlap. */}
+      <div className="flex min-h-0 flex-1">
+        {/* Left: Node Library (desktop ≥ md). On tablet/mobile it lives in the
+            slide-over drawer below. NodePalette already owns its sticky header
+            and independent scroll, so the aside is just a sized flex column. */}
+        <aside className="hidden md:flex w-72 shrink-0 flex-col border-r border-border bg-bg-soft/60">
+          <NodePalette onAISuggest={openCopilot} />
+        </aside>
 
-      <div className="relative flex-1 min-w-0">
-        <ReactFlow
-          nodes={rfNodes}
-          edges={rfEdges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeClick={(_, n) => setSelectedId(n.id)}
-          onPaneClick={() => setSelectedId(null)}
-          onPaneContextMenu={onPaneContextMenu}
-          onNodeContextMenu={onNodeContextMenu}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
-          snapToGrid
-          snapGrid={[16, 16]}
-          defaultEdgeOptions={{ type: "custom", style: EDGE_STYLE, markerEnd: EDGE_MARKER }}
-          proOptions={{ hideAttribution: true }}
-          className="bg-bg"
-        >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#1f2330" />
-          <Controls className="border! border-border! rounded-lg! overflow-hidden!" />
-          <MiniMap pannable zoomable nodeColor={(n) => getNodeDef((n.data as { __type?: string }).__type ?? (n.type === "agentflow" ? "util.delay" : n.type ?? ""))?.color ?? "#3a3f52"} className="border! border-border! rounded-lg!" maskColor="rgba(7,8,12,0.7)" />
-
-          <Panel position="top-left">
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-2.5 py-1.5 shadow-lg">
-              <button onClick={() => history.back()} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="ArrowLeft" className="h-4 w-4" /></button>
-              <div className="h-5 w-px bg-border" />
-              <button title="Undo (⌘Z)" onClick={() => { const prev = undoStack.current.pop(); if (prev) { redoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(prev); } }} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Undo2" className="h-4 w-4" /></button>
-              <button title="Redo (⌘⇧Z)" onClick={() => { const next = redoStack.current.pop(); if (next) { undoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(next); } }} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Redo2" className="h-4 w-4" /></button>
-              <div className="h-5 w-px bg-border" />
-              <button title="Auto layout" onClick={autoLayout} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="LayoutGrid" className="h-4 w-4" /></button>
-              <button title="Fit view (F)" onClick={() => fitView({ padding: 0.2, duration: 300 })} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Maximize" className="h-4 w-4" /></button>
-              <button title="Search nodes (/)" onClick={() => setSearchOpen(true)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-3 text-fg-muted hover:text-fg"><Icon name="Search" className="h-4 w-4" /></button>
-            </div>
-          </Panel>
-
-          <Panel position="top-center">
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2/90 backdrop-blur-xl px-3 py-1.5 shadow-lg">
-              <Icon name="Workflow" className="h-4 w-4 text-brand" />
-              <input value={name} onChange={(e) => setName(e.target.value)} className="w-40 bg-transparent text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand rounded px-1 -mx-1" />
-              <Badge tone={statusTone}>{initial.status}</Badge>
-              <span className="text-[11px] text-fg-subtle">v{version} · {nodeCount} nodes</span>
-              <span className={cn("flex items-center gap-1 text-[11px]", saveState === "saving" ? "text-fg-subtle" : "text-success")}>
-                {saveState === "saving" ? <><Icon name="LoaderCircle" className="h-3 w-3 animate-spin" /> Saving…</> : <><Icon name="Check" className="h-3 w-3" /> Saved</>}
-              </span>
-            </div>
-          </Panel>
-
-          <Panel position="top-right">
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setOptimizerOpen(true)} title="AI Cost Optimizer (preflight estimate)">
-                <Icon name="Calculator" className="h-3.5 w-3.5" /> Cost
-              </Button>
+        {/* Center: in-flow toolbar + canvas + execution, stacked vertically.
+            All three belong to this column only, so they can never cover the
+            side panels, and the side panels run the editor's full height. */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="relative z-20 flex flex-col gap-1 border-b border-border bg-surface-2/95 px-2 py-1.5 backdrop-blur-xl">
+            {/* Row 1 — identity: back, workflow name, status, version, run.
+                Always visible (mobile collapses to its essentials). The name
+                input is the flexible element: min-w-0 lets it shrink instead of
+                pushing its siblings, so the title can never overlap a control. */}
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setLeftDrawerOpen(true)} title="Node library" aria-label="Open node library" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg md:hidden"><Icon name="PanelLeft" className="h-4 w-4" /></button>
+              <button onClick={() => history.back()} title="Back" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="ArrowLeft" className="h-4 w-4" /></button>
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+                <Icon name="Workflow" className="hidden h-4 w-4 shrink-0 text-brand sm:block" />
+                <input value={name} onChange={(e) => setName(e.target.value)} className="min-w-0 w-20 flex-1 max-w-40 rounded bg-transparent px-1 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand" />
+                <Badge tone={statusTone} className="hidden shrink-0 sm:inline-flex">{initial.status}</Badge>
+                <span className={cn("hidden shrink-0 items-center gap-1 text-[11px] xl:inline-flex", saveState === "saving" ? "text-fg-subtle" : "text-success")}>
+                  {saveState === "saving" ? <><Icon name="LoaderCircle" className="h-3 w-3 animate-spin" /> Saving…</> : <><Icon name="Check" className="h-3 w-3" /> Saved</>}
+                </span>
+              </div>
               <div className="relative">
-                <Button
-                  ref={versionTriggerRef}
-                  variant="secondary"
-                  size="sm"
-                  onClick={toggleVersionMenu}
-                  aria-haspopup="menu"
-                  aria-expanded={versionMenuOpen}
-                >
-                  <Icon name="History" className="h-3.5 w-3.5" /> v{version}
+                <Button ref={versionTriggerRef} variant="secondary" size="sm" onClick={toggleVersionMenu} aria-haspopup="menu" aria-expanded={versionMenuOpen}>
+                  <Icon name="History" className="h-3.5 w-3.5" /> <span className="hidden sm:inline">v{version}</span>
                 </Button>
                 {versionMenuOpen && (
-                  <div ref={versionPanelRef} className="absolute right-0 top-9 z-20">
+                  <div ref={versionPanelRef} className="absolute right-0 top-9 z-30">
                     <VersionHistory
                       workflowId={workflowId}
                       versions={versions}
@@ -663,85 +669,165 @@ function BuilderInner({ initial }: { initial: InitialWorkflow }) {
                   </div>
                 )}
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setCopilotOpen((o) => !o)}><Icon name="Sparkles" className="h-3.5 w-3.5" /> Copilot</Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => { setSimulateGraph(graphForApi()); setSimulateOpen(true); }}
-                title="Simulate (dry run — no external calls, no DB writes, no credits)"
-              >
-                <Icon name="FlaskConical" className="h-3.5 w-3.5" /> Simulate
-              </Button>
-              <Button size="sm" variant={runStatus === "running" ? "danger" : "ai"} onClick={runWorkflow} className="min-w-[96px]">
+              <Button size="sm" variant={runStatus === "running" ? "danger" : "ai"} onClick={runWorkflow} className="shrink-0 min-w-[64px] sm:min-w-[96px]">
                 {runStatus === "running" ? <><Icon name="Square" className="h-3.5 w-3.5" /> Stop</> : <><Icon name="Play" className="h-3.5 w-3.5" /> Run</>}
               </Button>
+              {/* Below xl the inline Copilot panel is a drawer instead. */}
+              <button onClick={openCopilot} title="AI Copilot" aria-label="Open AI Copilot" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-brand hover:bg-surface-3 xl:hidden"><Icon name="Sparkles" className="h-4 w-4" /></button>
             </div>
-          </Panel>
 
-          <Panel position="bottom-center">
-            <div className="w-[42rem] max-w-[90vw]">
-              <ExecutionDock
-                open={dockOpen}
-                onToggle={() => setDockOpen((o) => !o)}
-                status={runStatus}
-                log={runLog}
-                steps={steps}
-                totals={totals}
-                workflowId={workflowId}
-                executionId={currentExecutionId}
-                replayingId={replayingId}
-                onRun={runWorkflow}
-                onPause={pauseRunCb}
-                onResume={resumeRun}
-                onStep={stepRunCb}
-                onStop={stopRun}
-                onRetryNode={retryNode}
-                onReplayNode={replayNode}
-                onDiagnose={(nodeId) => { setSelectedId(nodeId); setCopilotOpen(true); setDiagnoseSignal((s) => s + 1); }}
-              />
+            {/* Row 2 — tools + actions. Hidden on mobile (< sm), where row 1
+                essentials + keyboard shortcuts cover the same ground. A
+                flex-1 spacer pins the actions to the right edge. Every control
+                here is shrink-0, so they sit on a fixed-width rail and never
+                overlap; row 1's flexible name absorbs any width changes. */}
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <button title="Undo (⌘Z)" onClick={() => { const prev = undoStack.current.pop(); if (prev) { redoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(prev); } }} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="Undo2" className="h-3.5 w-3.5" /></button>
+              <button title="Redo (⌘⇧Z)" onClick={() => { const next = redoStack.current.pop(); if (next) { undoStack.current.push({ nodes: JSON.parse(JSON.stringify(rfNodes)), edges: JSON.parse(JSON.stringify(rfEdges)), viewport: getViewport() }); restore(next); } }} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="Redo2" className="h-3.5 w-3.5" /></button>
+              <button title="Auto layout" onClick={autoLayout} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="LayoutGrid" className="h-3.5 w-3.5" /></button>
+              <button title="Fit view (F)" onClick={() => fitView({ padding: 0.2, duration: 300 })} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="Maximize" className="h-3.5 w-3.5" /></button>
+              <button title="Search nodes (/)" onClick={() => setSearchOpen(true)} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-fg-muted hover:bg-surface-3 hover:text-fg"><Icon name="Search" className="h-3.5 w-3.5" /></button>
+              <div className="flex-1" />
+              <Button variant="secondary" size="sm" onClick={() => setOptimizerOpen(true)} title="AI Cost Optimizer (preflight estimate)" className="hidden md:inline-flex">
+                <Icon name="Calculator" className="h-3.5 w-3.5" /> <span className="hidden lg:inline">Cost</span>
+              </Button>
+              {/* Desktop (≥ xl): toggle the inline copilot/inspector panel. */}
+              <Button variant="secondary" size="sm" onClick={() => setCopilotOpen((o) => !o)} title="Copilot" className="hidden xl:inline-flex">
+                <Icon name="Sparkles" className="h-3.5 w-3.5" /> <span className="hidden 2xl:inline">Copilot</span>
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => { setSimulateGraph(graphForApi()); setSimulateOpen(true); }} title="Simulate (dry run — no external calls, no DB writes, no credits)" className="hidden md:inline-flex">
+                <Icon name="FlaskConical" className="h-3.5 w-3.5" /> <span className="hidden lg:inline">Simulate</span>
+              </Button>
             </div>
-          </Panel>
-        </ReactFlow>
+          </div>
 
-        {searchOpen && <NodeSearch onClose={() => setSearchOpen(false)} onPick={(t) => insertNode(t)} />}
-        {ctx && <ContextMenu x={ctx.x} y={ctx.y} actions={ctxActions} onClose={() => setCtx(null)} />}
-        {compareOpen && (
-          <VersionCompareModal workflowId={workflowId} versions={versions} initialFrom={compareFrom} initialTo={compareTo} onClose={() => setCompareOpen(false)} />
-        )}
-        {optimizerOpen && (
-          <CostOptimizer workflowId={workflowId} onClose={() => setOptimizerOpen(false)} />
-        )}
-        {simulateOpen && simulateGraph && (
-          <SimulationModal workflowId={workflowId} graph={simulateGraph} onClose={() => setSimulateOpen(false)} />
-        )}
-      </div>
+          {/* Canvas. relative (no z-index) so the fixed z-50 modals below escape
+              to the viewport and still paint above the z-20 toolbar. */}
+          <div className="relative min-h-0 flex-1">
+            <ReactFlow
+              nodes={rfNodes}
+              edges={rfEdges}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onNodeClick={(_, n) => setSelectedId(n.id)}
+              onPaneClick={() => setSelectedId(null)}
+              onPaneContextMenu={onPaneContextMenu}
+              onNodeContextMenu={onNodeContextMenu}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              snapToGrid
+              snapGrid={[16, 16]}
+              defaultEdgeOptions={{ type: "custom", style: EDGE_STYLE, markerEnd: EDGE_MARKER }}
+              proOptions={{ hideAttribution: true }}
+              className="bg-bg"
+            >
+              <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#1f2330" />
+              <Controls className="border! border-border! rounded-lg! overflow-hidden!" />
+              <MiniMap pannable zoomable nodeColor={(n) => getNodeDef((n.data as { __type?: string }).__type ?? (n.type === "agentflow" ? "util.delay" : n.type ?? ""))?.color ?? "#3a3f52"} className="border! border-border! rounded-lg!" maskColor="rgba(7,8,12,0.7)" />
+            </ReactFlow>
 
-      <div className="hidden lg:flex w-80 shrink-0 border-l border-border bg-bg-soft/60 relative">
-        <AnimatePresence mode="wait">
-          {copilotOpen ? (
-            <motion.div key="copilot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-              <CopilotPanel
-                workflowName={name}
-                graph={graphContext}
-                selectedNode={selectedNode}
-                onGenerate={handleGenerate}
-                onInsertNode={(t) => insertNode(t)}
-                diagnoseSignal={diagnoseSignal}
-              />
-            </motion.div>
-          ) : (
-            <motion.div key="inspector" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-              <div className="flex items-center justify-between border-b border-border p-2">
-                <button onClick={() => setCopilotOpen(true)} className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-fg-muted hover:bg-surface-2 hover:text-fg">
-                  <Icon name="ArrowLeft" className="h-3.5 w-3.5" /> Copilot
-                </button>
-                <span className="text-[10px] text-fg-subtle">Inspector</span>
+            {/* Empty-state — centered in the canvas, behind the modals. */}
+            {nodeCount === 0 && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-4">
+                <div className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-border bg-surface-2/90 p-6 text-center shadow-xl backdrop-blur-xl">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-brand-soft text-brand">
+                    <Icon name="Sparkles" className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-sm font-semibold">
+                    {templateOrigin ? <>Start building “{templateOrigin.name}”</> : "Start building your workflow"}
+                  </h3>
+                  <p className="text-xs text-fg-muted">
+                    {templateOrigin
+                      ? "This template provides the workflow structure and metadata. Add nodes to configure the automation."
+                      : "Add a node from the palette on the left, or press / to search the node catalog."}
+                  </p>
+                  <Button size="sm" variant="ai" onClick={() => setSearchOpen(true)}>
+                    <Icon name="Plus" className="h-3.5 w-3.5" /> Add node
+                  </Button>
+                </div>
               </div>
-              <Inspector node={selectedNode} onUpdate={onUpdate} onRetry={retryNode} onDelete={deleteNode} onToggleBreakpoint={toggleBreakpoint} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+
+            {searchOpen && <NodeSearch onClose={() => setSearchOpen(false)} onPick={(t) => insertNode(t)} />}
+            {ctx && <ContextMenu x={ctx.x} y={ctx.y} actions={ctxActions} onClose={() => setCtx(null)} />}
+            {compareOpen && (
+              <VersionCompareModal workflowId={workflowId} versions={versions} initialFrom={compareFrom} initialTo={compareTo} onClose={() => setCompareOpen(false)} />
+            )}
+            {optimizerOpen && (
+              <CostOptimizer workflowId={workflowId} onClose={() => setOptimizerOpen(false)} />
+            )}
+            {simulateOpen && simulateGraph && (
+              <SimulationModal workflowId={workflowId} graph={simulateGraph} onClose={() => setSimulateOpen(false)} />
+            )}
+          </div>
+
+          {/* Execution console — bottom section of the center editor only.
+              Collapsed it is just the header strip; expanded it consumes
+              vertical space and pushes the canvas up. It never spans the side
+              panels and never overlaps them. */}
+          <div className="shrink-0">
+            <ExecutionDock
+              open={dockOpen}
+              onToggle={() => setDockOpen((o) => !o)}
+              status={runStatus}
+              log={runLog}
+              steps={steps}
+              totals={totals}
+              workflowId={workflowId}
+              executionId={currentExecutionId}
+              replayingId={replayingId}
+              onRun={runWorkflow}
+              onPause={pauseRunCb}
+              onResume={resumeRun}
+              onStep={stepRunCb}
+              onStop={stopRun}
+              onRetryNode={retryNode}
+              onReplayNode={replayNode}
+              onDiagnose={(nodeId) => { setSelectedId(nodeId); setCopilotOpen(true); if (!isXlPlus) setRightDrawerOpen(true); setDiagnoseSignal((s) => s + 1); }}
+            />
+          </div>
+        </div>
+
+        {/* Right: Copilot / Inspector (desktop ≥ lg). Full-height column; the
+            shared block is rendered via renderRightPanel() so the mobile
+            drawer reuses it. */}
+        <aside className="relative hidden w-80 shrink-0 flex-col border-l border-border bg-bg-soft/60 xl:flex">
+          {renderRightPanel()}
+        </aside>
       </div>
+
+      {/* Mobile node-library drawer (< md). NodePalette fills the panel; the
+          close button overlays its header's empty right side. */}
+      <AnimatePresence>
+        {leftDrawerOpen && !isMdPlus && (
+          <>
+            <motion.div key="left-backdrop" className="fixed inset-0 z-40 bg-black/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setLeftDrawerOpen(false)} />
+            <motion.aside key="left-drawer" className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-bg-soft shadow-2xl" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 400, damping: 35 }}>
+              <button onClick={() => setLeftDrawerOpen(false)} aria-label="Close node library" className="absolute right-2 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-md text-fg-muted hover:bg-surface-2 hover:text-fg"><Icon name="X" className="h-4 w-4" /></button>
+              <NodePalette onAISuggest={openCopilot} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Copilot/inspector drawer (< xl). Reuses renderRightPanel(); the
+          panel's absolute inset-0 children fill this relative container. */}
+      <AnimatePresence>
+        {rightDrawerOpen && !isXlPlus && (
+          <>
+            <motion.div key="right-backdrop" className="fixed inset-0 z-40 bg-black/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRightDrawerOpen(false)} />
+            <motion.aside key="right-drawer" className="fixed inset-y-0 right-0 z-50 w-80 border-l border-border bg-bg-soft shadow-2xl" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 400, damping: 35 }}>
+              <button onClick={() => setRightDrawerOpen(false)} aria-label="Close copilot" className="absolute right-2 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-md bg-surface-2/70 text-fg-muted hover:bg-surface-2 hover:text-fg"><Icon name="X" className="h-4 w-4" /></button>
+              {renderRightPanel()}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

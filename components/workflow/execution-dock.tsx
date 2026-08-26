@@ -85,7 +85,7 @@ export function ExecutionDock({
   const canStep = status === "paused";
 
   return (
-    <div className="pointer-events-auto w-full rounded-t-xl border border-b-0 border-border bg-bg/95 backdrop-blur-xl shadow-2xl">
+    <div className="w-full border-t border-border bg-surface-2/95">
       {/* header */}
       <div className="flex items-center gap-2 border-b border-border px-3 py-1.5">
         <button onClick={onToggle} className="grid h-6 w-6 place-items-center rounded-md hover:bg-surface-2 text-fg-muted">

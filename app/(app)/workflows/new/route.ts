@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
-import { EMPTY_GRAPH } from "@/lib/workflow/graph";
+import { createWorkflowForUser } from "@/lib/workflow/create";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +10,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?callbackUrl=/workflows");
 
-  const wf = await prisma.workflow.create({
-    data: { ownerId: user.id, name: "Untitled workflow", graph: EMPTY_GRAPH as object },
-  });
+  const wf = await createWorkflowForUser(user.id, {});
 
   redirect(`/workflows/${wf.id}`);
 }

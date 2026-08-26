@@ -42,6 +42,7 @@ export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: 
       {/* Mobile menu trigger — opens the slide-in sidebar drawer (lg+ hides it; the static rail is always visible there) */}
       <button
         type="button"
+        suppressHydrationWarning
         onClick={onOpenSidebar}
         aria-label="Open menu"
         className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface-2/60 text-fg-muted transition-colors hover:border-border-strong hover:text-fg lg:hidden"
@@ -58,6 +59,7 @@ export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: 
 
       {/* Command trigger */}
       <button
+        suppressHydrationWarning
         onClick={onOpenCommand}
         className="group flex h-9 flex-1 max-w-md items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 text-sm text-fg-subtle hover:border-border-strong transition-colors"
       >

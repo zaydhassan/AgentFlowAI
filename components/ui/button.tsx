@@ -35,7 +35,10 @@ export interface ButtonProps
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => (
-    <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+    // suppressHydrationWarning: browser extensions (e.g. Bitwarden) inject
+    // fdprocessedid onto buttons before React hydrates, causing spurious
+    // hydration mismatches. Safe to ignore for attribute-only diffs.
+    <button ref={ref} suppressHydrationWarning className={cn(buttonVariants({ variant, size }), className)} {...props} />
   )
 );
 Button.displayName = "Button";
