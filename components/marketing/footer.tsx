@@ -39,11 +39,14 @@ function MailIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// Social icons are placeholders — they're rendered as non-navigating chips so
+// no broken/placeholder URLs are shipped. Swap each entry for a real href when
+// the account exists.
 const socialLinks = [
-  { label: "GitHub", href: site.socials.github, Icon: GithubIcon },
-  { label: "LinkedIn", href: site.socials.linkedin, Icon: LinkedinIcon },
-  { label: "X (Twitter)", href: site.socials.x, Icon: XIcon },
-  { label: "Email", href: `mailto:${site.email}`, Icon: MailIcon },
+  { label: "GitHub", Icon: GithubIcon },
+  { label: "LinkedIn", Icon: LinkedinIcon },
+  { label: "X (Twitter)", Icon: XIcon },
+  { label: "Email", Icon: MailIcon },
 ];
 
 export function Footer() {
@@ -71,17 +74,16 @@ export function Footer() {
           </p>
 
           <div className="mt-5 flex items-center gap-2">
-            {socialLinks.map(({ label, href, Icon }) => (
-              <a
+            {socialLinks.map(({ label, Icon }) => (
+              <span
                 key={label}
-                href={href}
-                target={href.startsWith("http") ? "_blank" : undefined}
-                rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                aria-label={label}
-                className={`grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface-2/60 text-fg-muted hover:text-fg hover:border-border-strong transition-colors ${focusClass}`}
+                role="img"
+                aria-label={`${label} (placeholder)`}
+                title={`${label} — link coming soon`}
+                className="grid h-9 w-9 cursor-default place-items-center rounded-lg border border-border bg-surface-2/60 text-fg-muted"
               >
                 <Icon className="h-4 w-4" />
-              </a>
+              </span>
             ))}
           </div>
         </div>
