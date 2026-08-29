@@ -21,7 +21,7 @@ export const site = {
     security: process.env.NEXT_PUBLIC_SECURITY_EMAIL?.trim() || "security@agentflow.ai",
   },
   socials: {
-    github: process.env.NEXT_PUBLIC_SOCIAL_GITHUB?.trim() || "https://github.com/agentflow-ai",
+    github: process.env.NEXT_PUBLIC_SOCIAL_GITHUB?.trim() || "https://github.com/zaydhassan/AgentFlowAI",
     linkedin: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN?.trim() || "https://www.linkedin.com/company/agentflow-ai",
     x: process.env.NEXT_PUBLIC_SOCIAL_X?.trim() || "https://x.com/agentflowai",
   },
@@ -33,7 +33,7 @@ export const site = {
         { label: "Workflow Builder", href: "/workflows" },
         { label: "Features", href: "/#features" },
         { label: "Pricing", href: "/pricing" },
-        { label: "Templates", href: "/marketplace" },
+        { label: "Templates", href: "/templates" },
       ],
     },
     {

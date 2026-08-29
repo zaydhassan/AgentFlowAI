@@ -39,7 +39,14 @@ export function ContactForm() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Name" name="name" placeholder="Ada Lovelace" autoComplete="name" required />
+        <Field
+          label="Name"
+          name="name"
+          placeholder="Ada Lovelace"
+          icon="User"
+          autoComplete="name"
+          required
+        />
         <Field
           label="Email"
           name="email"
@@ -55,6 +62,7 @@ export function ContactForm() {
         label="Company"
         name="company"
         placeholder="Acme Inc. (optional)"
+        icon="Building2"
         autoComplete="organization"
       />
 
@@ -64,21 +72,36 @@ export function ContactForm() {
         </span>
         <textarea
           name="message"
-          rows={5}
+          rows={6}
           required
           minLength={10}
           placeholder="Tell us what you're trying to automate…"
           aria-describedby="message-hint"
-          className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle focus-ring"
+          className="w-full rounded-xl border border-border bg-surface-2/70 px-3.5 py-2.5 text-sm text-fg transition-colors placeholder:text-fg-subtle hover:border-border-strong focus-ring focus:border-brand/50"
         />
         <p id="message-hint" className="mt-1.5 text-[11px] text-fg-subtle">
           Minimum 10 characters. The more context, the better we can help.
         </p>
       </label>
 
-      <Button type="submit" variant="ai" size="lg" className="w-full" disabled={pending} aria-busy={pending}>
-        {pending && (
-          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden />
+      <Button
+        type="submit"
+        variant="ai"
+        size="lg"
+        className="btn-shine group w-full"
+        disabled={pending}
+        aria-busy={pending}
+      >
+        {pending ? (
+          <span
+            className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+            aria-hidden
+          />
+        ) : (
+          <Icon
+            name="Send"
+            className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          />
         )}
         {pending ? "Sending…" : "Send message"}
       </Button>
@@ -114,7 +137,7 @@ function Field({ label, name, type = "text", placeholder, icon, autoComplete, re
           autoComplete={autoComplete}
           required={required}
           aria-label={label}
-          className={`h-10 w-full rounded-lg border border-border bg-surface-2 ${icon ? "pl-9" : "pl-3"} pr-3 text-sm text-fg placeholder:text-fg-subtle focus-ring`}
+          className={`h-10 w-full rounded-xl border border-border bg-surface-2/70 text-sm text-fg transition-colors placeholder:text-fg-subtle hover:border-border-strong focus-ring focus:border-brand/50 ${icon ? "pl-9" : "pl-3.5"} pr-3`}
         />
       </div>
     </label>

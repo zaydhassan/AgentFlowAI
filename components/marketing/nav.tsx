@@ -43,7 +43,7 @@ const NAV: NavEntry[] = [
       { label: "Security", href: "/security", desc: "SOC 2, encryption, isolation", icon: "ShieldCheck" },
     ],
   },
-  { kind: "link", label: "Templates", href: "/marketplace" },
+  { kind: "link", label: "Templates", href: "/templates" },
   { kind: "link", label: "Developers", href: "/docs" },
   { kind: "link", label: "Pricing", href: "/pricing" },
   { kind: "link", label: "Enterprise", href: "/contact" },

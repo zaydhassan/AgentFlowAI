@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import { SiteContainer } from "@/components/marketing/container";
 import { LogoMark } from "@/components/ui/logo";
 import { site } from "@/lib/site";
 
@@ -55,8 +56,10 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-bg-soft/40">
       <h2 className="sr-only">Footer</h2>
-      <div className="mx-auto max-w-7xl px-5 lg:px-8 py-12 grid grid-cols-2 gap-8 gap-y-10 md:grid-cols-6">
-        <div className="col-span-2 md:col-span-2">
+      {/* Same container as the page sections above — CTA and footer share
+          one vertical grid. Brand column gets a 2fr track, link columns 1fr. */}
+      <SiteContainer className="grid grid-cols-1 gap-10 py-12 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))] lg:gap-8">
+        <div className="min-w-0">
           <Link
             href="/"
             className={`inline-flex items-center gap-2.5 ${focusClass}`}
@@ -88,7 +91,12 @@ export function Footer() {
           </div>
         </div>
 
-        <nav aria-label="Footer" className="col-span-2 md:col-span-4 grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {/* Spans the four 1fr tracks of the parent grid, so the columns line
+            up with it exactly. Stacks cleanly on mobile / 2-up on tablet. */}
+        <nav
+          aria-label="Footer"
+          className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-4"
+        >
           {site.footerNav.map((group) => (
             <div key={group.title}>
               <h3 className="text-xs font-semibold uppercase tracking-widest text-fg-subtle mb-3">
@@ -109,10 +117,10 @@ export function Footer() {
             </div>
           ))}
         </nav>
-      </div>
+      </SiteContainer>
 
       <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-fg-subtle">
+        <SiteContainer className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 text-xs text-fg-subtle">
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
             <span>© {year} AgentFlow AI. All rights reserved.</span>
             <span className="hidden sm:inline" aria-hidden="true">·</span>
@@ -126,7 +134,7 @@ export function Footer() {
           <p className="order-3 sm:order-2 w-full sm:w-auto text-center sm:text-right">
             Built with <span className="text-rose-400" aria-hidden="true">❤</span><span className="sr-only">love</span> using Next.js
           </p>
-        </div>
+        </SiteContainer>
       </div>
     </footer>
   );
