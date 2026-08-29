@@ -938,3 +938,50 @@ html.light .nl-pop {
     animation: none;
   }
 }
+
+/* ── Changelog release timeline (app/changelog/page.tsx +
+   components/marketing/changelog.tsx) ─────────────────────────────────── */
+
+/* Traveling light — a short gradient segment that drifts down the timeline
+   rail. Position-only animation on a small absolutely-positioned element,
+   same cheap paint profile as nl-particle above. */
+.cl-seek {
+  height: 18%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(124, 92, 255, 0.9),
+    rgba(34, 211, 238, 0.7),
+    transparent
+  );
+  opacity: 0;
+  animation: cl-seek 11s ease-in-out infinite;
+}
+@keyframes cl-seek {
+  0% { top: -18%; opacity: 0; }
+  12% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Breathing glow halo behind the release markers. Color comes from the
+   element's data-accent (set in ReleaseItem). */
+.cl-halo {
+  --halo: rgba(124, 92, 255, 0.55);
+  opacity: 0.4;
+  animation: cl-breathe 4.5s ease-in-out infinite;
+}
+.cl-halo[data-accent="ai"] {
+  --halo: rgba(34, 211, 238, 0.5);
+}
+@keyframes cl-breathe {
+  0%, 100% { opacity: 0.3; box-shadow: 0 0 8px 1px var(--halo); }
+  50% { opacity: 0.85; box-shadow: 0 0 18px 3px var(--halo); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-seek,
+  .cl-halo {
+    animation: none;
+  }
+}
