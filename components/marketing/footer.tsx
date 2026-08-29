@@ -124,7 +124,7 @@ export function Footer() {
             </span>
           </div>
           <p className="order-3 sm:order-2 w-full sm:w-auto text-center sm:text-right">
-            Built with <span className="text-rose-400" aria-hidden="true">❤</span><span className="sr-only">love</span> using Next.js &amp; FastAPI
+            Built with <span className="text-rose-400" aria-hidden="true">❤</span><span className="sr-only">love</span> using Next.js
           </p>
         </div>
       </div>

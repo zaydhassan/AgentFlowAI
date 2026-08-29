@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FadeIn, HeroFade, BlurReveal } from "@/components/marketing/motion";
+import { HeroFade, BlurReveal } from "@/components/marketing/motion";
 import { MarketingNav } from "@/components/marketing/nav";
 import { Footer } from "@/components/marketing/footer";
 import { HeroBackground } from "@/components/marketing/hero-background";
@@ -11,16 +11,10 @@ import { LivePreview } from "@/components/marketing/live-preview";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { NODE_LIBRARY, CATEGORY_META } from "@/lib/nodes";
-import { PLAN_META } from "@/lib/payments/plan-meta";
+import { NodeLibrary } from "@/components/marketing/node-library";
+import { NaturalLanguageBuilder } from "@/components/marketing/nl-builder";
+import { RuntimeHubSection } from "@/components/marketing/runtime-hub";
 import { auth } from "@/auth";
-
-const plans = [
-  { name: "Free", price: "$0", period: "forever", features: ["3 active workflows", "1,000 credits / mo", "Community templates", "Email support"], cta: "Start free" },
-  { name: PLAN_META.pro.label, price: `$${PLAN_META.pro.priceAmount.monthly}`, period: "/ mo", features: ["25 active workflows", "150k credits / mo", "AI Copilot + self-heal", "Priority support"], cta: "Start Pro", featured: true },
-  { name: PLAN_META.business.label, price: `$${PLAN_META.business.priceAmount.monthly}`, period: "/ mo", features: ["Unlimited workflows", "1M credits / mo", "RBAC + audit logs", "SSO ready"], cta: "Start Business" },
-  { name: "Enterprise", price: "Custom", period: "", features: ["Self-hosted option", "Dedicated support", "SLA + uptime", "Custom nodes"], cta: "Contact sales" },
-];
 
 export default async function LandingPage() {
   const session = await auth();
@@ -138,128 +132,15 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section id="ai" className="relative mesh-bg border-b border-border">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
-          <div className="grid grid-cols-1 gap-14 lg:grid-cols-2 lg:gap-16 lg:items-center">
-            <BlurReveal>
-              <Badge tone="ai" className="mb-4">Natural-language builder</Badge>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Describe it. Ship it.</h2>
-              <p className="mt-5 text-fg-muted">
-                Type what you want in plain English. The planner agent decomposes your request, picks the
-                right nodes, connects them with validated edges, and hands you a working workflow — with a
-                copilot ready to optimize cost, latency, and reliability.
-              </p>
-              <div className="mt-8 glass rounded-xl border border-border p-5">
-                <div className="flex items-center gap-2 text-xs text-fg-subtle mb-2">
-                  <Icon name="User" className="h-3.5 w-3.5" /> you
-                </div>
-                <p className="text-sm">“When an invoice arrives in Gmail: extract the data, save to Postgres, upload to S3, notify Slack, and generate a monthly report.”</p>
-                <div className="mt-3 flex items-center gap-2 text-xs text-ai">
-                  <Icon name="Sparkles" className="h-3.5 w-3.5" /> AgentFlow
-                </div>
-                <p className="text-sm text-fg-muted">Built a 7-node workflow with a Schedule trigger, Claude extraction, OCR backup, and a monthly report branch. Ready to run? <span className="text-brand">Yes</span></p>
-              </div>
-            </BlurReveal>
-            <BlurReveal delay={0.1}>
-              <div className="glass-strong rounded-2xl border border-border p-6 shadow-2xl shadow-black/40">
-                <div className="flex items-center justify-between text-xs text-fg-subtle mb-5">
-                  <span>Planner Agent</span>
-                  <span className="flex items-center gap-1.5 text-success"><span className="dot dot-live bg-success" /> reasoning</span>
-                </div>
-                <div className="space-y-3.5">
-                  {["Parse user intent", "Decompose into 6 tasks", "Map tasks to nodes", "Validate connections", "Estimate cost · $4.20 · ~3m"].map((s, i) => (
-                    <div key={s} className="flex items-center gap-3">
-                      <span className={`grid h-6 w-6 place-items-center rounded-full ${i < 4 ? "bg-success/15 text-success" : "bg-surface-3 text-fg-subtle"}`}>
-                        <Icon name={i < 4 ? "Check" : "Clock"} className="h-3 w-3" />
-                      </span>
-                      <span className="text-sm">{s}</span>
-                      {i < 4 && <span className="ml-auto text-[10px] text-fg-subtle">{(i + 1) * 0.4}s</span>}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 h-1.5 w-full rounded-full bg-surface-3 overflow-hidden">
-                  <div className="h-full w-[80%] rounded-full bg-gradient-to-r from-brand to-ai" />
-                </div>
-              </div>
-            </BlurReveal>
-          </div>
-        </div>
+      <section id="ai" className="relative border-b border-border">
+        <NaturalLanguageBuilder />
       </section>
 
-      <section id="nodes" className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
-        <BlurReveal className="max-w-2xl">
-          <Badge tone="brand" className="mb-4">Node Library</Badge>
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">200+ integrations. One canvas.</h2>
-          <p className="mt-5 text-fg-muted">Drop any node onto the canvas — communications, AI models, storage, documents, clouds, and utilities. Every node exposes inputs, outputs, settings, logs, and retry.</p>
-        </BlurReveal>
-        <div className="mt-14 grid grid-cols-2 gap-5 sm:grid-cols-4">
-          {Object.entries(CATEGORY_META).map(([key, meta], gi) => (
-            <FadeIn key={key} delay={gi * 0.04}>
-              <div className="glass rounded-xl border border-border p-5 h-full">
-                <div className="flex items-center gap-2 mb-3.5">
-                  <span className="h-2.5 w-2.5 rounded-sm" style={{ background: meta.color }} />
-                  <span className="text-sm font-semibold">{meta.label}</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {NODE_LIBRARY.filter((n) => n.category === key).map((n) => (
-                    <span key={n.type} className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[11px] text-fg-muted">
-                      <Icon name={n.icon} className="h-3 w-3" style={{ color: n.color }} />
-                      {n.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
+      <section id="nodes" className="relative overflow-hidden border-t border-border">
+        <NodeLibrary ctaHref={dashboardHref} />
       </section>
 
-      <section id="pricing" className="border-t border-border bg-bg-soft/40">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
-          <BlurReveal className="text-center max-w-2xl mx-auto">
-            <Badge tone="ai" className="mb-4">Pricing</Badge>
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Credit-based, scales with you</h2>
-            <p className="mt-5 text-fg-muted">Start free. Upgrade when your automations outgrow it. Stripe-powered billing.</p>
-          </BlurReveal>
-          <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {plans.map((p, i) => (
-              <FadeIn key={p.name} delay={i * 0.05}>
-                <div className={`card-hover h-full rounded-xl border p-5 ${p.featured ? "border-brand/50 bg-brand-soft/30 shadow-[0_8px_40px_-12px_rgba(124,92,255,0.5)]" : "glass border-border"}`}>
-                  {p.featured && <Badge tone="brand" className="mb-3">Most popular</Badge>}
-                  <div className="text-sm font-semibold text-fg-muted">{p.name}</div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-semibold tracking-tight">{p.price}</span>
-                    <span className="text-xs text-fg-subtle">{p.period}</span>
-                  </div>
-                  <ul className="mt-4 space-y-2">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-fg-muted">
-                        <Icon name="Check" className="h-3.5 w-3.5 text-success" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/signup" className="block mt-5">
-                    <Button variant={p.featured ? "ai" : "secondary"} size="sm" className="w-full">{p.cta}</Button>
-                  </Link>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 lg:px-8 py-24 lg:py-32">
-        <BlurReveal className="relative overflow-hidden rounded-3xl border border-border mesh-bg p-12 text-center lg:p-20">
-          <div className="relative">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">Automate like you mean it.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-fg-muted">Spin up your first AI-native workflow in minutes. Free to start, no card required.</p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/signup"><Button size="lg" variant="ai" className="btn-shine"><Icon name="Rocket" className="h-4 w-4" /> Get started free</Button></Link>
-              <Link href="/dashboard"><Button size="lg" variant="secondary" className="btn-shine"><Icon name="LayoutDashboard" className="h-4 w-4" /> View live demo</Button></Link>
-            </div>
-          </div>
-        </BlurReveal>
-      </section>
+      <RuntimeHubSection />
 
       <Footer />
     </div>
