@@ -45,10 +45,10 @@ lights up real AI, payments, and email the moment keys are added.
 
 ---
 
-## 🧩 What I Built
+## 🧩 What I Built 
 
 AgentFlow AI is built end-to-end — frontend, API, execution runtime, AI layer,
-data model, background workers, and integrations. Here's what that covers:
+data model, background workers, and integrations. Here's what it covers:
 
 - **Visual workflow builder** — a React Flow canvas with a **74-node library
   across 14 categories** (AI, communication, Gmail, database, logic, files,
