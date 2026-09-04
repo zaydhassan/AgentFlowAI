@@ -31,7 +31,6 @@ const NAV: NavEntry[] = [
     items: [
       { label: "AI Workflow Builder", href: "/workflows", desc: "Visual, drag-and-drop agent orchestration", icon: "Workflow" },
       { label: "AI Engine", href: "/#ai", desc: "Plan → Reason → Execute → Learn runtime", icon: "Sparkles" },
-      { label: "Node Library", href: "/#nodes", desc: "200+ prebuilt integrations & tools", icon: "Boxes" },
     ],
   },
   {
