@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { MarketingPage } from "@/components/marketing/page-shell";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { SecurityPillarCard } from "@/components/marketing/security-pillar-card";
+import { SecurityHero } from "@/components/marketing/security/security-hero";
+import { SecurityTrustRow } from "@/components/marketing/security/security-trust-row";
+import { SecurityCapabilityCard } from "@/components/marketing/security/security-capability-card";
+import { SecurityPractices } from "@/components/marketing/security/security-practices";
+import { SecurityCta } from "@/components/marketing/security/security-cta";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -32,70 +32,51 @@ const practices = [
 export default function SecurityPage() {
   return (
     <MarketingPage>
-      <section className="relative mesh-bg overflow-hidden">
-        <div className="relative mx-auto max-w-4xl px-5 lg:px-8 py-24 text-center">
-          <Badge tone="ai" className="mx-auto mb-5">Security</Badge>
-          <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            Security is a <span className="text-brand-gradient">prerequisite</span>, not a feature
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-fg-muted">
-            Your workflows touch real systems and real data. We engineer AgentFlow to be worthy of
-            that trust — defense in depth, transparent practices, and the controls your security
-            team expects.
-          </p>
+      {/* One consistent page background: near-black base, faded grid, purple/cyan glows. */}
+      <div className="relative isolate">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(40% 28% at 2% 8%, rgba(124,92,255,0.09), transparent 70%), radial-gradient(36% 26% at 98% 14%, rgba(34,211,238,0.07), transparent 70%), radial-gradient(32% 22% at 50% 100%, rgba(91,139,255,0.05), transparent 70%)",
+            }}
+          />
+          <div className="grid-overlay absolute inset-0 opacity-70 [mask-image:linear-gradient(to_bottom,transparent,#000_6%,#000_88%,transparent)]" />
         </div>
-      </section>
 
-      <section className="mx-auto max-w-5xl px-5 lg:px-8 py-20">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pillars.map((p) => (
-            <SecurityPillarCard key={p.title} {...p} />
-          ))}
-        </div>
-      </section>
+        <SecurityHero description="Your workflows touch real systems and real data. We engineer AgentFlow to be worthy of that trust — defense in depth, transparent practices, and the controls your security team expects." />
 
-      <section className="border-t border-border bg-bg-soft/40">
-        <div className="mx-auto max-w-5xl px-5 lg:px-8 py-16 grid gap-10 md:grid-cols-2">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Security practices</h2>
-            <ul className="mt-6 space-y-3">
-              {practices.map((p) => (
-                <li key={p} className="flex items-start gap-2.5 text-sm text-fg-muted">
-                  <Icon name="CheckCircle2" className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {p}
-                </li>
-              ))}
-            </ul>
+        <SecurityTrustRow />
+
+        {/* Security capabilities — 3-column desktop grid. */}
+        <section aria-label="Security capabilities" className="relative mx-auto max-w-7xl px-5 py-20 lg:px-8">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {pillars.map((p, i) => (
+              <SecurityCapabilityCard key={p.title} capability={p} index={i} />
+            ))}
           </div>
-          <div className="rounded-2xl border border-border bg-bg p-6">
-            <div className="inline-flex items-center gap-2 text-ai">
-              <Icon name="Bug" className="h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-widest">Responsible disclosure</span>
-            </div>
-            <h3 className="mt-3 text-lg font-semibold">Found a vulnerability?</h3>
-            <p className="mt-2 text-sm text-fg-muted">
-              We reward responsible disclosure. Email us with a reproducible report — we respond
-              within 24 hours, validate, and credit you (or keep you anonymous) on fix.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link href={`mailto:${site.legal.security}`}><Button variant="secondary" size="md">{site.legal.security}</Button></Link>
-            </div>
-            <p className="mt-3 text-xs text-fg-subtle">
-              Please don&apos;t test on production accounts or customer data. Provide a PoC in your report.
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="mx-auto max-w-5xl px-5 lg:px-8 py-16">
-        <div className="rounded-3xl border border-border mesh-bg p-10 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Need a security review?</h2>
-          <p className="mx-auto mt-3 max-w-md text-fg-muted">
-            Enterprise customers get a completed security questionnaire, SOC 2 report access, and a
-            named solutions contact.
-          </p>
-          <Link href="/contact" className="mt-6 inline-block"><Button size="lg" variant="ai"><Icon name="Shield" className="h-4 w-4" /> Request a review</Button></Link>
-        </div>
-      </section>
+        {/* Practices + responsible disclosure — two-column. */}
+        <section aria-label="Security practices" className="relative border-t border-border bg-bg-soft/40">
+          <div className="mx-auto max-w-5xl px-5 py-20 lg:px-8">
+            <SecurityPractices
+              practices={practices}
+              disclosure="We reward responsible disclosure. Email us with a reproducible report — we respond within 24 hours, validate, and credit you (or keep you anonymous) on fix."
+              note="Please don't test on production accounts or customer data. Provide a PoC in your report."
+              email={site.legal.security}
+            />
+          </div>
+        </section>
+
+        {/* Bottom CTA. */}
+        <section aria-label="Get started" className="relative mx-auto max-w-7xl px-5 pb-24 pt-16 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            <SecurityCta enterprise="Enterprise customers get a completed security questionnaire, SOC 2 report access, and a named solutions contact." />
+          </div>
+        </section>
+      </div>
     </MarketingPage>
   );
 }
