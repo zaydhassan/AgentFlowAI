@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingPage } from "@/components/marketing/page-shell";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { CoreConceptCard, type CoreConcept } from "@/components/marketing/core-concept-card";
-import { DocsSearch } from "@/components/docs/docs-search";
+import { type CoreConcept } from "@/components/marketing/core-concept-card";
+import { DocsBackground } from "@/components/docs/docs-background";
+import { DocumentationHero } from "@/components/docs/docs-hero";
+import { ConceptCard } from "@/components/docs/concept-card";
+import { DeveloperTimeline, DocsCallout } from "@/components/docs/developer-timeline";
+import { DocumentationCta } from "@/components/docs/docs-cta";
 
 export const metadata: Metadata = {
   title: "Documentation — AgentFlow AI",
@@ -81,87 +83,72 @@ const guide = [
 export default function DocsPage() {
   return (
     <MarketingPage>
-      <section className="relative mesh-bg overflow-hidden">
-        <div className="relative mx-auto max-w-4xl px-5 lg:px-8 py-24 text-center">
-          <Badge tone="ai" className="mx-auto mb-5">Documentation</Badge>
-          <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            Build with <span className="text-brand-gradient">AgentFlow</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-fg-muted">
-            Everything you need to design, run, and operate AI-native workflows — from the visual
-            builder to the command line.
-          </p>
-          <DocsSearch />
-        </div>
-      </section>
+      {/* One consistent page background behind every section. */}
+      <div className="relative isolate">
+        <DocsBackground />
 
-      {/* Concepts */}
-      <section className="mx-auto max-w-5xl px-5 lg:px-8 py-20">
-        <Badge tone="ai" className="mb-5">Documentation</Badge>
-        <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-          Core Concepts
-        </h2>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-fg-muted sm:text-lg">
-          Build, orchestrate and deploy autonomous AI systems with enterprise-grade tooling.
-        </p>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
-          {concepts.map((c, i) => (
-            <CoreConceptCard key={c.title} concept={c} index={i} />
-          ))}
-        </div>
-      </section>
+        <DocumentationHero />
 
-      {/* Developer Guide */}
-      <section id="developer-guide" className="border-t border-border bg-bg-soft/40 scroll-mt-24">
-        <div className="mx-auto max-w-5xl px-5 lg:px-8 py-20">
-          <div className="flex items-center gap-2 text-ai">
-            <Icon name="Terminal" className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-widest">Developer Guide</span>
-          </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight">From zero to a running workflow</h2>
-          <p className="mt-3 max-w-2xl text-fg-muted">
-            Prefer the terminal? The CLI gives you the full power of AgentFlow with version control
-            and CI-friendly commands.
-          </p>
-
-          <div className="mt-8 space-y-4">
-            {guide.map((g) => (
-              <div key={g.n} className="rounded-2xl border border-border bg-bg p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-ai/10 text-sm font-semibold text-ai">
-                    {g.n}
-                  </span>
-                  <div className="flex-1">
-                    <h3 className="text-base font-semibold">{g.title}</h3>
-                    <p className="mt-1 text-sm text-fg-muted">{g.body}</p>
-                  </div>
-                </div>
-                <pre className="mt-4 overflow-x-auto rounded-lg border border-border bg-surface-2/60 px-4 py-3 text-xs text-fg-muted">
-                  <code>{`$ ${g.code}`}</code>
-                </pre>
-              </div>
+        {/* Core Concepts grid — 2×2 desktop, 2 tablet, 1 mobile. */}
+        <section aria-label="Core concepts" className="relative mx-auto max-w-5xl px-5 pb-20 lg:px-8">
+          <div className="grid gap-5 sm:grid-cols-2">
+            {concepts.map((c, i) => (
+              <ConceptCard key={c.title} concept={c} index={i} />
             ))}
           </div>
+        </section>
 
-          <div className="mt-8 rounded-2xl border border-border bg-surface-2/30 p-6 text-sm text-fg-muted">
-            <h3 className="text-sm font-semibold text-fg">Reference</h3>
-            <p className="mt-2">
-              A full REST &amp; event reference is coming. Until it ships, the Developer Guide above
-              is the source of truth for the CLI and workflow schema. Track progress on the{" "}
-              <Link href="/changelog" className="text-brand hover:underline">changelog</Link>.
+        {/* Developer Guide */}
+        <section
+          id="developer-guide"
+          className="relative border-t border-border bg-bg-soft/40 scroll-mt-24"
+        >
+          <div className="mx-auto max-w-5xl px-5 py-20 lg:px-8">
+            <div className="flex items-center gap-2 text-ai">
+              <Icon name="Terminal" className="h-4 w-4" aria-hidden />
+              <span className="text-xs font-semibold uppercase tracking-widest">
+                01 · Developer Guide
+              </span>
+            </div>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+              From zero to a running workflow
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-fg-muted">
+              Prefer the terminal? The CLI gives you the full power of AgentFlow with version
+              control and CI-friendly commands.
             </p>
-          </div>
-        </div>
-      </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-5xl px-5 lg:px-8 pb-24">
-        <div className="rounded-3xl border border-border mesh-bg p-10 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Ready to build?</h2>
-          <p className="mx-auto mt-3 max-w-md text-fg-muted">Start free with 1,000 credits — no card required.</p>
-          <Link href="/signup" className="mt-6 inline-block"><Button size="lg" variant="ai"><Icon name="Rocket" className="h-4 w-4" /> Get started</Button></Link>
-        </div>
-      </section>
+            <DeveloperTimeline steps={guide} />
+
+            <div className="mt-10">
+              <DocsCallout
+                title="Reference"
+                action={
+                  <Link
+                    href="/changelog"
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-brand transition-opacity hover:opacity-80 focus-ring rounded-sm"
+                  >
+                    Track progress
+                    <Icon name="ArrowRight" className="h-4 w-4" aria-hidden />
+                  </Link>
+                }
+              >
+                A full REST &amp; event reference is coming. Until it ships, the Developer Guide
+                above is the source of truth for the CLI and workflow schema. Track progress on the{" "}
+                <Link href="/changelog" className="text-brand hover:underline">
+                  changelog
+                </Link>
+                .
+              </DocsCallout>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section aria-label="Get started" className="relative mx-auto max-w-5xl px-5 pb-24 pt-16 lg:px-8">
+          <DocumentationCta />
+        </section>
+      </div>
     </MarketingPage>
   );
 }
