@@ -6,7 +6,6 @@ import { signOut } from "next-auth/react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
-import { useTheme, type Theme } from "@/components/theme-provider";
 import { useDropdown } from "@/lib/hooks/use-dropdown";
 
 export type UserMenuUser = {
@@ -24,12 +23,6 @@ export function initials(name?: string | null, email?: string | null): string {
     .map((s) => s[0]!.toUpperCase())
     .join("");
 }
-
-const THEME_OPTIONS: { value: Theme; label: string; icon: string }[] = [
-  { value: "light", label: "Light", icon: "Sun" },
-  { value: "dark", label: "Dark", icon: "Moon" },
-  { value: "system", label: "System", icon: "Monitor" },
-];
 
 // Primary nav rows. Every href resolves to a real page — no fake links.
 const MENU_ITEMS = [
@@ -110,7 +103,6 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
   const { open, close, toggle, panelRef, triggerRef } =
     useDropdown<HTMLButtonElement>("user-menu");
   const [signingOut, startSignOut] = useTransition();
-  const { theme, setTheme } = useTheme();
 
   const handleSignOut = () => {
     startSignOut(() => {
@@ -149,7 +141,7 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="absolute right-0 top-full mt-1.5 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-surface-2/95 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)] backdrop-blur-2xl"
+            className="absolute right-0 top-full mt-1.5 z-50 w-60 overflow-hidden rounded-xl border border-border bg-surface-2 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]"
           >
             {/* Identity header. */}
             <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-2.5">
@@ -175,33 +167,6 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
                 </motion.div>
               ))}
             </motion.div>
-
-              {/* Theme switcher. */}
-              <div className="border-t border-border px-1.5 py-1.5">
-                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">
-                  Theme
-                </div>
-                <div className="flex items-center gap-1 px-1">
-                  {THEME_OPTIONS.map((opt) => {
-                    const active = theme === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setTheme(opt.value)}
-                        aria-pressed={active}
-                        className={cn(
-                          "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-colors focus-ring",
-                          active ? "bg-brand-soft text-fg" : "text-fg-muted hover:text-fg hover:bg-surface-3"
-                        )}
-                      >
-                        <Icon name={opt.icon} className="h-3.5 w-3.5" />
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Sign out. */}
               <div className="border-t border-border p-1.5">

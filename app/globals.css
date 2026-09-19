@@ -2,49 +2,55 @@
 
 /* ============================================================
    AgentFlow AI — Design System (Tailwind v4)
-   Premium dark, glassmorphism, animated gradients.
+   Dark, developer-first: black + white + electric blue.
+   Semantic colors only for state (success/warning/error).
    ============================================================ */
 
 @theme {
-  /* Surfaces (dark by default; light overrides below) */
-  --color-bg: #07080c;
-  --color-bg-soft: #0a0b11;
-  --color-surface: #0f1118;
-  --color-surface-2: #14161f;
-  --color-surface-3: #1a1d29;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.14);
+  /* Surfaces (dark) */
+  --color-bg: #05080d;
+  --color-bg-soft: #080d15;
+  --color-surface: #0b1118;
+  --color-surface-2: #111923;
+  --color-surface-3: #182231;
+  --color-border: #1c2936;
+  --color-border-strong: #2b3c4e;
 
   /* Text */
-  --color-fg: #f4f6fb;
-  --color-fg-muted: #9aa1b2;
-  --color-fg-subtle: #6b7185;
+  --color-fg: #f5f7fa;
+  --color-fg-muted: #8b98a8;
+  --color-fg-subtle: #596675;
 
-  /* Brand — violet/indigo */
-  --color-brand: #7c5cff;
-  --color-brand-2: #5b8bff;
-  --color-brand-soft: rgba(124, 92, 255, 0.14);
+  /* Brand — electric blue */
+  --color-brand: #2196f3;
+  --color-brand-2: #42a5f5;
+  --color-brand-soft: rgba(33, 150, 243, 0.14);
 
-  /* AI accent — cyan */
-  --color-ai: #22d3ee;
-  --color-ai-2: #34d399;
+  /* Secondary accent (aliased to hover blue) */
+  --color-ai: #42a5f5;
+  --color-ai-2: #42a5f5;
 
   /* Semantic */
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-danger: #fb7185;
-  --color-info: #60a5fa;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #2196f3;
 
   /* Status */
-  --color-running: #60a5fa;
-  --color-queued: #fbbf24;
-  --color-failed: #fb7185;
-  --color-succeeded: #34d399;
+  --color-running: #2196f3;
+  --color-queued: #f59e0b;
+  --color-failed: #ef4444;
+  --color-succeeded: #22c55e;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius: 0.75rem;
+  /* Rounded but not overly rounded */
+  --radius: 0.625rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
 }
 
 @layer base {
@@ -54,26 +60,6 @@
 
   html {
     color-scheme: dark;
-  }
-
-  /* Light theme overrides — surfaces, text, and brand-soft tint.
-     Brand/semantic colors stay the same; only the neutrals flip. */
-  html.light {
-    color-scheme: light;
-
-    --color-bg: #f7f8fb;
-    --color-bg-soft: #eef0f6;
-    --color-surface: #ffffff;
-    --color-surface-2: #f1f3f9;
-    --color-surface-3: #e7eaf2;
-    --color-border: rgba(10, 12, 20, 0.08);
-    --color-border-strong: rgba(10, 12, 20, 0.16);
-
-    --color-fg: #0b0d14;
-    --color-fg-muted: #525a72;
-    --color-fg-subtle: #8a90a6;
-
-    --color-brand-soft: rgba(124, 92, 255, 0.10);
   }
 
   body {
@@ -86,7 +72,7 @@
   }
 
   ::selection {
-    background: rgba(124, 92, 255, 0.3);
+    background: rgba(33, 150, 243, 0.35);
     color: #fff;
   }
 
@@ -98,34 +84,30 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(139, 152, 168, 0.18);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(139, 152, 168, 0.3);
     background-clip: padding-box;
   }
 }
 
 @layer components {
   .glass {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
   }
 
   .glass-strong {
-    background: linear-gradient(180deg, rgba(20, 22, 31, 0.85), rgba(15, 17, 24, 0.85));
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
   }
 
   .text-gradient {
-    background: linear-gradient(110deg, #fff 10%, #c4b5ff 40%, #7c5cff 60%, #22d3ee 90%);
+    background: linear-gradient(110deg, #fff 20%, #42a5f5 90%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -134,7 +116,7 @@
   }
 
   .text-brand-gradient {
-    background: linear-gradient(110deg, #8b7bff, #22d3ee);
+    background: linear-gradient(110deg, #2196f3, #42a5f5);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -148,17 +130,16 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(60% 50% at 15% 10%, rgba(124, 92, 255, 0.22), transparent 70%),
-      radial-gradient(50% 40% at 90% 20%, rgba(34, 211, 238, 0.16), transparent 70%),
-      radial-gradient(45% 45% at 70% 90%, rgba(91, 139, 255, 0.14), transparent 70%);
+      radial-gradient(60% 50% at 15% 10%, rgba(33, 150, 243, 0.14), transparent 70%),
+      radial-gradient(50% 40% at 90% 20%, rgba(66, 165, 245, 0.08), transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
 
   .grid-overlay {
     background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
@@ -185,42 +166,7 @@
     outline: none;
   }
   .focus-ring:focus-visible {
-    box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px rgba(124, 92, 255, 0.6);
-  }
-}
-
-/* Light-theme adjustments for utilities that hard-code rgba.
-   Dark values stay as the default; these overrides flip the alpha. */
-html.light {
-  .glass {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4));
-  }
-  .glass-strong {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 248, 251, 0.92));
-  }
-  .mesh-bg::before {
-    background:
-      radial-gradient(60% 50% at 15% 10%, rgba(124, 92, 255, 0.10), transparent 70%),
-      radial-gradient(50% 40% at 90% 20%, rgba(34, 211, 238, 0.08), transparent 70%),
-      radial-gradient(45% 45% at 70% 90%, rgba(91, 139, 255, 0.07), transparent 70%);
-  }
-  .grid-overlay {
-    background-image:
-      linear-gradient(to right, rgba(10, 12, 20, 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(10, 12, 20, 0.04) 1px, transparent 1px);
-  }
-  .card-hover:hover {
-    box-shadow: 0 16px 48px -16px rgba(10, 12, 20, 0.18);
-  }
-  ::selection {
-    background: rgba(124, 92, 255, 0.18);
-    color: #0b0d14;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(10, 12, 20, 0.18);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(10, 12, 20, 0.3);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px rgba(33, 150, 243, 0.55);
   }
 }
 
@@ -232,13 +178,13 @@ html.light {
 
 @keyframes pulse-dot {
   0% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 
@@ -302,19 +248,19 @@ html.light {
 
 /* Hairline gradient border used by the CTA ring. */
 .cta-ring {
-  background: linear-gradient(120deg, #7c5cff, #22d3ee 55%, #5b8bff);
+  background: linear-gradient(120deg, #2196f3, #42a5f5);
 }
 
 /* Live status dot for the AI badge. */
 @keyframes status-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
   }
   70% {
-    box-shadow: 0 0 0 5px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 .status-dot {
@@ -328,10 +274,10 @@ html.light {
   backface-visibility: hidden;
 }
 
-/* Premium 1px top-edge highlight for the glass header — a faint light-from-above
-   sheen that reads as a real material edge, not a flat translucent bar. Sits
-   above the backdrop blur, below the content (content is positioned/stacked by
-   the navbar layout; this pseudo is pointer-events-none). */
+/* Premium 1px top-edge highlight for the header — a faint light-from-above
+   sheen that reads as a real material edge. Sits above the content
+   (content is positioned/stacked by the navbar layout; this pseudo is
+   pointer-events-none). */
 .nav-edge::after {
   content: "";
   position: absolute;
@@ -341,22 +287,12 @@ html.light {
     90deg,
     transparent,
     rgba(255, 255, 255, 0.12) 18%,
-    rgba(124, 92, 255, 0.18) 50%,
-    rgba(34, 211, 238, 0.12) 82%,
+    rgba(33, 150, 243, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 82%,
     transparent
   );
   opacity: 0.9;
   pointer-events: none;
-}
-html.light .nav-edge::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(10, 12, 20, 0.06) 18%,
-    rgba(124, 92, 255, 0.12) 50%,
-    rgba(10, 12, 20, 0.05) 82%,
-    transparent
-  );
 }
 
 /* Sliding active pill behind the current nav link (Linear/Vercel style).
@@ -364,7 +300,7 @@ html.light .nav-edge::after {
    carries this class and slides between links on route change. */
 .nav-active-pill {
   background: var(--color-brand-soft);
-  box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(33, 150, 243, 0.25);
 }
 .nav-active-pill::after {
   content: "";
@@ -401,13 +337,14 @@ html.light .nav-edge::after {
 
 /* ───────────────────────── Visual Workflow Builder ───────────────────────── */
 
-/* Running node: subtle border shimmer + soft pulsing glow (GPU-only). */
+/* Running node: subtle border shimmer + soft pulsing glow (GPU-only).
+   Running state = electric blue per the status palette. */
 .af-node-running {
   animation: af-shimmer 1.4s ease-in-out infinite;
 }
 @keyframes af-shimmer {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.4), 0 8px 30px -8px rgba(124, 92, 255, 0.5); }
-  50%      { box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.55), 0 10px 36px -8px rgba(124, 92, 255, 0.7); }
+  0%, 100% { box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.35), 0 8px 30px -8px rgba(33, 150, 243, 0.4); }
+  50%      { box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.5), 0 10px 36px -8px rgba(33, 150, 243, 0.55); }
 }
 
 /* Sticky-note paper texture — a faint diagonal hatch, no extra DOM. */
@@ -432,7 +369,7 @@ html.light .nav-edge::after {
 .af-guide-line {
   background: var(--color-brand);
   opacity: 0.5;
-  box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.2);
 }
 
 /* Flowing animated edge stroke (used by React Flow's built-in dash). */
@@ -444,10 +381,9 @@ html.light .nav-edge::after {
   to { stroke-dashoffset: -10; }
 }
 
-/* Premium control surfaces used across the builder dock + panels. */
+/* Solid control surfaces used across the builder dock + panels. */
 .af-glass {
-  background: color-mix(in oklab, var(--color-surface-2) 90%, transparent);
-  backdrop-filter: blur(16px);
+  background: var(--color-surface-2);
   border: 1px solid var(--color-border);
 }
 
@@ -533,9 +469,9 @@ html.light .nav-edge::after {
    surfaces). No new theme colors are introduced.
    ============================================================ */
 
-/* Animated multi-stop gradient text for highlighted words. */
+/* Animated two-stop gradient text for highlighted words. */
 .text-anim-gradient {
-  background: linear-gradient(110deg, #7c5cff, #22d3ee, #5b8bff, #7c5cff);
+  background: linear-gradient(110deg, #2196f3, #42a5f5, #2196f3);
   background-size: 250% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -583,7 +519,7 @@ html.light .nav-edge::after {
   transform: translateX(130%);
 }
 
-/* Aurora blobs — large, soft, slowly drifting color fields. */
+/* Aurora blob — one large, soft, slowly drifting blue field. */
 .aurora-blob {
   position: absolute;
   border-radius: 50%;
@@ -592,28 +528,12 @@ html.light .nav-edge::after {
   will-change: transform;
 }
 .aurora-1 {
-  background: radial-gradient(circle at center, rgba(124, 92, 255, 0.45), transparent 70%);
+  background: radial-gradient(circle at center, rgba(33, 150, 243, 0.28), transparent 70%);
   animation: aurora-drift-1 18s ease-in-out infinite;
-}
-.aurora-2 {
-  background: radial-gradient(circle at center, rgba(34, 211, 238, 0.35), transparent 70%);
-  animation: aurora-drift-2 22s ease-in-out infinite;
-}
-.aurora-3 {
-  background: radial-gradient(circle at center, rgba(91, 139, 255, 0.32), transparent 70%);
-  animation: aurora-drift-3 26s ease-in-out infinite;
 }
 @keyframes aurora-drift-1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(40px, -30px) scale(1.1); }
-}
-@keyframes aurora-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1.05); }
-  50% { transform: translate(-50px, 40px) scale(0.95); }
-}
-@keyframes aurora-drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, 50px) scale(1.08); }
 }
 
 /* Orbital rings — faint concentric ellipses that rotate very slowly. */
@@ -633,7 +553,7 @@ html.light .nav-edge::after {
   height: 6px;
   border-radius: 50%;
   background: var(--color-ai);
-  box-shadow: 0 0 12px 2px rgba(34, 211, 238, 0.6);
+  box-shadow: 0 0 12px 2px rgba(66, 165, 245, 0.5);
   transform: translateX(-50%);
 }
 @keyframes spin-slow {
@@ -653,8 +573,7 @@ html.light .nav-edge::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(124, 92, 255, 0.25),
-    rgba(34, 211, 238, 0.25),
+    rgba(33, 150, 243, 0.2),
     transparent
   );
   pointer-events: none;
@@ -665,11 +584,11 @@ html.light .nav-edge::after {
   50% { transform: translateX(10%) translateY(-10px); opacity: 0.7; }
 }
 
-/* Glowing workflow node ring (pulsing box-shadow using brand/ai tokens). */
+/* Glowing workflow node ring (pulsing box-shadow using brand tokens). */
 .node-glow {
   box-shadow:
     0 0 0 1px var(--color-border),
-    0 8px 30px -12px rgba(124, 92, 255, 0.5);
+    0 8px 30px -12px rgba(33, 150, 243, 0.4);
 }
 
 /* Trust logo wordmark — grayscale by default, brand-color + lift on hover. */
@@ -687,7 +606,7 @@ html.light .nav-edge::after {
 .trust-logo:hover svg {
   color: var(--color-brand);
   transform: scale(1.08);
-  filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.6));
+  filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5));
 }
 
 /* Infinite logo marquee — duplicated track translates -50% for a seamless
@@ -736,7 +655,7 @@ html.light .nav-edge::after {
 .metric-card:hover {
   transform: translateY(-4px);
   border-color: var(--color-border-strong);
-  box-shadow: 0 18px 50px -20px var(--glow, rgba(124, 92, 255, 0.5));
+  box-shadow: 0 18px 50px -20px var(--glow, rgba(33, 150, 243, 0.4));
 }
 .metric-card:hover::before {
   opacity: 0.18;
@@ -745,7 +664,7 @@ html.light .nav-edge::after {
   transition: box-shadow 0.35s ease;
 }
 .metric-card:hover .metric-icon {
-  box-shadow: 0 0 22px -2px var(--glow, rgba(124, 92, 255, 0.6));
+  box-shadow: 0 0 22px -2px var(--glow, rgba(33, 150, 243, 0.5));
 }
 .metric-value {
   transition: transform 0.3s ease;
@@ -764,11 +683,6 @@ html.light .nav-edge::after {
   opacity: 1;
 }
 
-/* Light-theme toning for the metric glow. */
-html.light .metric-card:hover {
-  box-shadow: 0 18px 50px -20px rgba(10, 12, 20, 0.16);
-}
-
 /* Feature card premium hover — lift + soft brand border glow + animated
    top sheen. Combines with .surface-premium. */
 .feature-card {
@@ -783,7 +697,7 @@ html.light .metric-card:hover {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(120deg, rgba(124, 92, 255, 0), rgba(34, 211, 238, 0), rgba(124, 92, 255, 0));
+  background: linear-gradient(120deg, rgba(33, 150, 243, 0), rgba(66, 165, 245, 0), rgba(33, 150, 243, 0));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -794,11 +708,11 @@ html.light .metric-card:hover {
 .feature-card:hover {
   transform: translateY(-6px);
   border-color: var(--color-border-strong);
-  box-shadow: 0 24px 60px -24px rgba(124, 92, 255, 0.35);
+  box-shadow: 0 24px 60px -24px rgba(33, 150, 243, 0.3);
 }
 .feature-card:hover::before {
   opacity: 1;
-  background: linear-gradient(120deg, rgba(124, 92, 255, 0.5), rgba(34, 211, 238, 0.5), rgba(124, 92, 255, 0.5));
+  background: linear-gradient(120deg, rgba(33, 150, 243, 0.5), rgba(66, 165, 245, 0.5), rgba(33, 150, 243, 0.5));
 }
 
 /* Small glowing icon tile used inside feature cards. */
@@ -837,16 +751,6 @@ html.light .metric-card:hover {
   }
 }
 
-/* Light-theme toning for the FX above — keeps glows/grids subtle on light. */
-html.light {
-  .aurora-1 { background: radial-gradient(circle at center, rgba(124, 92, 255, 0.22), transparent 70%); }
-  .aurora-2 { background: radial-gradient(circle at center, rgba(34, 211, 238, 0.18), transparent 70%); }
-  .aurora-3 { background: radial-gradient(circle at center, rgba(91, 139, 255, 0.16), transparent 70%); }
-  .orbital-ring { border-color: rgba(10, 12, 20, 0.06); }
-  .node-glow { box-shadow: 0 0 0 1px var(--color-border), 0 8px 26px -12px rgba(124, 92, 255, 0.25); }
-  .feature-card:hover { box-shadow: 0 24px 60px -24px rgba(10, 12, 20, 0.18); }
-}
-
 /* ============================================================
    Node Library section (landing page) — category module cards
    + node detail popover. Modeled on .metric-card (lift, glow,
@@ -874,24 +778,16 @@ html.light {
 .nl-module:hover {
   transform: translateY(-3px);
   border-color: var(--color-border-strong);
-  box-shadow: 0 18px 50px -20px color-mix(in oklab, var(--glow, #7c5cff) 55%, transparent);
+  box-shadow: 0 18px 50px -20px color-mix(in oklab, var(--glow, #2196f3) 55%, transparent);
 }
 .nl-module:hover::before {
   opacity: 0.14;
 }
-html.light .nl-module:hover {
-  box-shadow: 0 18px 50px -20px rgba(10, 12, 20, 0.16);
-}
 
-/* Node detail popover (grid view) — glass-strong material. */
+/* Node detail popover (grid view) — solid elevated surface. */
 .nl-pop {
-  background: linear-gradient(180deg, rgba(20, 22, 31, 0.92), rgba(15, 17, 24, 0.92));
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: var(--color-surface-2);
   border: 1px solid var(--color-border-strong);
-}
-html.light .nl-pop {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 248, 251, 0.95));
 }
 
 /* Traveling data particle along the natural-language builder's workflow
@@ -950,8 +846,8 @@ html.light .nl-pop {
   background: linear-gradient(
     180deg,
     transparent,
-    rgba(124, 92, 255, 0.9),
-    rgba(34, 211, 238, 0.7),
+    rgba(33, 150, 243, 0.9),
+    rgba(66, 165, 245, 0.7),
     transparent
   );
   opacity: 0;
@@ -967,12 +863,12 @@ html.light .nl-pop {
 /* Breathing glow halo behind the release markers. Color comes from the
    element's data-accent (set in ReleaseItem). */
 .cl-halo {
-  --halo: rgba(124, 92, 255, 0.55);
+  --halo: rgba(33, 150, 243, 0.5);
   opacity: 0.4;
   animation: cl-breathe 4.5s ease-in-out infinite;
 }
 .cl-halo[data-accent="ai"] {
-  --halo: rgba(34, 211, 238, 0.5);
+  --halo: rgba(66, 165, 245, 0.45);
 }
 @keyframes cl-breathe {
   0%, 100% { opacity: 0.3; box-shadow: 0 0 8px 1px var(--halo); }
