@@ -147,7 +147,10 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
             role="search"
           >
             <Icon name="Search" className="h-4 w-4 shrink-0 text-fg-subtle" />
+            {/* suppressHydrationWarning: extensions inject fdprocessedid onto
+                interactive elements pre-hydration (see components/ui/button.tsx). */}
             <input
+              suppressHydrationWarning
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -160,6 +163,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
             </kbd>
             {searching && (
               <button
+                suppressHydrationWarning
                 onClick={() => {
                   setQuery("");
                   setCategory("all");
@@ -197,6 +201,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           <div className="glass flex rounded-lg border border-border p-1" role="tablist" aria-label="Node library view">
             {(["grid", "flow"] as const).map((v) => (
               <button
+                suppressHydrationWarning
                 key={v}
                 role="tab"
                 aria-selected={view === v}
@@ -261,6 +266,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
                 className="flex items-center gap-2"
               >
                 <button
+                  suppressHydrationWarning
                   onClick={() => {
                     setQuery(n.label);
                     setCategory("all");
@@ -329,6 +335,7 @@ function FilterChip({
 }) {
   return (
     <button
+      suppressHydrationWarning
       onClick={onClick}
       className={cn(
         "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all focus-ring",

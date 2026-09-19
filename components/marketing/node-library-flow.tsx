@@ -202,7 +202,10 @@ export function NodeLibraryFlow({
                 height={CARD_H}
                 style={{ opacity: filteredOut || dimmedByTrace ? 0.22 : 1, transition: "opacity 0.3s ease" }}
               >
+                {/* suppressHydrationWarning: extensions inject fdprocessedid onto
+                    interactive elements pre-hydration (see components/ui/button.tsx). */}
                 <button
+                  suppressHydrationWarning
                   type="button"
                   onMouseEnter={() => setFocus(cat)}
                   onMouseLeave={() => setFocus((f) => (f === cat ? null : f))}
@@ -238,6 +241,7 @@ export function NodeLibraryFlow({
         </p>
         {focus && (
           <button
+            suppressHydrationWarning
             onClick={() => onExplore(focus)}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/40 bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand transition-colors hover:text-ai focus-ring"
           >

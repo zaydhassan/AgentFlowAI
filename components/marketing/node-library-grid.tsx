@@ -165,7 +165,10 @@ function CategoryModule({
           {hiddenCount > 0 ? (
             <>
               <span className="text-[10px] text-fg-subtle">+{hiddenCount} more</span>
+              {/* suppressHydrationWarning: extensions inject fdprocessedid onto
+                  interactive elements pre-hydration (see components/ui/button.tsx). */}
               <button
+                suppressHydrationWarning
                 onClick={() => onExplore(cat)}
                 className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-medium text-brand transition-colors hover:text-ai focus-ring"
               >
@@ -174,6 +177,7 @@ function CategoryModule({
             </>
           ) : expanded ? (
             <button
+              suppressHydrationWarning
               onClick={onCollapse}
               className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-medium text-fg-subtle transition-colors hover:text-fg focus-ring"
             >

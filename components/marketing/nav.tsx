@@ -180,6 +180,7 @@ export function MarketingNav() {
 
           {/* Mobile drawer trigger. */}
           <button
+            suppressHydrationWarning
             type="button"
             onClick={() => setDrawer(true)}
             aria-label="Open menu"
@@ -264,11 +265,14 @@ function MegaLink({
       onMouseEnter={() => onOpenChange(true)}
       onMouseLeave={() => onOpenChange(false)}
     >
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => onOpenChange(!open)}
+          {/* suppressHydrationWarning: extensions inject fdprocessedid onto
+              interactive elements pre-hydration (see components/ui/button.tsx). */}
+          <button
+            suppressHydrationWarning
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={() => onOpenChange(!open)}
         className={cn(
           "group flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-sm transition-colors duration-200 focus-ring",
           active || open ? "text-fg" : "text-fg-muted hover:text-fg"
@@ -387,6 +391,7 @@ function MobileDrawer({
                 </span>
               </div>
               <button
+                suppressHydrationWarning
                 type="button"
                 onClick={onClose}
                 aria-label="Close menu"
@@ -421,6 +426,7 @@ function MobileDrawer({
                   ) : (
                     <motion.div key={entry.label} variants={drawerItem} className="py-0.5">
                     <button
+                      suppressHydrationWarning
                       type="button"
                       onClick={() =>
                         setDrawerMega(drawerMega === entry.label ? null : entry.label)

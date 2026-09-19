@@ -135,7 +135,10 @@ export function NaturalLanguageBuilder() {
                   replay();
                 }}
               >
+                {/* suppressHydrationWarning: extensions inject fdprocessedid
+                    onto interactive elements pre-hydration (see components/ui/button.tsx). */}
                 <input
+                  suppressHydrationWarning
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe any workflow…"
@@ -143,6 +146,7 @@ export function NaturalLanguageBuilder() {
                   className="h-10 w-full min-w-0 rounded-xl border border-border bg-surface-2/60 px-3.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-subtle focus:border-brand/50"
                 />
                 <button
+                  suppressHydrationWarning
                   type="submit"
                   aria-label="Generate workflow (demo replay)"
                   className="grid h-10 w-11 shrink-0 cursor-pointer place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_18px_-4px_rgba(124,92,255,0.6)] transition-all duration-200 hover:border-brand hover:text-ai hover:shadow-[0_0_24px_-2px_rgba(124,92,255,0.8)] focus-ring"
@@ -169,6 +173,7 @@ export function NaturalLanguageBuilder() {
           {EXAMPLE_PROMPTS.map((p, i) => (
             <motion.button
               key={p}
+              suppressHydrationWarning
               initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
