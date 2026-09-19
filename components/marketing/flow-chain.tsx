@@ -47,7 +47,7 @@ function NodeCard({
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.4, delay: 0.15 + index * 0.15 }}
       whileHover={reduceMotion ? undefined : { y: -2 }}
-      className="w-[118px] shrink-0 rounded-xl border border-border bg-surface-2/80 p-3 transition-colors hover:border-border-strong hover:bg-surface-3/70 sm:w-[136px] lg:w-[110px] lg:px-2.5 xl:w-[136px] xl:px-3"
+      className="w-[118px] shrink-0 rounded-xl border border-border bg-surface-2 p-3 transition-colors hover:border-border-strong hover:bg-surface-3 sm:w-[136px] lg:w-[110px] lg:px-2.5 xl:w-[136px] xl:px-3"
     >
       <div className="flex items-center gap-2">
         <span

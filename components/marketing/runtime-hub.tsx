@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// "One runtime. Infinite workflows." — orchestration-runtime showcase that
+// "One runtime. Infinite workflows." â€” orchestration-runtime showcase that
 // replaces the homepage's closing CTA block:
 //   1. compact demo pipeline (real node types from lib/nodes, labeled demo)
 //   2. heading block
@@ -9,7 +9,7 @@
 //   4. premium CTA, visually connected with flowing gradient lines
 //
 // Honesty rules: node labels/icons resolve from NODE_LIBRARY; the node count
-// is computed from the library (no fabricated "200+"); no live metrics —
+// is computed from the library (no fabricated "200+"); no live metrics â€”
 // status dots are decorative "ready" indicators only. All motion is gated on
 // useReducedMotion; connector particles/orbits stop under it.
 
@@ -22,7 +22,7 @@ import { BlurReveal, StaggerContainer, StaggerItem } from "@/components/marketin
 import { FlowChain, type FlowNodeItem } from "@/components/marketing/flow-chain";
 import { NODE_LIBRARY } from "@/lib/nodes";
 
-// ── Real node definitions (throw at module scope if the library changes) ───
+// â”€â”€ Real node definitions (throw at module scope if the library changes) â”€â”€â”€
 function nodeOf(type: string) {
   const def = NODE_LIBRARY.find((n) => n.type === type);
   if (!def) throw new Error(`node def missing: ${type}`);
@@ -41,11 +41,11 @@ const DEMO_PIPELINE: FlowNodeItem[] = DEMO_TYPES.map(({ type, sub }) => {
   return { label: def.label, sub, icon: def.icon, color: def.color };
 });
 
-// Honest count derived from the library (74 → "70+").
+// Honest count derived from the library (74 â†’ "70+").
 const NODE_COUNT = NODE_LIBRARY.length;
 const HEADLINE_COUNT = Math.floor(NODE_COUNT / 10) * 10;
 
-// ── Feature callouts (system components, not dashboard cards) ──────────────
+// â”€â”€ Feature callouts (system components, not dashboard cards) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type CalloutData = {
   icon: string;
   title: string;
@@ -58,19 +58,19 @@ const LEFT_CALLOUTS: CalloutData[] = [
     icon: "Plug",
     title: "Connect anything",
     body: `${HEADLINE_COUNT}+ pre-built nodes to connect your apps, data, models, and services.`,
-    accent: "#7c5cff",
+    accent: "#2196f3",
   },
   {
     icon: "BrainCircuit",
     title: "AI that acts",
     body: "LLM agents with tools, memory, and RAG to reason and take action.",
-    accent: "#5b8bff",
+    accent: "#42a5f5",
   },
   {
     icon: "Terminal",
     title: "Built for developers",
     body: "TypeScript-first SDK, API, and CLI to extend and automate everything.",
-    accent: "#22d3ee",
+    accent: "#64b5f6",
   },
 ];
 
@@ -79,23 +79,23 @@ const RIGHT_CALLOUTS: CalloutData[] = [
     icon: "Eye",
     title: "Observe everything",
     body: "Trace every step, inspect I/O, track latency, cost, and failures.",
-    accent: "#22d3ee",
+    accent: "#64b5f6",
   },
   {
     icon: "ShieldCheck",
     title: "Reliable by design",
     body: "Retries, fallbacks, timeouts and idempotency built into every run.",
-    accent: "#34d399",
+    accent: "#42a5f5",
   },
   {
     icon: "Rocket",
     title: "Scale without limits",
     body: "Stateless execution, queues, and parallelism to scale with your needs.",
-    accent: "#5b8bff",
+    accent: "#42a5f5",
   },
 ];
 
-// Hub satellites — real node categories around the core.
+// Hub satellites â€” real node categories around the core.
 const SAT_TOP = {
   label: "Database",
   icon: nodeOf("store.postgres").icon,
@@ -113,29 +113,29 @@ export function RuntimeHubSection() {
 
   return (
     <section className="relative overflow-hidden border-t border-border">
-      {/* Ambient — grid texture + two restrained radials. */}
+      {/* Ambient â€” grid texture + two restrained radials. */}
       <div className="grid-overlay pointer-events-none absolute inset-0 opacity-60" aria-hidden />
       <div
         className="pointer-events-none absolute left-1/2 top-24 h-[540px] w-[880px] max-w-full -translate-x-1/2 rounded-full opacity-70 blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.14), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.14), transparent 70%)" }}
         aria-hidden
       />
       <div
         className="pointer-events-none absolute bottom-40 left-1/2 h-[380px] w-[680px] max-w-full -translate-x-1/2 rounded-full opacity-50 blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.1), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.08), transparent 70%)" }}
         aria-hidden
       />
 
       <div className="relative mx-auto max-w-7xl px-5 py-24 lg:px-8 lg:py-32">
-        {/* ── 1. Demo pipeline (real node types) ─────────────────────── */}
+        {/* â”€â”€ 1. Demo pipeline (real node types) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <BlurReveal className="mx-auto max-w-3xl">
           <FlowChain nodes={DEMO_PIPELINE} />
           <p className="mt-3 text-center text-[10px] text-fg-subtle">
-            Demo pipeline — real node types from the library, not live execution data.
+            Demo pipeline â€” real node types from the library, not live execution data.
           </p>
         </BlurReveal>
 
-        {/* ── 2. Heading block ──────────────────────────────────────── */}
+        {/* â”€â”€ 2. Heading block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <BlurReveal delay={0.08} className="mx-auto mt-20 max-w-3xl text-center">
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-gradient-to-r from-transparent to-brand/60" aria-hidden />
@@ -156,9 +156,9 @@ export function RuntimeHubSection() {
           </p>
         </BlurReveal>
 
-        {/* ── 3. Hub + callouts ─────────────────────────────────────── */}
+        {/* â”€â”€ 3. Hub + callouts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mt-16 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-center lg:gap-6 xl:gap-8">
-          {/* Left callouts — stack on mobile, 2-col on sm, rail on lg */}
+          {/* Left callouts â€” stack on mobile, 2-col on sm, rail on lg */}
           <StaggerContainer
             stagger={0.1}
             className="order-2 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:order-1 lg:flex lg:flex-col lg:justify-center lg:gap-14"
@@ -208,14 +208,14 @@ export function RuntimeHubSection() {
           </StaggerContainer>
         </div>
 
-        {/* ── 4. Connector lines down to the CTA ────────────────────── */}
+        {/* â”€â”€ 4. Connector lines down to the CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <CtaConnectors reduceMotion={Boolean(reduceMotion)} />
 
-        {/* ── 5. CTA ────────────────────────────────────────────────── */}
-        <BlurReveal className="relative overflow-hidden rounded-3xl border border-border mesh-bg p-12 text-center lg:p-20">
+        {/* â”€â”€ 5. CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <BlurReveal className="relative overflow-hidden rounded-2xl border border-border mesh-bg p-12 text-center lg:p-20">
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(124,92,255,0.6), rgba(34,211,238,0.6), transparent)" }}
+            style={{ background: "linear-gradient(90deg, transparent, rgba(33,150,243,0.6), rgba(66,165,245,0.5), transparent)" }}
             aria-hidden
           />
           <div className="relative">
@@ -232,7 +232,7 @@ export function RuntimeHubSection() {
   );
 }
 
-/* ── Feature callout — compact connected system component ─────────────── */
+/* â”€â”€ Feature callout â€” compact connected system component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function Callout({
   data,
@@ -254,7 +254,7 @@ function Callout({
   const isActive = active === calloutKey;
   return (
     <StaggerItem className="relative h-full">
-      {/* Thin connector into the hub — lg+ only, on the hub-facing edge.
+      {/* Thin connector into the hub â€” lg+ only, on the hub-facing edge.
           Anchored to this wrapper so it spans exactly the grid gap. */}
       <span
         aria-hidden
@@ -281,8 +281,8 @@ function Callout({
         onMouseLeave={onLeave}
         className={`h-full rounded-xl border p-4 transition-all duration-300 ${
           isActive
-            ? "border-brand/40 bg-surface-2/80 shadow-[0_0_30px_-10px_rgba(124,92,255,0.55)]"
-            : "border-border bg-surface-2/40 hover:border-border-strong hover:bg-surface-2/70"
+            ? "border-brand/40 bg-surface-2 shadow-[0_0_30px_-10px_rgba(33,150,243,0.5)]"
+            : "border-border bg-surface-2 hover:border-border-strong hover:bg-surface-3"
         }`}
       >
         <div className="flex items-start gap-3">
@@ -306,7 +306,7 @@ function Callout({
   );
 }
 
-/* ── Central orchestration hub ─────────────────────────────────────────── */
+/* â”€â”€ Central orchestration hub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function Hub({ active, reduceMotion }: { active: boolean; reduceMotion: boolean }) {
   return (
@@ -321,14 +321,14 @@ function Hub({ active, reduceMotion }: { active: boolean; reduceMotion: boolean 
         aria-hidden
       />
 
-      {/* Breathing halo — the runtime "alive" glow. */}
+      {/* Breathing halo â€” the runtime "alive" glow. */}
       <div
         className={`hub-breathe absolute inset-[27%] rounded-full blur-2xl transition-opacity duration-500 ${
           active ? "opacity-100" : "opacity-70"
         }`}
         style={{
           background:
-            "radial-gradient(circle, rgba(124,92,255,0.32), rgba(34,211,238,0.12) 55%, transparent 75%)",
+            "radial-gradient(circle, rgba(33,150,243,0.28), rgba(66,165,245,0.1) 55%, transparent 75%)",
         }}
         aria-hidden
       />
@@ -339,30 +339,30 @@ function Hub({ active, reduceMotion }: { active: boolean; reduceMotion: boolean 
 
       {/* Satellites */}
       <span
-        className="absolute left-1/2 top-0 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-surface-2/80 px-2.5 py-1.5 text-[10px] text-fg-muted"
+        className="absolute left-1/2 top-0 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-1.5 text-[10px] text-fg-muted"
         aria-hidden
       >
         <Icon name={SAT_TOP.icon} className="h-3 w-3" style={{ color: SAT_TOP.color }} />
         {SAT_TOP.label}
       </span>
       <span
-        className="absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-surface-2/80 px-2.5 py-1.5 text-[10px] text-fg-muted"
+        className="absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-1.5 text-[10px] text-fg-muted"
         aria-hidden
       >
         <Icon name={SAT_BOTTOM.icon} className="h-3 w-3" style={{ color: SAT_BOTTOM.color }} />
         {SAT_BOTTOM.label}
       </span>
 
-      {/* Core — layered hexagon, gradient hairline border via clip-path. */}
+      {/* Core â€” layered hexagon, gradient hairline border via clip-path. */}
       <div
         className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-500 ${
           active ? "scale-[1.04]" : ""
         }`}
       >
-        <div className="hub-hex bg-gradient-to-br from-brand/70 via-ai/40 to-brand-2/60 p-px shadow-[0_0_60px_-12px_rgba(124,92,255,0.6)]">
+        <div className="hub-hex bg-gradient-to-br from-brand/70 via-ai/40 to-brand-2/60 p-px shadow-[0_0_60px_-12px_rgba(33,150,243,0.5)]">
           <div className="hub-hex grid h-28 w-28 place-items-center bg-surface-2 sm:h-32 sm:w-32">
             <div className="flex flex-col items-center gap-1.5">
-              <span className="grid h-10 w-10 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_20px_-4px_rgba(124,92,255,0.7)]">
+              <span className="grid h-10 w-10 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_20px_-4px_rgba(33,150,243,0.55)]">
                 <Icon name="Workflow" className="h-5 w-5" />
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-widest">AgentFlow</span>
@@ -404,7 +404,7 @@ function HubLine({
   );
 }
 
-/* ── Flowing connectors between hub and CTA ────────────────────────────── */
+/* â”€â”€ Flowing connectors between hub and CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function CtaConnectors({ reduceMotion }: { reduceMotion: boolean }) {
   return (
@@ -417,23 +417,23 @@ function CtaConnectors({ reduceMotion }: { reduceMotion: boolean }) {
     >
       <defs>
         <linearGradient id="rh-cta-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#7c5cff" />
-          <stop offset="100%" stopColor="#22d3ee" />
+          <stop offset="0%" stopColor="#2196f3" />
+          <stop offset="100%" stopColor="#42a5f5" />
         </linearGradient>
       </defs>
       {/* Center drop + two side curves into the CTA panel. */}
       <path d="M400 4 L400 106" stroke="url(#rh-cta-grad)" strokeOpacity="0.45" strokeWidth="1.2" />
-      <path d="M170 8 C260 44 330 70 356 106" stroke="#7c5cff" strokeOpacity="0.3" strokeWidth="1" />
-      <path d="M630 8 C540 44 470 70 444 106" stroke="#22d3ee" strokeOpacity="0.3" strokeWidth="1" />
+      <path d="M170 8 C260 44 330 70 356 106" stroke="#2196f3" strokeOpacity="0.3" strokeWidth="1" />
+      <path d="M630 8 C540 44 470 70 444 106" stroke="#42a5f5" strokeOpacity="0.3" strokeWidth="1" />
       {!reduceMotion && (
         <>
-          <circle r="2" fill="#7c5cff" opacity="0.9">
+          <circle r="2" fill="#2196f3" opacity="0.9">
             <animateMotion dur="3.2s" repeatCount="indefinite" path="M400 4 L400 106" />
           </circle>
-          <circle r="1.6" fill="#a78bfa" opacity="0.8">
+          <circle r="1.6" fill="#64b5f6" opacity="0.8">
             <animateMotion dur="3.8s" begin="0.8s" repeatCount="indefinite" path="M170 8 C260 44 330 70 356 106" />
           </circle>
-          <circle r="1.6" fill="#22d3ee" opacity="0.8">
+          <circle r="1.6" fill="#42a5f5" opacity="0.8">
             <animateMotion dur="3.8s" begin="1.6s" repeatCount="indefinite" path="M630 8 C540 44 470 70 444 106" />
           </circle>
         </>

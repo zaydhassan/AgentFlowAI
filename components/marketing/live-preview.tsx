@@ -8,7 +8,7 @@ const LiveDashboard = dynamic(
   () => import("./live-dashboard").then((m) => m.LiveDashboard),
   {
     ssr: false,
-    loading: () => <div className="h-[460px] rounded-2xl surface-premium" />,
+    loading: () => <div className="h-[460px] rounded-xl surface-premium" />,
   }
 );
 
@@ -21,7 +21,7 @@ export function LivePreview() {
       {inView ? (
         <LiveDashboard />
       ) : (
-        <div className="h-[460px] rounded-2xl surface-premium" />
+        <div className="h-[460px] rounded-xl surface-premium" />
       )}
     </div>
   );

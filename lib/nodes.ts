@@ -1,4 +1,4 @@
-import type { NodeDef, ConfigField } from "./types";
+﻿import type { NodeDef, ConfigField } from "./types";
 
 const f = (
   key: string,
@@ -9,7 +9,7 @@ const f = (
 
 // Long-term memory config appended to every AI node. Opt-in: useMemory defaults
 // off so existing workflows are unchanged. The execution engine gates the
-// retrieve→inject→generate→store branch on config.useMemory === true.
+// retrieveâ†’injectâ†’generateâ†’store branch on config.useMemory === true.
 const MEMORY_FIELDS: ConfigField[] = [
   f("useMemory", "Use memory", "boolean", { default: false, help: "Retrieve relevant long-term memories before generating, then store this exchange." }),
   f("memoryScope", "Memory scope", "select", { options: [
@@ -31,7 +31,7 @@ const MEMORY_FIELDS: ConfigField[] = [
 export const NODE_LIBRARY: NodeDef[] = [
   {
     type: "trigger.schedule", label: "Schedule", category: "scheduling",
-    description: "Run on a cron schedule", icon: "Clock", color: "#f472b6", inputs: 0, outputs: 1,
+    description: "Run on a cron schedule", icon: "Clock", color: "#8B98A8", inputs: 0, outputs: 1,
     defaultConfig: { cron: "0 9 * * *" },
     configSchema: [
       f("cron", "Cron expression", "text", { required: true, default: "0 9 * * *", placeholder: "0 9 * * *", help: "Standard 5-field cron (min hour dom month dow)" }),
@@ -40,7 +40,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "trigger.webhook", label: "Webhook", category: "scheduling",
-    description: "Start on an incoming HTTP webhook", icon: "Webhook", color: "#f472b6", inputs: 0, outputs: 1,
+    description: "Start on an incoming HTTP webhook", icon: "Webhook", color: "#8B98A8", inputs: 0, outputs: 1,
     configSchema: [
       f("method", "Method", "select", { options: ["GET", "POST", "PUT", "DELETE"].map((v) => ({ label: v, value: v })), default: "POST" }),
       f("path", "Path", "text", { default: "/hook", placeholder: "/incoming" }),
@@ -49,19 +49,19 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "trigger.manual", label: "Manual", category: "scheduling",
-    description: "Run on demand", icon: "Play", color: "#f472b6", inputs: 0, outputs: 1,
+    description: "Run on demand", icon: "Play", color: "#8B98A8", inputs: 0, outputs: 1,
     configSchema: [f("payload", "Run payload (JSON)", "code", { default: "{}" })],
   },
   {
     type: "trigger.event", label: "Event", category: "scheduling",
-    description: "React to a platform event", icon: "Zap", color: "#f472b6", inputs: 0, outputs: 1,
+    description: "React to a platform event", icon: "Zap", color: "#8B98A8", inputs: 0, outputs: 1,
     configSchema: [
       f("event", "Event name", "select", { options: ["workflow.completed", "workflow.failed", "node.error", "manual"].map((v) => ({ label: v, value: v })) }),
     ],
   },
   {
     type: "trigger.interval", label: "Interval", category: "scheduling",
-    description: "Run every N seconds", icon: "Repeat", color: "#f472b6", inputs: 0, outputs: 1,
+    description: "Run every N seconds", icon: "Repeat", color: "#8B98A8", inputs: 0, outputs: 1,
     defaultConfig: { seconds: 300 },
     configSchema: [f("seconds", "Interval (seconds)", "number", { required: true, default: 300 })],
   },
@@ -69,14 +69,14 @@ export const NODE_LIBRARY: NodeDef[] = [
   // Real OAuth-backed Gmail nodes. Each action node resolves the connected
   // account from `accountId` (the inspector renders an `account` dropdown that
   // fetches /api/integrations/accounts?provider=gmail). Message-id fields fall
-  // back to the upstream node's output (so Search/New Email/Read → Reply/
+  // back to the upstream node's output (so Search/New Email/Read â†’ Reply/
   // Forward/Label chain without config). See lib/integrations/providers/gmail.
   {
     type: "gmail.trigger.newEmail", label: "New Email", category: "gmail",
     description: "Start when a new email arrives (polling)", icon: "Inbox", color: "#ea4335", inputs: 0, outputs: 1,
     defaultConfig: { query: "is:unread", maxResults: 10 },
     configSchema: [
-      f("accountId", "Gmail account", "account", { provider: "gmail", required: true, help: "Connect an account in Settings → Integrations" }),
+      f("accountId", "Gmail account", "account", { provider: "gmail", required: true, help: "Connect an account in Settings â†’ Integrations" }),
       f("query", "Search query", "text", { default: "is:unread", help: "Gmail search; polled for messages newer than the last run" }),
       f("maxResults", "Max results", "number", { default: 10 }),
     ],
@@ -191,13 +191,13 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "comm.slack", label: "Slack", category: "communication",
-    description: "Post to Slack channels", icon: "MessageSquare", color: "#a855f7", inputs: 1, outputs: 1,
+    description: "Post to Slack channels", icon: "MessageSquare", color: "#42A5F5", inputs: 1, outputs: 1,
     defaultConfig: { channel: "#general" },
     configSchema: [f("channel", "Channel", "text", { required: true, default: "#general" }), f("message", "Message", "textarea", { required: true })],
   },
   {
     type: "comm.discord", label: "Discord", category: "communication",
-    description: "Send Discord messages", icon: "MessagesSquare", color: "#6366f1", inputs: 1, outputs: 1,
+    description: "Send Discord messages", icon: "MessagesSquare", color: "#64B5F6", inputs: 1, outputs: 1,
     configSchema: [f("webhookUrl", "Webhook URL", "secret", { required: true }), f("message", "Message", "textarea", { required: true })],
   },
   {
@@ -252,12 +252,12 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "ai.prompt", label: "Prompt", category: "ai",
-    description: "Templated prompt node", icon: "PenLine", color: "#8b5cf6", inputs: 1, outputs: 1,
+    description: "Templated prompt node", icon: "PenLine", color: "#64B5F6", inputs: 1, outputs: 1,
     configSchema: [f("template", "Prompt template", "code", { required: true, default: "Summarize: {{input}}" }), f("variables", "Variables (JSON)", "code", { default: "{}" }), ...MEMORY_FIELDS],
   },
   {
     type: "ai.agent", label: "AI Agent", category: "ai",
-    description: "Autonomous agent with tools", icon: "Bot", color: "#7c5cff", inputs: 1, outputs: 1,
+    description: "Autonomous agent with tools", icon: "Bot", color: "#2196F3", inputs: 1, outputs: 1,
     metrics: { tokens: true, cost: true },
     configSchema: [
       f("goal", "Goal", "textarea", { required: true }),
@@ -268,12 +268,12 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "ai.multiAgent", label: "Multi-Agent", category: "ai",
-    description: "Orchestrate the LangGraph multi-agent runtime (planner → workers → reviewer → executor)", icon: "Users", color: "#7c5cff", inputs: 1, outputs: 1,
+    description: "Orchestrate the LangGraph multi-agent runtime (planner â†’ workers â†’ reviewer â†’ executor)", icon: "Users", color: "#2196F3", inputs: 1, outputs: 1,
     metrics: { tokens: true, cost: true },
     defaultConfig: { objective: "", maxIterations: 2, requireApproval: false, memoryScope: "long_term", timeoutMs: 120000, guidance: "" },
     configSchema: [
       f("objective", "Objective", "textarea", { required: true, help: "What the agent team should accomplish. Leave blank to use the upstream node's output as the objective." }),
-      f("maxIterations", "Max revision loops", "number", { default: 2, help: "Planner↔reviewer revision rounds before forcing completion." }),
+      f("maxIterations", "Max revision loops", "number", { default: 2, help: "Plannerâ†”reviewer revision rounds before forcing completion." }),
       f("timeoutMs", "Timeout (ms)", "number", { default: 120000 }),
       f("requireApproval", "Require human approval", "boolean", { default: false, help: "Pause for operator sign-off before the reviewer (LangGraph checkpoint)." }),
       f("guidance", "Guidance", "textarea", { help: "Extra instructions prepended to every agent's prompt." }),
@@ -290,7 +290,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "ai.router", label: "AI Router", category: "ai",
-    description: "Route to the best model per task", icon: "Route", color: "#22d3ee", inputs: 1, outputs: 4,
+    description: "Route to the best model per task", icon: "Route", color: "#64B5F6", inputs: 1, outputs: 4,
     metrics: { tokens: true, cost: true },
     configSchema: [f("strategy", "Strategy", "select", { options: [{ label: "Cost/quality", value: "balanced" }, { label: "Cheapest", value: "cost" }, { label: "Highest quality", value: "quality" }], default: "balanced" }), ...MEMORY_FIELDS],
   },
@@ -313,17 +313,17 @@ export const NODE_LIBRARY: NodeDef[] = [
 
   {
     type: "ai.rag", label: "RAG Retrieve", category: "rag",
-    description: "Retrieval over your documents", icon: "Library", color: "#14b8a6", inputs: 1, outputs: 1,
+    description: "Retrieval over your documents", icon: "Library", color: "#90CAF9", inputs: 1, outputs: 1,
     configSchema: [f("index", "Index", "text", { required: true, default: "knowledge" }), f("query", "Query", "textarea", { required: true }), f("topK", "Top K", "number", { default: 4 })],
   },
   {
     type: "rag.embed", label: "Embed", category: "rag",
-    description: "Embed text into a vector index", icon: "Boxes", color: "#14b8a6", inputs: 1, outputs: 1,
+    description: "Embed text into a vector index", icon: "Boxes", color: "#90CAF9", inputs: 1, outputs: 1,
     configSchema: [f("index", "Index", "text", { required: true, default: "knowledge" }), f("model", "Embedding model", "text", { default: "text-embedding-3-small" })],
   },
   {
     type: "rag.index", label: "Index Source", category: "rag",
-    description: "Ingest a file or URL into an index", icon: "FileInput", color: "#14b8a6", inputs: 1, outputs: 1,
+    description: "Ingest a file or URL into an index", icon: "FileInput", color: "#90CAF9", inputs: 1, outputs: 1,
     configSchema: [f("index", "Index", "text", { required: true, default: "knowledge" }), f("source", "Source URL / path", "text", { required: true }), f("chunkSize", "Chunk size", "number", { default: 800 })],
   },
 
@@ -382,7 +382,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "doc.ocr", label: "OCR", category: "files",
-    description: "Extract text from images", icon: "ScanText", color: "#a855f7", inputs: 1, outputs: 1,
+    description: "Extract text from images", icon: "ScanText", color: "#42A5F5", inputs: 1, outputs: 1,
     configSchema: [f("engine", "Engine", "select", { options: ["tesseract", "google-vision", "aws-textract"].map((v) => ({ label: v, value: v })) }), f("image", "Image path / URL", "text", { required: true })],
   },
 
@@ -458,7 +458,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "dev.webhook", label: "Webhook Out", category: "developer",
-    description: "Send an outbound webhook", icon: "Webhook", color: "#f472b6", inputs: 1, outputs: 1,
+    description: "Send an outbound webhook", icon: "Webhook", color: "#8B98A8", inputs: 1, outputs: 1,
     configSchema: [f("url", "URL", "text", { required: true }), f("secret", "Signing secret", "secret")],
   },
   {
@@ -480,7 +480,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   {
     type: "util.condition", label: "Condition", category: "logic",
     description: "If / then branching", icon: "GitBranch", color: "#f59e0b", inputs: 1, outputs: 2,
-    configSchema: [f("expression", "Condition (JS)", "code", { required: true, default: "input.value > 0", help: "Truthy → output 1, falsy → output 2" })],
+    configSchema: [f("expression", "Condition (JS)", "code", { required: true, default: "input.value > 0", help: "Truthy â†’ output 1, falsy â†’ output 2" })],
   },
   {
     type: "util.switch", label: "Switch", category: "logic",
@@ -516,7 +516,7 @@ export const NODE_LIBRARY: NodeDef[] = [
   },
   {
     type: "util.transform", label: "Transform", category: "utilities",
-    description: "Map / reshape data", icon: "Wand2", color: "#8b5cf6", inputs: 1, outputs: 1,
+    description: "Map / reshape data", icon: "Wand2", color: "#64B5F6", inputs: 1, outputs: 1,
     configSchema: [f("expression", "Transform (JS)", "code", { required: true, default: "return { ...input, ok: true }" })],
   },
   {
@@ -530,41 +530,41 @@ export const NODE_LIBRARY: NodeDef[] = [
   // tool/resource dropdown in the inspector (components/workflow/inspector.tsx).
   {
     type: "mcp.tool", label: "MCP Tool", category: "mcp",
-    description: "Invoke a tool from a connected MCP server (discovered dynamically via the Model Context Protocol).", icon: "Plug", color: "#8b5cf6", inputs: 1, outputs: 1,
+    description: "Invoke a tool from a connected MCP server (discovered dynamically via the Model Context Protocol).", icon: "Plug", color: "#64B5F6", inputs: 1, outputs: 1,
     metrics: { tokens: true, cost: true },
     defaultConfig: { tool: "", arguments: "{}", timeoutMs: 30000 },
     configSchema: [
-      f("tool", "Tool", "mcp.tool", { required: true, help: "Pick a tool discovered from your connected MCP servers (Settings → MCP). Register a server and run Discover first." }),
+      f("tool", "Tool", "mcp.tool", { required: true, help: "Pick a tool discovered from your connected MCP servers (Settings â†’ MCP). Register a server and run Discover first." }),
       f("arguments", "Arguments (JSON)", "code", { default: "{}", help: "JSON object passed as the tool's input arguments, per its schema." }),
       f("timeoutMs", "Timeout (ms)", "number", { default: 30000, help: "Per-call timeout. Long-running tools that emit progress reset the timer." }),
     ],
   },
   {
     type: "mcp.resource", label: "MCP Resource", category: "mcp",
-    description: "Read a resource (file, data, template) exposed by a connected MCP server.", icon: "FileInput", color: "#8b5cf6", inputs: 1, outputs: 1,
+    description: "Read a resource (file, data, template) exposed by a connected MCP server.", icon: "FileInput", color: "#64B5F6", inputs: 1, outputs: 1,
     defaultConfig: { resource: "", arguments: "{}" },
     configSchema: [
       f("resource", "Resource", "mcp.resource", { required: true, help: "Pick a resource discovered from your connected MCP servers." }),
-      f("arguments", "Arguments (JSON)", "code", { default: "{}", help: "JSON object — for resource templates, used to fill the URI template variables." }),
+      f("arguments", "Arguments (JSON)", "code", { default: "{}", help: "JSON object â€” for resource templates, used to fill the URI template variables." }),
     ],
   },
 ];
 
 export const CATEGORY_META: Record<NodeDef["category"], { label: string; color: string; icon: string }> = {
-  ai: { label: "AI", color: "#7c5cff", icon: "Sparkles" },
-  communication: { label: "Communication", color: "#a855f7", icon: "MessageSquare" },
+  ai: { label: "AI", color: "#2196F3", icon: "Sparkles" },
+  communication: { label: "Communication", color: "#42A5F5", icon: "MessageSquare" },
   gmail: { label: "Gmail", color: "#ea4335", icon: "Mail" },
   database: { label: "Database", color: "#10b981", icon: "Database" },
   logic: { label: "Logic", color: "#f59e0b", icon: "GitBranch" },
   files: { label: "Files", color: "#0ea5e9", icon: "FileText" },
   cloud: { label: "Cloud", color: "#ff9900", icon: "Cloud" },
-  integrations: { label: "Integrations", color: "#22d3ee", icon: "Blocks" },
+  integrations: { label: "Integrations", color: "#42A5F5", icon: "Blocks" },
   developer: { label: "Developer", color: "#eab308", icon: "Code" },
   utilities: { label: "Utilities", color: "#64748b", icon: "Wrench" },
-  scheduling: { label: "Scheduling", color: "#f472b6", icon: "Clock" },
+  scheduling: { label: "Scheduling", color: "#8B98A8", icon: "Clock" },
   memory: { label: "Memory", color: "#f59e0b", icon: "Brain" },
-  rag: { label: "RAG", color: "#14b8a6", icon: "Library" },
-  mcp: { label: "MCP", color: "#8b5cf6", icon: "Plug" },
+  rag: { label: "RAG", color: "#90CAF9", icon: "Library" },
+  mcp: { label: "MCP", color: "#64B5F6", icon: "Plug" },
 };
 
 // Display order for the palette (matches the brief).
@@ -574,7 +574,7 @@ export const CATEGORY_ORDER: NodeDef["category"][] = [
 ];
 
 // In-process TTL memo for node-definition lookups. Node defs are static module
-// data, so this is a cheap synchronous memoization (not a Redis round-trip —
+// data, so this is a cheap synchronous memoization (not a Redis round-trip â€”
 // the call sites in the builder/inspector are synchronous and can't await the
 // async CacheProvider). The TTL lets dev edits surface without a full process
 // restart. The dynamic caches (memory retrievals, workflow metadata, MCP tool

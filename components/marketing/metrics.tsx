@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRef, type CSSProperties } from "react";
 import { motion, useInView } from "framer-motion";
@@ -16,28 +16,28 @@ type Capability = {
 const CAPABILITIES: Capability[] = [
   {
     icon: "Blocks",
-    accent: "#7c5cff",
+    accent: "#2196f3",
     headline: { kind: "count", value: 60, suffix: "+" },
     label: "Workflow Nodes",
     desc: "Visual AI, Logic, Memory, MCP and Integration nodes.",
   },
   {
     icon: "Plug",
-    accent: "#22d3ee",
+    accent: "#42a5f5",
     headline: { kind: "count", value: 200, suffix: "+" },
     label: "Integrations",
     desc: "Connect Gmail, Slack, GitHub, Notion, APIs and more.",
   },
   {
     icon: "BrainCircuit",
-    accent: "#5b8bff",
+    accent: "#2196f3",
     headline: { kind: "text", value: "Persistent" },
     label: "Memory Engine",
     desc: "Long-term semantic memory, RAG and context retrieval.",
   },
   {
     icon: "Network",
-    accent: "#34d399",
+    accent: "#42a5f5",
     headline: { kind: "text", value: "Multi-Agent" },
     label: "Runtime",
     desc: "Planner, Research, Reasoning, Reviewer & Executor.",

@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// Grid view — category "capability modules" with real node counts, per-node
+// Grid view â€” category "capability modules" with real node counts, per-node
 // hover detail popover, and drag affordances (the same `application/
 // agentflow-node` MIME type the workflow builder's palette consumes).
 
@@ -48,7 +48,7 @@ export function NodeLibraryGrid({
         <Icon name="SearchX" className="mx-auto h-6 w-6 text-fg-subtle" />
         <p className="mt-3 text-sm text-fg-muted">No nodes match your search.</p>
         <p className="mt-1 text-xs text-fg-subtle">
-          Try a provider, tool, or capability — e.g. &ldquo;email&rdquo;, &ldquo;SQL&rdquo; or &ldquo;model&rdquo;.
+          Try a provider, tool, or capability â€” e.g. &ldquo;email&rdquo;, &ldquo;SQL&rdquo; or &ldquo;model&rdquo;.
         </p>
       </div>
     );
@@ -115,10 +115,10 @@ function CategoryModule({
   const hiddenCount = nodes.length - preview.length;
 
   return (
-    // .nl-module — like .metric-card, but lets the detail popover escape the
+    // .nl-module â€” like .metric-card, but lets the detail popover escape the
     // card (metric-card clips overflow).
     <div className="nl-module h-full rounded-xl p-5" style={{ ["--glow" as string]: meta.color }}>
-      {/* Subtle category illustration — a small icon constellation tinted with
+      {/* Subtle category illustration â€” a small icon constellation tinted with
           the category color, echoing the palette. */}
       <div className="pointer-events-none absolute -right-3 -top-3 select-none" aria-hidden>
         {[nodes[0], nodes[Math.min(1, nodes.length - 1)], nodes[nodes.length - 1]].map((n, i) => (
@@ -202,19 +202,19 @@ function NodePill({ node, ctaHref }: { node: NodeDef; ctaHref: string }) {
         href={ctaHref}
         draggable
         onDragStart={(e) => {
-          // Same MIME type the builder's canvas drop handler reads — the drag
+          // Same MIME type the builder's canvas drop handler reads â€” the drag
           // gesture mirrors the in-app palette.
           e.dataTransfer.setData("application/agentflow-node", node.type);
           e.dataTransfer.effectAllowed = "copy";
         }}
         className="node-pill inline-flex cursor-grab items-center gap-1.5 rounded-lg border border-border bg-surface-2/60 px-2.5 py-1.5 text-[11px] text-fg-muted transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-3/70 hover:text-fg focus-ring active:cursor-grabbing"
-        title={`${node.label} — ${node.description}`}
+        title={`${node.label} â€” ${node.description}`}
       >
         <Icon name={node.icon} className="h-3 w-3 shrink-0" style={{ color: node.color }} />
         <span className="whitespace-nowrap">{node.label}</span>
       </Link>
 
-      {/* Detail popover — hover/focus only (≥sm); touch users tap through to
+      {/* Detail popover â€” hover/focus only (â‰¥sm); touch users tap through to
           the dashboard where the full inspector exists. */}
       <div
         role="tooltip"

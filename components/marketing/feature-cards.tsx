@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { StaggerContainer, StaggerItem } from "@/components/marketing/motion";
@@ -19,10 +19,10 @@ const FEATURES: Feature[] = [
     icon: "Workflow",
     category: "Builder",
     title: "AI Workflows",
-    desc: "Compose autonomous agents on a visual canvas that reasons over every step — not just at the end.",
+    desc: "Compose autonomous agents on a visual canvas that reasons over every step â€” not just at the end.",
     bullets: ["Drag-and-drop canvas", "Natural-language build", "Reusable templates"],
     href: "/workflows",
-    accent: "#7c5cff",
+    accent: "#2196f3",
   },
   {
     icon: "Brain",
@@ -31,7 +31,7 @@ const FEATURES: Feature[] = [
     desc: "Long-term vector memory that persists across runs, users, and sessions for true continuity.",
     bullets: ["Long-term vector memory", "Per-user & per-run context", "Semantic recall"],
     href: "/ai/memory",
-    accent: "#22d3ee",
+    accent: "#2196f3",
   },
   {
     icon: "Bot",
@@ -40,7 +40,7 @@ const FEATURES: Feature[] = [
     desc: "Run parallel agents with role-based orchestration and transparent reasoning traces.",
     bullets: ["Parallel agent execution", "Role-based orchestration", "Transparent reasoning"],
     href: "/ai/agents",
-    accent: "#5b8bff",
+    accent: "#2196f3",
   },
   {
     icon: "Boxes",
@@ -49,16 +49,16 @@ const FEATURES: Feature[] = [
     desc: "Connect anything out of the box, or build your own nodes with the SDK.",
     bullets: ["200+ prebuilt nodes", "Custom node SDK", "OAuth + webhooks"],
     href: "/marketplace",
-    accent: "#34d399",
+    accent: "#2196f3",
   },
   {
     icon: "ShieldCheck",
     category: "Trust",
     title: "Enterprise Security",
-    desc: "SOC 2-aligned controls, RBAC, audit logs, and SSO — enterprise-grade by default.",
+    desc: "SOC 2-aligned controls, RBAC, audit logs, and SSO â€” enterprise-grade by default.",
     bullets: ["SOC 2 controls", "RBAC + audit logs", "SSO / SAML ready"],
     href: "/security",
-    accent: "#fbbf24",
+    accent: "#2196f3",
   },
   {
     icon: "Wrench",
@@ -67,7 +67,7 @@ const FEATURES: Feature[] = [
     desc: "Native Model Context Protocol support with dynamic tool discovery and standard calls.",
     bullets: ["Model Context Protocol", "Dynamic tool discovery", "Standard tool calls"],
     href: "/docs",
-    accent: "#a855f7",
+    accent: "#2196f3",
   },
 ];
 
@@ -79,7 +79,7 @@ export function FeatureCards() {
     >
       {FEATURES.map((f) => (
         <StaggerItem key={f.title} className="h-full">
-          <div className="surface-premium feature-card group h-full rounded-2xl p-6">
+          <div className="surface-premium feature-card group h-full rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div
                 className="feature-icon grid h-11 w-11 place-items-center rounded-xl"

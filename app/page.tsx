@@ -31,7 +31,7 @@ export default async function LandingPage() {
             <HeroFade y={12} duration={0.5}>
               <Badge
                 tone="brand"
-                className="lg:mx-0 mx-auto bg-surface-2/80 text-brand backdrop-blur-sm border-brand/40 shadow-[0_0_24px_-6px_rgba(124,92,255,0.55)]"
+                className="lg:mx-0 mx-auto bg-surface-2 text-brand border-brand/40 shadow-[0_0_24px_-6px_rgba(33,150,243,0.45)]"
               >
                 <span className="dot dot-live bg-brand mr-1.5" />
                 The AI-Native Automation Platform
@@ -40,32 +40,30 @@ export default async function LandingPage() {
 
             <HeroFade y={16} duration={0.6} delay={0.08}>
               <h1 className="mt-7 text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl xl:text-6xl">
-                Build, Deploy &amp; Scale
+                Build AI Agents
                 <br />
-                Autonomous <span className="text-anim-gradient">AI Agents</span>
-                <br />
-                Without Limits.
+                for <span className="text-brand">Real Work.</span>
               </h1>
             </HeroFade>
 
             <HeroFade y={16} duration={0.6} delay={0.16}>
               <p className="mx-auto lg:mx-0 mt-7 max-w-xl text-pretty text-lg text-fg-muted">
-                AgentFlow AI is the AI-native automation platform for building, deploying, and scaling
-                autonomous agents that think, remember, and self-heal — without writing glue code or
-                managing infrastructure.
+                Build, connect, and deploy AI agents that automate real-world workflows —
+                from triggers and tools to actions, without writing glue code or managing
+                infrastructure.
               </p>
             </HeroFade>
 
             <HeroFade y={16} duration={0.6} delay={0.24}>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
                 <Link href={dashboardHref} className="w-full sm:w-auto">
-                  <Button size="lg" variant="ai" className="btn-shine w-full sm:w-auto">
-                    <Icon name="Sparkles" className="h-4 w-4" /> Start Building Free
+                  <Button size="lg" variant="primary" className="w-full sm:w-auto">
+                    <Icon name="ArrowRight" className="h-4 w-4" /> Start Building Free
                   </Button>
                 </Link>
                 <Link href="/contact" className="w-full sm:w-auto">
-                  <Button size="lg" variant="secondary" className="btn-shine w-full sm:w-auto">
-                    <Icon name="Calendar" className="h-4 w-4" /> Book Demo
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                    <Icon name="PlayCircle" className="h-4 w-4" /> Watch Demo
                   </Button>
                 </Link>
               </div>

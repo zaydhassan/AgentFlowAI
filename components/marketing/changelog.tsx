@@ -28,7 +28,7 @@ export type ReleaseEntry = {
   notes: ReleaseNote[];
 };
 
-// Header tag → badge tone: Released purple, Improved cyan, Fixed green.
+// Header tag → badge tone (brand blue, ai blue, semantic green).
 const TAG_TONES = { Released: "brand", Improved: "ai", Fixed: "success" } as const;
 
 // Row badge tone + contextual row icon per note kind.
@@ -44,13 +44,13 @@ const NOTE_META: Record<ReleaseNote["kind"], { tone: "brand" | "ai" | "success";
 const ACCENTS = {
   brand: {
     marker:
-      "border-brand/40 bg-brand/10 text-brand shadow-[0_0_18px_-4px_rgba(124,92,255,0.8)] group-hover/release:border-brand/60",
+      "border-brand/40 bg-brand/10 text-brand shadow-[0_0_18px_-4px_rgba(33,150,243,0.55)] group-hover/release:border-brand/60",
     bar: "bg-gradient-to-b from-brand via-brand/50 to-transparent",
     rowIcon: "group-hover/note:text-brand",
   },
   ai: {
     marker:
-      "border-ai/40 bg-ai/10 text-ai shadow-[0_0_18px_-4px_rgba(34,211,238,0.8)] group-hover/release:border-ai/60",
+      "border-ai/40 bg-ai/10 text-ai shadow-[0_0_18px_-4px_rgba(66,165,245,0.55)] group-hover/release:border-ai/60",
     bar: "bg-gradient-to-b from-ai via-ai/50 to-transparent",
     rowIcon: "group-hover/note:text-ai",
   },
@@ -89,7 +89,7 @@ function ReleaseItem({ entry }: { entry: ReleaseEntry }) {
         <span
           data-accent={entry.accent}
           className={cn(
-            "relative grid h-11 w-11 place-items-center rounded-xl border backdrop-blur-sm transition-all duration-300 group-hover/release-item:scale-110 sm:h-12 sm:w-12",
+            "relative grid h-11 w-11 place-items-center rounded-xl border transition-all duration-300 group-hover/release-item:scale-110 sm:h-12 sm:w-12",
             accent.marker,
           )}
           aria-hidden
@@ -117,8 +117,8 @@ function ReleaseItem({ entry }: { entry: ReleaseEntry }) {
       <StaggerContainer
         stagger={0.06}
         className={cn(
-          "card-hover relative mt-5 overflow-hidden rounded-2xl border bg-surface-2/40 transition-colors duration-300 group-hover/release-item:border-border-strong",
-          entry.latest && "border-brand/30 bg-surface-2/60 shadow-[0_0_48px_-14px_rgba(124,92,255,0.4)]",
+          "card-hover relative mt-5 overflow-hidden rounded-xl border bg-surface-2 transition-colors duration-300 group-hover/release-item:border-border-strong",
+          entry.latest && "border-brand/30 shadow-[0_0_48px_-14px_rgba(33,150,243,0.28)]",
         )}
       >
         {/* Left accent bar */}
@@ -157,16 +157,16 @@ function ReleaseItem({ entry }: { entry: ReleaseEntry }) {
 export function RoadmapCTA() {
   return (
     <BlurReveal className="mt-14">
-      <div className="mx-auto w-full rounded-2xl bg-gradient-to-r from-brand/40 via-border to-ai/40 p-px">
-        <div className="relative overflow-hidden rounded-[calc(1rem-1px)] bg-surface/90 px-6 py-7 sm:px-8">
+      <div className="mx-auto w-full rounded-xl bg-gradient-to-r from-brand/40 via-border to-ai/40 p-px">
+        <div className="relative overflow-hidden rounded-[calc(0.625rem-1px)] bg-surface px-6 py-7 sm:px-8">
           <div
             className="pointer-events-none absolute -left-16 top-0 h-full w-56 rounded-full opacity-40 blur-3xl"
-            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.3), transparent 70%)" }}
+            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.22), transparent 70%)" }}
             aria-hidden
           />
           <div
             className="pointer-events-none absolute -right-16 bottom-0 h-full w-56 rounded-full opacity-30 blur-3xl"
-            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.25), transparent 70%)" }}
+            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.18), transparent 70%)" }}
             aria-hidden
           />
 
@@ -179,7 +179,7 @@ export function RoadmapCTA() {
                 style={{ animationDirection: "reverse", animationDuration: "34s" }}
               />
               <span
-                className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(124,92,255,0.7)]"
+                className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(33,150,243,0.5)]"
               >
                 <Icon name="FileSearch" className="h-5 w-5" />
               </span>
@@ -197,9 +197,9 @@ export function RoadmapCTA() {
             {/* Gradient-border CTA — arrow nudges on hover. */}
             <Link
               href="/about"
-              className="group/cta focus-ring inline-flex shrink-0 rounded-xl bg-gradient-to-r from-brand/60 to-ai/60 p-px transition-shadow duration-300 hover:shadow-[0_0_28px_-6px_rgba(124,92,255,0.7)]"
+              className="group/cta focus-ring inline-flex shrink-0 rounded-xl bg-gradient-to-r from-brand/60 to-ai/60 p-px transition-shadow duration-300 hover:shadow-[0_0_28px_-6px_rgba(33,150,243,0.5)]"
             >
-              <span className="inline-flex items-center gap-2 rounded-[calc(0.75rem-1px)] bg-surface px-4 py-2 text-sm font-medium text-fg transition-colors duration-300 group-hover/cta:bg-surface-2">
+              <span className="inline-flex items-center gap-2 rounded-[calc(0.625rem-1px)] bg-surface px-4 py-2 text-sm font-medium text-fg transition-colors duration-300 group-hover/cta:bg-surface-2">
                 View roadmap
                 <Icon
                   name="ArrowRight"

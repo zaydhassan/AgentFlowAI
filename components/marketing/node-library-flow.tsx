@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
-// Flow view — a miniature AgentFlow canvas mapping how node categories compose:
-// Trigger → Think → Control → Connect. Pure SVG (bezier edges + SMIL traveling
-// pulses, the same technique as HeroWorkflow — no JS animation loops). Hover/
+// Flow view â€” a miniature AgentFlow canvas mapping how node categories compose:
+// Trigger â†’ Think â†’ Control â†’ Connect. Pure SVG (bezier edges + SMIL traveling
+// pulses, the same technique as HeroWorkflow â€” no JS animation loops). Hover/
 // tap a category to trace its connections; reduced-motion users get static
 // connections (particles are not rendered).
 
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const CARD_W = 150;
 const CARD_H = 54;
 
-// Flow layout order — Trigger column, Think column, Control column, Connect.
+// Flow layout order â€” Trigger column, Think column, Control column, Connect.
 const FLOW_CATEGORIES: NodeCategory[] = [
   "scheduling",
   "memory",
@@ -52,13 +52,13 @@ const POSITIONS: Record<NodeCategory, number> = {
   integrations: 464,
 };
 
-// Left x/y for every category — matching FLOW_CATORS order.
+// Left x/y for every category â€” matching FLOW_CATORS order.
 function colOf(cat: NodeCategory): 0 | 1 | 2 | 3 {
   const i = FLOW_CATEGORIES.indexOf(cat);
   return (i < 1 ? 0 : i < 5 ? 1 : i < 8 ? 2 : 3) as 0 | 1 | 2 | 3;
 }
 
-// How categories typically compose on the canvas (source → drains into).
+// How categories typically compose on the canvas (source â†’ drains into).
 const EDGES: [NodeCategory, NodeCategory][] = [
   ["scheduling", "ai"],
   ["memory", "ai"],
@@ -122,7 +122,7 @@ export function NodeLibraryFlow({
     <div className="relative">
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[90%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(91,139,255,0.1), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.08), transparent 70%)" }}
         aria-hidden
       />
       {/* min-w keeps the map legible on phones; the wrapper scrolls, the page
@@ -159,7 +159,7 @@ export function NodeLibraryFlow({
             </text>
           ))}
 
-          {/* Base connectors — color-blended from source to target category. */}
+          {/* Base connectors â€” color-blended from source to target category. */}
           {edgeIndex.map((e) => {
             const lit = focus !== null && (e.a === focus || e.b === focus);
             const dimmed = focus !== null && !lit;
@@ -176,7 +176,7 @@ export function NodeLibraryFlow({
             );
           })}
 
-          {/* Traveling pulses — SMIL, no JS loop. Omitted under
+          {/* Traveling pulses â€” SMIL, no JS loop. Omitted under
               prefers-reduced-motion. */}
           {!reduceMotion &&
             edgeIndex.map((e, i) => (
@@ -211,7 +211,7 @@ export function NodeLibraryFlow({
                   onMouseLeave={() => setFocus((f) => (f === cat ? null : f))}
                   onClick={() => setFocus(cat)}
                   className={cn(
-                    "group relative flex h-full w-full cursor-pointer items-center gap-2 rounded-xl border bg-surface-2/90 px-2.5 text-left backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 focus-ring",
+                    "group relative flex h-full w-full cursor-pointer items-center gap-2 rounded-xl border bg-surface-2 px-2.5 text-left transition-all duration-200 hover:-translate-y-0.5 focus-ring",
                     focus === cat ? "border-border-strong bg-surface-3" : "border-border hover:border-border-strong",
                   )}
                   style={focus === cat ? { boxShadow: `0 8px 30px -12px ${meta.color}88, inset 0 0 0 1px ${meta.color}55` } : undefined}
@@ -237,7 +237,7 @@ export function NodeLibraryFlow({
 
       <div className="mt-4 flex flex-col items-center gap-2 text-center">
         <p className="text-[11px] text-fg-subtle">
-          How categories compose on the canvas — hover or tap a node to trace its connections.
+          How categories compose on the canvas â€” hover or tap a node to trace its connections.
         </p>
         {focus && (
           <button

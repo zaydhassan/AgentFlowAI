@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// Landing-page Node Library section — "Interactive AI infrastructure map".
+// Landing-page Node Library section â€” "Interactive AI infrastructure map".
 // Fully derived from lib/nodes NODE_LIBRARY/CATEGORY_META: every count shown is
 // computed from that data. The strip in the header is a labeled demo pipeline
 // (commonly used node types), not claimed live production traffic.
@@ -19,7 +19,7 @@ import { NodeLibraryGrid } from "./node-library-grid";
 import { NodeLibraryFlow } from "./node-library-flow";
 
 // One-line capability description per category (marketing copy for this
-// section only — kept alongside the section, not in the shared node data).
+// section only â€” kept alongside the section, not in the shared node data).
 const CATEGORY_BLURBS: Record<NodeCategory, string> = {
   ai: "Intelligence for autonomous workflows.",
   communication: "Reach your team wherever they work.",
@@ -37,7 +37,7 @@ const CATEGORY_BLURBS: Record<NodeCategory, string> = {
   mcp: "Extend agents with external tools.",
 };
 
-// Commonly used node types on the canvas — a curated demo pipeline built from
+// Commonly used node types on the canvas â€” a curated demo pipeline built from
 // real node definitions. Labeled as a demo; no live-activity claim.
 const DEMO_PIPELINE_TYPES = ["ai.openai", "ai.agent", "store.postgres", "comm.slack"] as const;
 
@@ -60,7 +60,7 @@ function matchesQuery(node: NodeDef, query: string): boolean {
 }
 
 const NODE_COUNT = NODE_LIBRARY.length;
-// Honest headline count, floored to the nearest ten (74 → "70+").
+// Honest headline count, floored to the nearest ten (74 â†’ "70+").
 const HEADLINE_COUNT = Math.floor(NODE_COUNT / 10) * 10;
 
 export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
@@ -70,7 +70,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
   const searchRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
 
-  // ⌘K / "/" focuses the node search — mirrors the builder palette habit.
+  // âŒ˜K / "/" focuses the node search â€” mirrors the builder palette habit.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -96,7 +96,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
     [category, query],
   );
 
-  // Categories that still have nodes after filtering — drives empty modules out
+  // Categories that still have nodes after filtering â€” drives empty modules out
   // of the grid and dims non-matching nodes in the flow view.
   const activeCategories = useMemo(() => {
     const present = new Set(filtered.map((n) => n.category));
@@ -119,12 +119,12 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
       <div className="grid-overlay pointer-events-none absolute inset-0 opacity-70" aria-hidden />
       <div
         className="pointer-events-none absolute left-1/2 top-24 h-[420px] w-[720px] max-w-full -translate-x-1/2 rounded-full opacity-60 blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.16), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.12), transparent 70%)" }}
         aria-hidden
       />
 
       <div className="relative mx-auto max-w-7xl px-5 py-24 lg:px-8 lg:py-32">
-        {/* ── Section hero ─────────────────────────────────────────── */}
+        {/* â”€â”€ Section hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <BlurReveal className="mx-auto max-w-2xl text-center">
           <Badge tone="brand" className="mb-4">Node Library</Badge>
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -132,7 +132,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           </h2>
           <p className="mt-5 text-fg-muted">
             Connect AI models, communication tools, databases, cloud services, memory, RAG, and
-            developer tools — everything your agents need to think, act, remember, and connect.
+            developer tools â€” everything your agents need to think, act, remember, and connect.
           </p>
           <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-surface-2/70 px-3.5 py-1.5 text-xs text-fg-muted">
             <span className="dot dot-live bg-success" />
@@ -140,10 +140,10 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           </p>
         </BlurReveal>
 
-        {/* ── Search + filters ─────────────────────────────────────── */}
+        {/* â”€â”€ Search + filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <BlurReveal delay={0.08} className="mx-auto mt-12 max-w-3xl">
           <div
-            className="glass relative flex items-center gap-3 rounded-xl border border-border px-4 py-3 shadow-[0_8px_40px_-16px_rgba(124,92,255,0.35)] transition-colors focus-within:border-border-strong"
+            className="glass relative flex items-center gap-3 rounded-xl border border-border px-4 py-3 shadow-[0_8px_40px_-16px_rgba(33,150,243,0.3)] transition-colors focus-within:border-border-strong"
             role="search"
           >
             <Icon name="Search" className="h-4 w-4 shrink-0 text-fg-subtle" />
@@ -154,12 +154,12 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search nodes, integrations, or capabilities…"
+              placeholder="Search nodes, integrations, or capabilitiesâ€¦"
               aria-label="Search nodes and integrations"
               className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-fg-subtle"
             />
             <kbd className="hidden shrink-0 items-center gap-1 rounded-md border border-border bg-surface-3 px-1.5 py-0.5 text-[10px] text-fg-subtle sm:flex">
-              ⌘K
+              âŒ˜K
             </kbd>
             {searching && (
               <button
@@ -176,7 +176,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
             )}
           </div>
 
-          {/* Category filter — horizontal scroll on mobile. */}
+          {/* Category filter â€” horizontal scroll on mobile. */}
           <div className="mt-4 -mx-5 overflow-x-auto px-5 pb-1 lg:mx-0 lg:px-0" style={{ scrollbarWidth: "none" }}>
             <div className="flex w-max gap-2 lg:w-auto lg:flex-wrap lg:justify-center">
               <FilterChip active={category === "all"} onClick={() => setCategory("all")}>
@@ -191,7 +191,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           </div>
         </BlurReveal>
 
-        {/* ── View toggle ──────────────────────────────────────────── */}
+        {/* â”€â”€ View toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mt-10 flex items-center justify-between gap-4">
           <p className="hidden text-xs text-fg-subtle sm:block">
             {searching
@@ -214,7 +214,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
                 {view === v && (
                   <motion.span
                     layoutId="nl-view-pill"
-                    className="absolute inset-0 rounded-md bg-brand-soft shadow-[inset_0_0_0_1px_rgba(124,92,255,0.3)]"
+                    className="absolute inset-0 rounded-md bg-brand-soft shadow-[inset_0_0_0_1px_rgba(33,150,243,0.25)]"
                     transition={{ type: "spring", stiffness: 400, damping: 32 }}
                   />
                 )}
@@ -227,7 +227,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           </div>
         </div>
 
-        {/* ── Views ────────────────────────────────────────────────── */}
+        {/* â”€â”€ Views â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="relative mt-8">
           {view === "grid" ? (
             <NodeLibraryGrid
@@ -250,7 +250,7 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
           )}
         </div>
 
-        {/* ── Commonly used demo pipeline + featured nodes ─────────── */}
+        {/* â”€â”€ Commonly used demo pipeline + featured nodes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mx-auto mt-14 max-w-3xl text-center">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-fg-subtle">
             Commonly used on the canvas
@@ -284,23 +284,23 @@ export function NodeLibrary({ ctaHref }: { ctaHref: string }) {
             ))}
           </div>
           <p className="mt-3 text-[10px] text-fg-subtle">
-            Demo pipeline — real node types from the library, not live execution data.
+            Demo pipeline â€” real node types from the library, not live execution data.
           </p>
         </div>
 
-        {/* ── Bottom CTA ───────────────────────────────────────────── */}
+        {/* â”€â”€ Bottom CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <BlurReveal className="mx-auto mt-20 max-w-4xl">
-          <div className="surface-premium relative overflow-hidden rounded-2xl border border-border px-8 py-12 text-center">
+          <div className="surface-premium relative overflow-hidden rounded-xl border border-border px-8 py-12 text-center">
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-px"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(124,92,255,0.6), rgba(34,211,238,0.6), transparent)" }}
+              style={{ background: "linear-gradient(90deg, transparent, rgba(33,150,243,0.6), rgba(66,165,245,0.5), transparent)" }}
               aria-hidden
             />
             <h3 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               More nodes. More possibilities.
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm text-fg-muted">
-              Need an integration we don&rsquo;t have yet? Tell us what connects to your workflow —
+              Need an integration we don&rsquo;t have yet? Tell us what connects to your workflow â€”
               or build it yourself with the developer toolkit.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

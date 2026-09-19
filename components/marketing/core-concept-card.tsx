@@ -60,16 +60,16 @@ export function CoreConceptCard({ concept, index }: { concept: CoreConcept; inde
         whileHover="hover"
         transition={HOVER_TRANSITION}
         className={cn(
-          "group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-[#27272F] bg-surface-2 p-8",
+          "group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface-2 p-8",
           "transition-[border-color,box-shadow] duration-200 ease-out",
-          "hover:border-[#34343F] hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.35)]",
+          "hover:border-border-strong hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.35)]",
         )}
       >
-        {/* 52px icon tile with a very soft purple background. */}
+        {/* 52px icon tile with a very soft brand-tinted background. */}
         <motion.div
           variants={iconVariants}
           transition={HOVER_TRANSITION}
-          className="grid h-[52px] w-[52px] place-items-center rounded-2xl bg-brand-soft text-brand"
+          className="grid h-[52px] w-[52px] place-items-center rounded-xl bg-brand-soft text-brand"
         >
           <Icon name={icon} className="h-6 w-6" strokeWidth={1.75} />
         </motion.div>

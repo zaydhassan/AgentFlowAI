@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
@@ -6,10 +6,10 @@ import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Icon } from "@/components/ui/icon";
 
 const METRICS = [
-  { label: "Executions today", target: 184327, suffix: "+", icon: "Activity", color: "#7c5cff" },
-  { label: "Success rate", target: 98.2, suffix: "%", decimals: 1, icon: "CheckCircle2", color: "#34d399" },
-  { label: "Active agents", target: 42, suffix: "", icon: "Bot", color: "#22d3ee" },
-  { label: "Avg latency", target: 38, suffix: "ms", icon: "Zap", color: "#5b8bff" },
+  { label: "Executions today", target: 184327, suffix: "+", icon: "Activity", color: "#2196f3" },
+  { label: "Success rate", target: 98.2, suffix: "%", decimals: 1, icon: "CheckCircle2", color: "#22c55e" },
+  { label: "Active agents", target: 42, suffix: "", icon: "Bot", color: "#42a5f5" },
+  { label: "Avg latency", target: 38, suffix: "ms", icon: "Zap", color: "#42a5f5" },
 ];
 
 const THROUGHPUT = [
@@ -19,15 +19,15 @@ const THROUGHPUT = [
 ];
 
 const LOG_POOL = [
-  { lvl: "info", msg: "Gmail trigger fired · message received" },
+  { lvl: "info", msg: "Gmail trigger fired Â· message received" },
   { lvl: "ai", msg: "AI Agent extracted 4 fields (confidence 0.97)" },
-  { lvl: "ok", msg: "Memory upsert · vector store updated" },
-  { lvl: "tool", msg: "MCP tool call · reconcile_invoice(…)" },
-  { lvl: "ok", msg: "Database row inserted · id=inv_8821" },
-  { lvl: "info", msg: "Slack notification · #finance notified" },
-  { lvl: "warn", msg: "Rate limit approaching · backing off 1.2s" },
-  { lvl: "ok", msg: "Workflow completed · 6/6 nodes in 3.1s" },
-  { lvl: "ai", msg: "Copilot suggested cheaper route · -$0.04/run" },
+  { lvl: "ok", msg: "Memory upsert Â· vector store updated" },
+  { lvl: "tool", msg: "MCP tool call Â· reconcile_invoice(â€¦)" },
+  { lvl: "ok", msg: "Database row inserted Â· id=inv_8821" },
+  { lvl: "info", msg: "Slack notification Â· #finance notified" },
+  { lvl: "warn", msg: "Rate limit approaching Â· backing off 1.2s" },
+  { lvl: "ok", msg: "Workflow completed Â· 6/6 nodes in 3.1s" },
+  { lvl: "ai", msg: "Copilot suggested cheaper route Â· -$0.04/run" },
 ];
 
 const LEVEL_STYLES: Record<string, string> = {
@@ -96,14 +96,14 @@ export function LiveDashboard() {
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className="surface-premium relative overflow-hidden rounded-2xl shadow-[0_40px_120px_-40px_rgba(0,0,0,0.7)]"
+      className="surface-premium relative overflow-hidden rounded-xl shadow-[0_40px_120px_-40px_rgba(0,0,0,0.7)]"
     >
       {/* Window chrome */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <span className="h-3 w-3 rounded-full bg-danger/70" />
         <span className="h-3 w-3 rounded-full bg-warning/70" />
         <span className="h-3 w-3 rounded-full bg-success/70" />
-        <span className="ml-3 text-xs text-fg-subtle">agentflow · production</span>
+        <span className="ml-3 text-xs text-fg-subtle">agentflow Â· production</span>
         <span className="ml-auto flex items-center gap-1.5 text-[11px] text-success">
           <span className="status-dot inline-block h-1.5 w-1.5 rounded-full bg-success" /> live
         </span>
@@ -141,18 +141,18 @@ export function LiveDashboard() {
             ))}
           </div>
 
-          {/* Throughput chart — custom SVG (no per-point keys, no recharts). */}
+          {/* Throughput chart â€” custom SVG (no per-point keys, no recharts). */}
           <div className="bg-surface p-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-fg-muted">Throughput · last 24h</span>
-              <span className="text-[11px] text-success">▲ 12.4%</span>
+              <span className="text-xs font-medium text-fg-muted">Throughput Â· last 24h</span>
+              <span className="text-[11px] text-success">â–² 12.4%</span>
             </div>
             <div className="mt-3 h-[150px]">
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
                 <defs>
                   <linearGradient id="lp-area" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7c5cff" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#2196f3" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#2196f3" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <motion.path
@@ -165,7 +165,7 @@ export function LiveDashboard() {
                 <motion.path
                   d={linePath}
                   fill="none"
-                  stroke="#7c5cff"
+                  stroke="#2196f3"
                   strokeWidth={1.4}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -180,7 +180,7 @@ export function LiveDashboard() {
                     cx={p.x}
                     cy={p.y}
                     r={0.7}
-                    fill="#22d3ee"
+                    fill="#42a5f5"
                   />
                 ))}
               </svg>
@@ -203,7 +203,7 @@ export function LiveDashboard() {
             <div className="mt-3 h-[132px] space-y-1.5 overflow-hidden font-mono text-[11px]">
               {logs.map((l) => (
                 <div key={`log-${l.id}`} className="log-line flex items-start gap-2">
-                  <span className="text-fg-subtle">›</span>
+                  <span className="text-fg-subtle">â€º</span>
                   <span className={LEVEL_STYLES[l.lvl]}>{l.msg}</span>
                 </div>
               ))}
@@ -249,7 +249,7 @@ export function LiveDashboard() {
           {/* Notification */}
           <div className="bg-surface p-4">
             <span className="text-xs font-medium text-fg-muted">Notifications</span>
-            <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-border bg-surface-2/60 p-2.5">
+            <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-border bg-surface-2 p-2.5">
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-brand-soft text-brand">
                 <Icon name="Bell" className="h-3.5 w-3.5" />
               </span>
@@ -281,7 +281,7 @@ export function LiveDashboard() {
                 { k: "Collections", v: "38" },
                 { k: "Hits", v: "94%" },
               ].map((s) => (
-                <div key={s.k} className="rounded-lg border border-border bg-surface-2/50 p-2">
+                <div key={s.k} className="rounded-lg border border-border bg-surface-2 p-2">
                   <div className="text-sm font-semibold tabular-nums">{s.v}</div>
                   <div className="text-[10px] text-fg-subtle">{s.k}</div>
                 </div>
@@ -298,9 +298,9 @@ export function LiveDashboard() {
               <span className="font-medium text-fg">AI Copilot</span>
             </div>
             <p className="mt-2.5 text-[12px] leading-relaxed text-fg-muted">
-              “I rerouted the extraction step to a faster model and added a retry guard. Estimated
-              <span className="text-success"> −18% cost</span> and
-              <span className="text-success"> −240ms latency</span> per run.”
+              â€œI rerouted the extraction step to a faster model and added a retry guard. Estimated
+              <span className="text-success"> âˆ’18% cost</span> and
+              <span className="text-success"> âˆ’240ms latency</span> per run.â€
               <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-ai/70" />
             </p>
           </div>

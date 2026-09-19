@@ -369,7 +369,7 @@ function MobileDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-50 bg-black/50 lg:hidden"
           />
           <motion.aside
             initial={{ x: "100%" }}
