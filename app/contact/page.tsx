@@ -37,9 +37,9 @@ const faqs = [
 ];
 
 const RESPONSES = [
-  { icon: "CreditCard", title: "Sales & pricing", time: "within 1 business day", color: "#7c5cff" },
-  { icon: "LifeBuoy", title: "Support", time: "within 2 business days", color: "#22d3ee" },
-  { icon: "ShieldCheck", title: "Security disclosures", time: "within 24 hours", color: "#34d399" },
+  { icon: "CreditCard", title: "Sales & pricing", time: "within 1 business day", color: "#2196F3" },
+  { icon: "LifeBuoy", title: "Support", time: "within 2 business days", color: "#42A5F5" },
+  { icon: "ShieldCheck", title: "Security disclosures", time: "within 24 hours", color: "#64B5F6" },
 ] as const;
 
 export default function ContactPage() {
@@ -51,7 +51,7 @@ export default function ContactPage() {
       <section className="relative overflow-hidden">
         <div
           className="pointer-events-none absolute right-0 top-0 h-[420px] w-[560px] max-w-full rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.1), transparent 70%)" }}
+          style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.1), transparent 70%)" }}
           aria-hidden
         />
         <div className="relative mx-auto max-w-6xl px-5 py-20 lg:px-8">
@@ -91,7 +91,7 @@ export default function ContactPage() {
               {/* Response expectations — product-status style panel. */}
               <StaggerContainer stagger={0.08}>
                 <StaggerItem>
-                  <div className="rounded-2xl border border-border bg-surface-2/40 p-5">
+                  <div className="rounded-xl border border-border bg-surface-2 p-5">
                     <h3 className="text-sm font-semibold">Response expectations</h3>
                     <ul className="mt-4 space-y-3">
                       {RESPONSES.map((r) => (
@@ -108,20 +108,20 @@ export default function ContactPage() {
               <StaggerItem>
                 <div
                   id="contact-form"
-                  className="surface-premium relative scroll-mt-24 overflow-hidden rounded-2xl border border-border p-6 sm:p-8"
+                  className="surface-premium relative scroll-mt-24 overflow-hidden rounded-xl border border-border p-6 sm:p-8"
                 >
                   <div
                     className="pointer-events-none absolute inset-x-0 top-0 h-px"
                     style={{
                       background:
-                        "linear-gradient(90deg, transparent, rgba(124,92,255,0.6), rgba(34,211,238,0.6), transparent)",
+                        "linear-gradient(90deg, transparent, rgba(33,150,243,0.43), rgba(66,165,245,0.45), transparent)",
                     }}
                     aria-hidden
                   />
                   <div
                     className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-50 blur-3xl"
                     style={{
-                      background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.22), transparent 70%)",
+                      background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.18), transparent 70%)",
                     }}
                     aria-hidden
                   />
@@ -155,17 +155,17 @@ export default function ContactPage() {
           edges sit on one vertical grid at every viewport width. */}
       <section className="pb-16 md:pb-20 lg:pb-24">
         <SiteContainer>
-        <div className="mx-auto w-full max-w-4xl rounded-3xl bg-gradient-to-br from-brand/40 via-border to-ai/40 p-px">
-          <BlurReveal className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-surface/90 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+        <div className="mx-auto w-full max-w-4xl rounded-2xl bg-gradient-to-br from-brand/40 via-border to-ai/40 p-px">
+          <BlurReveal className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-surface px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
             {/* Side glows */}
             <div
               className="pointer-events-none absolute -left-20 top-0 h-full w-72 rounded-full opacity-50 blur-3xl"
-              style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.3), transparent 70%)" }}
+              style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.22), transparent 70%)" }}
               aria-hidden
             />
             <div
               className="pointer-events-none absolute -right-20 top-0 h-full w-72 rounded-full opacity-40 blur-3xl"
-              style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.24), transparent 70%)" }}
+              style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.18), transparent 70%)" }}
               aria-hidden
             />
             <div className="relative flex flex-col items-center gap-5 text-center lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:text-left">
@@ -179,10 +179,10 @@ export default function ContactPage() {
                 />
                 <div
                   className="absolute inset-[20%] rounded-full opacity-70 blur-xl"
-                  style={{ background: "radial-gradient(circle, rgba(124,92,255,0.35), transparent 70%)" }}
+                  style={{ background: "radial-gradient(circle, rgba(33,150,243,0.25), transparent 70%)" }}
                 />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(124,92,255,0.7)]">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(33,150,243,0.5)]">
                     <Icon name="Send" className="h-5 w-5" />
                   </span>
                 </span>
@@ -235,7 +235,7 @@ function ChannelRow({
   const body = (
     <>
       <span
-        className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-shadow duration-300 group-hover:shadow-[0_0_18px_-2px_rgba(124,92,255,0.6)] ${tile.className}`}
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-shadow duration-300 group-hover:shadow-[0_0_18px_-2px_rgba(33,150,243,0.43)] ${tile.className}`}
       >
         {tile.icon === "in" ? (
           <span className="text-xs font-semibold leading-none">in</span>
@@ -260,7 +260,7 @@ function ChannelRow({
         <a
           href={href}
           {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          className="flex items-center gap-3.5 rounded-xl border border-border bg-surface-2/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-2/70 focus-ring"
+          className="flex items-center gap-3.5 rounded-xl border border-border bg-surface-2 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-3 focus-ring"
         >
           {body}
         </a>
@@ -268,7 +268,7 @@ function ChannelRow({
         <div
           aria-disabled="true"
           title="LinkedIn — link coming soon"
-          className="flex cursor-default items-center gap-3.5 rounded-xl border border-border bg-surface-2/40 p-4 opacity-70"
+          className="flex cursor-default items-center gap-3.5 rounded-xl border border-border bg-surface-2 p-4 opacity-70"
         >
           {body}
         </div>

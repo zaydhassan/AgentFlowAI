@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, type CSSProperties } from "react";
 import { motion, useInView } from "framer-motion";

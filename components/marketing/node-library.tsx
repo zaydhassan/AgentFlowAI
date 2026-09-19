@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // Landing-page Node Library section â€” "Interactive AI infrastructure map".
 // Fully derived from lib/nodes NODE_LIBRARY/CATEGORY_META: every count shown is

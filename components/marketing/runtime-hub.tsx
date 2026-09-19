@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // "One runtime. Infinite workflows." â€” orchestration-runtime showcase that
 // replaces the homepage's closing CTA block:

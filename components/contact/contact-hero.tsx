@@ -10,25 +10,25 @@ import { Icon } from "@/components/ui/icon";
 // Tiny decorative particles — existing pulsing dot (disabled under
 // prefers-reduced-motion by the .dot-live rule).
 const PARTICLES = [
-  { left: "18%", top: "30%", color: "#7c5cff", delay: "0s" },
-  { left: "30%", top: "62%", color: "#34d399", delay: "1.2s" },
-  { left: "66%", top: "26%", color: "#22d3ee", delay: "0.6s" },
-  { left: "78%", top: "58%", color: "#7c5cff", delay: "1.8s" },
-  { left: "50%", top: "18%", color: "#5b8bff", delay: "2.4s" },
+  { left: "18%", top: "30%", color: "#2196F3", delay: "0s" },
+  { left: "30%", top: "62%", color: "#42A5F5", delay: "1.2s" },
+  { left: "66%", top: "26%", color: "#42A5F5", delay: "0.6s" },
+  { left: "78%", top: "58%", color: "#2196F3", delay: "1.8s" },
+  { left: "50%", top: "18%", color: "#64B5F6", delay: "2.4s" },
 ] as const;
 
 export function ContactHero() {
   return (
     <section className="relative overflow-hidden border-b border-border">
-      {/* Ambient — left purple glow, right cyan glow, faint grid. */}
+      {/* Ambient — left and right blue glow, faint grid. */}
       <div
         className="pointer-events-none absolute -left-32 top-8 h-[420px] w-[520px] rounded-full opacity-50 blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.16), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.16), transparent 70%)" }}
         aria-hidden
       />
       <div
         className="pointer-events-none absolute -right-32 top-16 h-[380px] w-[480px] rounded-full opacity-40 blur-3xl"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.13), transparent 70%)" }}
+        style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.13), transparent 70%)" }}
         aria-hidden
       />
       <div className="grid-overlay pointer-events-none absolute inset-0 opacity-40" aria-hidden />

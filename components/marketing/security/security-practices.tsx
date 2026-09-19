@@ -102,7 +102,7 @@ function DisclosurePanel({
         aria-hidden
         style={{
           background:
-            "radial-gradient(50% 60% at 0% 0%, rgba(124,92,255,0.12), transparent 70%), radial-gradient(45% 60% at 100% 100%, rgba(34,211,238,0.08), transparent 70%)",
+            "radial-gradient(50% 60% at 0% 0%, rgba(33,150,243,0.12), transparent 70%), radial-gradient(45% 60% at 100% 100%, rgba(66,165,245,0.08), transparent 70%)",
         }}
       />
       <div
@@ -140,7 +140,7 @@ function DisclosurePanel({
             type="button"
             onClick={copy}
             aria-label={`Copy ${email} to clipboard`}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-surface-2/80 px-3.5 text-xs font-medium text-fg-muted transition-colors hover:border-border-strong hover:text-fg focus-ring"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3.5 text-xs font-medium text-fg-muted transition-colors hover:border-border-strong hover:text-fg focus-ring"
           >
             <Icon name={copied ? "Check" : "Copy"} className="h-3.5 w-3.5" aria-hidden />
             {copied ? "Copied" : "Copy"}

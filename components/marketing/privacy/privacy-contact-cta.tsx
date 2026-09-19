@@ -10,14 +10,14 @@ const focusClass =
 
 export function PrivacyContactCta({ email }: { email: string }) {
   return (
-    <FadeIn y={18} className="relative overflow-hidden rounded-3xl border border-border">
-      {/* Purple→cyan ambient wash, strongest at the edges so text stays dominant. */}
+    <FadeIn y={18} className="relative overflow-hidden rounded-2xl border border-border">
+      {/* Blue ambient wash, strongest at the edges so text stays dominant. */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden
         style={{
           background:
-            "radial-gradient(60% 90% at 8% 20%, rgba(124,92,255,0.16), transparent 70%), radial-gradient(50% 80% at 95% 80%, rgba(34,211,238,0.12), transparent 70%)",
+            "radial-gradient(60% 90% at 8% 20%, rgba(33,150,243,0.16), transparent 70%), radial-gradient(50% 80% at 95% 80%, rgba(66,165,245,0.12), transparent 70%)",
         }}
       />
       <div
@@ -26,7 +26,7 @@ export function PrivacyContactCta({ email }: { email: string }) {
       />
 
       <div className="relative flex flex-col items-center gap-5 p-10 text-center sm:p-14">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl border border-brand/25 bg-brand-soft text-brand shadow-[0_0_28px_-6px_rgba(124,92,255,0.5)]">
+        <span className="grid h-12 w-12 place-items-center rounded-xl border border-brand/25 bg-brand-soft text-brand shadow-[0_0_28px_-6px_rgba(33,150,243,0.36)]">
           <Icon name="ShieldCheck" className="h-6 w-6" aria-hidden />
         </span>
         <div>

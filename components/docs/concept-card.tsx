@@ -50,9 +50,9 @@ export function ConceptCard({ concept, index }: { concept: CoreConcept; index: n
         whileHover="hover"
         transition={HOVER_TRANSITION}
         className={cn(
-          "group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface-2/80",
+          "group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface-2",
           "transition-[border-color,box-shadow] duration-200 ease-out",
-          "hover:border-brand/30 hover:shadow-[0_20px_48px_-16px_rgba(124,92,255,0.3)]"
+          "hover:border-brand/30 hover:shadow-[0_20px_48px_-16px_rgba(33,150,243,0.22)]"
         )}
       >
         {/* Thin gradient border accent along the top edge. */}
@@ -66,7 +66,7 @@ export function ConceptCard({ concept, index }: { concept: CoreConcept; index: n
           aria-hidden
           style={{
             background:
-              "radial-gradient(50% 30% at 15% 0%, rgba(124,92,255,0.08), transparent 70%), radial-gradient(45% 30% at 95% 100%, rgba(34,211,238,0.06), transparent 70%)",
+              "radial-gradient(50% 30% at 15% 0%, rgba(33,150,243,0.08), transparent 70%), radial-gradient(45% 30% at 95% 100%, rgba(66,165,245,0.06), transparent 70%)",
           }}
         />
 
@@ -76,7 +76,7 @@ export function ConceptCard({ concept, index }: { concept: CoreConcept; index: n
             <motion.div
               variants={{ rest: { scale: 1 }, hover: { scale: 1.05 } }}
               transition={HOVER_TRANSITION}
-              className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", ICON_TONE[tone])}
+              className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-xl", ICON_TONE[tone])}
             >
               <Icon name={icon} className="h-5.5 w-5.5" strokeWidth={1.75} />
             </motion.div>

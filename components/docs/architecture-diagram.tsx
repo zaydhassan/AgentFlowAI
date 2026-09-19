@@ -19,7 +19,7 @@ export function ArchitectureDiagram({
   caption?: string;
 }) {
   return (
-    <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-surface-2/40 p-6 sm:p-8">
+    <figure className="my-8 overflow-hidden rounded-xl border border-border bg-surface-2 p-6 sm:p-8">
       <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">
         <Icon name="Network" className="h-3.5 w-3.5" />
         Architecture

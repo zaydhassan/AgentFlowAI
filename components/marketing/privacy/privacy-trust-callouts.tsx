@@ -39,9 +39,9 @@ export function PrivacyTrustCallouts() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.45, delay: i * 0.08 }}
-            className="relative overflow-hidden rounded-2xl border border-border bg-surface-2/40 p-5"
+            className="relative overflow-hidden rounded-xl border border-border bg-surface-2 p-5"
           >
-            {/* Hairline purple→cyan accent along the top edge. */}
+            {/* Hairline blue accent along the top edge. */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-brand/50 via-brand-2/30 to-ai/50" aria-hidden />
             <div className="flex items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">

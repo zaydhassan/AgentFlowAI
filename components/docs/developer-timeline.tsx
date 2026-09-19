@@ -32,7 +32,7 @@ export function DeveloperTimeline({ steps }: { steps: GuideStep[] }) {
         >
           {/* Glowing numbered node. */}
           <div className="relative z-10 shrink-0">
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-brand/40 bg-bg font-mono text-xs font-semibold text-brand shadow-[0_0_16px_-4px_rgba(124,92,255,0.6)]">
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-brand/40 bg-bg font-mono text-xs font-semibold text-brand shadow-[0_0_16px_-4px_rgba(33,150,243,0.43)]">
               {g.n}
             </span>
           </div>
@@ -66,15 +66,15 @@ export function DocsCallout({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-2xl border border-border bg-surface-2/40"
+      className="relative overflow-hidden rounded-xl border border-border bg-surface-2"
     >
-      {/* Soft purple→cyan wash. */}
+      {/* Soft blue wash. */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden
         style={{
           background:
-            "radial-gradient(45% 80% at 0% 50%, rgba(124,92,255,0.10), transparent 70%), radial-gradient(40% 80% at 100% 50%, rgba(34,211,238,0.07), transparent 70%)",
+            "radial-gradient(45% 80% at 0% 50%, rgba(33,150,243,0.10), transparent 70%), radial-gradient(40% 80% at 100% 50%, rgba(66,165,245,0.07), transparent 70%)",
         }}
       />
       <div className="relative flex flex-col gap-4 p-6 sm:flex-row sm:items-center">

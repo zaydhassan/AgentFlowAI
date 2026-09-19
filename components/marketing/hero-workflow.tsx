@@ -28,14 +28,14 @@ const NODES: Node[] = [
 ];
 
 const VB_W = 420;
-const VB_H = 600;
+const VB_H = 540;
 const NW = 200;
 const NH = 58;
 const positions = [
-  { x: 110, y: 40 },
-  { x: 110, y: 200 },
-  { x: 110, y: 360 },
-  { x: 110, y: 520 },
+  { x: 110, y: 36 },
+  { x: 110, y: 176 },
+  { x: 110, y: 316 },
+  { x: 110, y: 456 },
 ];
 const centers = positions.map((p) => ({ x: p.x + NW / 2, y: p.y + NH / 2 }));
 

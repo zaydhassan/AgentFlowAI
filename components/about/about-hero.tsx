@@ -13,10 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
 const INDICATORS = [
-  { icon: "ShieldCheck", label: "Reliability", color: "#34d399", className: "left-0 top-[12%]" },
-  { icon: "Lock", label: "Security", color: "#7c5cff", className: "right-0 top-[26%]" },
-  { icon: "Activity", label: "Observability", color: "#22d3ee", className: "bottom-[24%] left-[4%]" },
-  { icon: "Bot", label: "AI Agents", color: "#5b8bff", className: "bottom-[2%] right-[6%]" },
+  { icon: "ShieldCheck", label: "Reliability", color: "#42A5F5", className: "left-0 top-[12%]" },
+  { icon: "Lock", label: "Security", color: "#2196F3", className: "right-0 top-[26%]" },
+  { icon: "Activity", label: "Observability", color: "#42A5F5", className: "bottom-[24%] left-[4%]" },
+  { icon: "Bot", label: "AI Agents", color: "#64B5F6", className: "bottom-[2%] right-[6%]" },
 ] as const;
 
 export function AboutHero() {
@@ -35,7 +35,7 @@ export function AboutHero() {
       {/* Restrained ambient — soft radial + grid, no blobs. */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(58% 62% at 72% 28%, rgba(124,92,255,0.13), transparent 70%)" }}
+        style={{ background: "radial-gradient(58% 62% at 72% 28%, rgba(33,150,243,0.13), transparent 70%)" }}
         aria-hidden
       />
       <div className="grid-overlay pointer-events-none absolute inset-0 opacity-50" aria-hidden />
@@ -47,7 +47,7 @@ export function AboutHero() {
             <motion.div {...reveal(0)}>
               <Badge
                 tone="brand"
-                className="bg-surface-2/80 text-brand shadow-[0_0_24px_-6px_rgba(124,92,255,0.55)]"
+                className="bg-surface-2 text-brand shadow-[0_0_24px_-6px_rgba(33,150,243,0.4)]"
               >
                 <span className="dot dot-live mr-1.5 bg-brand" />
                 About AgentFlow
@@ -116,10 +116,10 @@ export function AboutHero() {
 
               {/* Core stack — layered runtime. */}
               <div className="node-glow absolute inset-[36%]">
-                <div className="absolute inset-0 translate-y-2.5 rounded-2xl border border-border bg-surface/70" />
-                <div className="absolute inset-0 translate-y-1 rounded-2xl border border-border bg-surface-2/80" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-brand/30 bg-surface">
-                  <span className="grid h-12 w-12 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(124,92,255,0.7)]">
+                <div className="absolute inset-0 translate-y-2.5 rounded-xl border border-border bg-surface" />
+                <div className="absolute inset-0 translate-y-1 rounded-xl border border-border bg-surface-2" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl border border-brand/30 bg-surface">
+                  <span className="grid h-12 w-12 place-items-center rounded-xl border border-brand/40 bg-brand-soft text-brand shadow-[0_0_24px_-4px_rgba(33,150,243,0.5)]">
                     <Icon name="BrainCircuit" className="h-6 w-6" />
                   </span>
                   <span className="text-[10px] font-medium uppercase tracking-widest text-fg-subtle">

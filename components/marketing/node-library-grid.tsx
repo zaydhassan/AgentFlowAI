@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // Grid view â€” category "capability modules" with real node counts, per-node
 // hover detail popover, and drag affordances (the same `application/

@@ -14,11 +14,11 @@ import { Icon } from "@/components/ui/icon";
 
 const FLOW_TYPES = [
   { type: "trigger.schedule", sub: "Event", color: "#f59e0b" },
-  { type: "ai.agent", sub: "Reasoning", color: "#7c5cff" },
-  { type: "mcp.tool", sub: "Action", color: "#22d3ee" },
-  { type: "store.postgres", sub: "Persist", color: "#5b8bff" },
-  { type: "cloud.s3", sub: "Storage", color: "#34d399" },
-  { type: "comm.slack", sub: "Notify", color: "#ec4899" },
+  { type: "ai.agent", sub: "Reasoning", color: "#2196F3" },
+  { type: "mcp.tool", sub: "Action", color: "#42A5F5" },
+  { type: "store.postgres", sub: "Persist", color: "#64B5F6" },
+  { type: "cloud.s3", sub: "Storage", color: "#90CAF9" },
+  { type: "comm.slack", sub: "Notify", color: "#8B98A8" },
   { type: "doc.pdf", sub: "Report", color: "#a1a1aa" },
 ] as const;
 
@@ -42,7 +42,7 @@ export function ArchitectureFlow() {
     <section className="relative overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(52% 55% at 50% 40%, rgba(124,92,255,0.1), transparent 70%)" }}
+        style={{ background: "radial-gradient(52% 55% at 50% 40%, rgba(33,150,243,0.1), transparent 70%)" }}
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl px-5 py-24 lg:px-8">
@@ -67,7 +67,7 @@ export function ArchitectureFlow() {
           {FLOW_LEGEND.map((s) => (
             <div
               key={s.label}
-              className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-2/40 p-3.5"
+              className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-2 p-3.5"
             >
               <Icon name={s.icon} className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
               <div>

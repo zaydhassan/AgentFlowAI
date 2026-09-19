@@ -27,7 +27,7 @@ export function DocumentationHero() {
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(40% 50% at 12% 20%, rgba(124,92,255,0.12), transparent 70%), radial-gradient(36% 46% at 88% 30%, rgba(34,211,238,0.09), transparent 70%)",
+              "radial-gradient(40% 50% at 12% 20%, rgba(33,150,243,0.12), transparent 70%), radial-gradient(36% 46% at 88% 30%, rgba(66,165,245,0.09), transparent 70%)",
           }}
         />
         <div className="grid-overlay absolute inset-0 [mask-image:radial-gradient(75%_70%_at_50%_30%,#000,transparent)]" />
@@ -44,7 +44,7 @@ export function DocumentationHero() {
               Core{" "}
               <span
                 className="bg-clip-text text-transparent"
-                style={{ backgroundImage: "linear-gradient(110deg, #8b7bff, #5b8bff, #22d3ee)" }}
+                style={{ backgroundImage: "linear-gradient(110deg, #90CAF9, #64B5F6, #42A5F5)" }}
               >
                 Concepts
               </span>
@@ -69,13 +69,13 @@ export function DocumentationHero() {
 
         {/* Architecture visual — layered orchestration chain. */}
         <HeroFade delay={0.24} className="relative mx-auto w-full max-w-[340px]">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-surface-2/50 p-6">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-surface-2/50 p-6">
             <div
               className="pointer-events-none absolute inset-0"
               aria-hidden
               style={{
                 background:
-                  "radial-gradient(60% 40% at 20% 0%, rgba(124,92,255,0.14), transparent 70%), radial-gradient(50% 40% at 90% 100%, rgba(34,211,238,0.10), transparent 70%)",
+                  "radial-gradient(60% 40% at 20% 0%, rgba(33,150,243,0.14), transparent 70%), radial-gradient(50% 40% at 90% 100%, rgba(66,165,245,0.10), transparent 70%)",
               }}
             />
             <div className="relative">
@@ -132,7 +132,7 @@ function ConnectorLine({ delay, reduceMotion }: { delay: number; reduceMotion: b
       <div className="absolute inset-0 bg-gradient-to-b from-brand/50 to-ai/50" />
       {!reduceMotion && (
         <motion.span
-          className="absolute left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-ai shadow-[0_0_8px_2px_rgba(34,211,238,0.5)]"
+          className="absolute left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-ai shadow-[0_0_8px_2px_rgba(66,165,245,0.4)]"
           initial={{ top: "-4px", opacity: 0 }}
           animate={{ top: ["-4px", "26px"], opacity: [0, 1, 0] }}
           transition={{ duration: 2.2, delay, repeat: Infinity, ease: "easeInOut" }}

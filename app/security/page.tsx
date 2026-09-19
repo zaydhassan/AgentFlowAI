@@ -32,14 +32,14 @@ const practices = [
 export default function SecurityPage() {
   return (
     <MarketingPage>
-      {/* One consistent page background: near-black base, faded grid, purple/cyan glows. */}
+      {/* One consistent page background: near-black base, faded grid, electric-blue glows. */}
       <div className="relative isolate">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(40% 28% at 2% 8%, rgba(124,92,255,0.09), transparent 70%), radial-gradient(36% 26% at 98% 14%, rgba(34,211,238,0.07), transparent 70%), radial-gradient(32% 22% at 50% 100%, rgba(91,139,255,0.05), transparent 70%)",
+                "radial-gradient(40% 28% at 2% 8%, rgba(33,150,243,0.09), transparent 70%), radial-gradient(36% 26% at 98% 14%, rgba(66,165,245,0.07), transparent 70%), radial-gradient(32% 22% at 50% 100%, rgba(66,165,245,0.05), transparent 70%)",
             }}
           />
           <div className="grid-overlay absolute inset-0 opacity-70 [mask-image:linear-gradient(to_bottom,transparent,#000_6%,#000_88%,transparent)]" />

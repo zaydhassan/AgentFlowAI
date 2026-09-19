@@ -9,12 +9,12 @@ import { Icon } from "@/components/ui/icon";
 export function AboutCta() {
   return (
     <section className="mx-auto max-w-7xl px-5 pb-24 pt-4 lg:px-8">
-      <BlurReveal className="relative overflow-hidden rounded-3xl border border-border mesh-bg px-8 py-16 text-center lg:py-20">
+      <BlurReveal className="relative overflow-hidden rounded-2xl border border-border mesh-bg px-8 py-16 text-center lg:py-20">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
           style={{
             background:
-              "linear-gradient(90deg, transparent, rgba(124,92,255,0.6), rgba(34,211,238,0.6), transparent)",
+              "linear-gradient(90deg, transparent, rgba(33,150,243,0.43), rgba(66,165,245,0.45), transparent)",
           }}
           aria-hidden
         />

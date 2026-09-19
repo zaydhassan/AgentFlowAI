@@ -13,15 +13,15 @@ export function SecurityCta({ enterprise }: { enterprise: string }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-3xl border border-border"
+      className="relative overflow-hidden rounded-2xl border border-border"
     >
-      {/* Purple/cyan ambient wash. */}
+      {/* Blue ambient wash. */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden
         style={{
           background:
-            "radial-gradient(50% 90% at 0% 50%, rgba(124,92,255,0.16), transparent 70%), radial-gradient(45% 90% at 100% 50%, rgba(34,211,238,0.12), transparent 70%)",
+            "radial-gradient(50% 90% at 0% 50%, rgba(33,150,243,0.16), transparent 70%), radial-gradient(45% 90% at 100% 50%, rgba(66,165,245,0.12), transparent 70%)",
         }}
       />
       <div
@@ -40,14 +40,14 @@ export function SecurityCta({ enterprise }: { enterprise: string }) {
         )}
         <defs>
           <linearGradient id="secCtaGrad" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#7c5cff" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#22d3ee" stopOpacity="0.3" />
+            <stop stopColor="#2196F3" stopOpacity="0.35" />
+            <stop offset="1" stopColor="#42A5F5" stopOpacity="0.3" />
           </linearGradient>
         </defs>
       </svg>
 
       <div className="relative flex flex-col items-center gap-5 p-10 text-center sm:p-14">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl border border-brand/25 bg-brand-soft text-brand shadow-[0_0_28px_-6px_rgba(124,92,255,0.5)]">
+        <span className="grid h-12 w-12 place-items-center rounded-xl border border-brand/25 bg-brand-soft text-brand shadow-[0_0_28px_-6px_rgba(33,150,243,0.36)]">
           <Icon name="Lock" className="h-6 w-6" aria-hidden />
         </span>
         <div>

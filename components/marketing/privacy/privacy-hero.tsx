@@ -24,12 +24,12 @@ export function PrivacyHero({ lastUpdated }: { lastUpdated: string }) {
       {/* Ambient background — glows, fine grid, faint orbital arcs, particles.
           Everything stays well behind the text. */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        {/* Purple glow left, cyan glow right. */}
+        {/* Blue glow left and right. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(38% 45% at 8% 35%, rgba(124,92,255,0.13), transparent 70%), radial-gradient(34% 42% at 92% 30%, rgba(34,211,238,0.10), transparent 70%), radial-gradient(30% 30% at 50% 0%, rgba(91,139,255,0.06), transparent 70%)",
+              "radial-gradient(38% 45% at 8% 35%, rgba(33,150,243,0.13), transparent 70%), radial-gradient(34% 42% at 92% 30%, rgba(66,165,245,0.10), transparent 70%), radial-gradient(30% 30% at 50% 0%, rgba(66,165,245,0.06), transparent 70%)",
           }}
         />
 
@@ -74,7 +74,7 @@ export function PrivacyHero({ lastUpdated }: { lastUpdated: string }) {
             <span
               className="bg-clip-text text-transparent"
               style={{
-                backgroundImage: "linear-gradient(110deg, #8b7bff, #5b8bff, #22d3ee)",
+                backgroundImage: "linear-gradient(110deg, #90CAF9, #64B5F6, #42A5F5)",
               }}
             >
               Policy

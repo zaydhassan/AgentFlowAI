@@ -67,7 +67,7 @@ export function PrivacyPage({ sections, lastUpdated, email }: PrivacyPageProps) 
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(30% 20% at 0% 30%, rgba(124,92,255,0.05), transparent 70%), radial-gradient(28% 20% at 100% 60%, rgba(34,211,238,0.04), transparent 70%)",
+                "radial-gradient(30% 20% at 0% 30%, rgba(33,150,243,0.05), transparent 70%), radial-gradient(28% 20% at 100% 60%, rgba(66,165,245,0.04), transparent 70%)",
             }}
           />
         </div>

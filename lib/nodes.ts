@@ -1,4 +1,4 @@
-﻿import type { NodeDef, ConfigField } from "./types";
+import type { NodeDef, ConfigField } from "./types";
 
 const f = (
   key: string,

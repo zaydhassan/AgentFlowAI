@@ -19,12 +19,12 @@ export function DocsBackground() {
 
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-      {/* Ambient radial glows — purple left, cyan right. */}
+      {/* Ambient radial glows — blue accents left and right. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(42% 34% at 4% 12%, rgba(124,92,255,0.10), transparent 70%), radial-gradient(36% 30% at 96% 18%, rgba(34,211,238,0.08), transparent 70%), radial-gradient(34% 26% at 50% 100%, rgba(91,139,255,0.05), transparent 70%)",
+            "radial-gradient(42% 34% at 4% 12%, rgba(33,150,243,0.10), transparent 70%), radial-gradient(36% 30% at 96% 18%, rgba(66,165,245,0.08), transparent 70%), radial-gradient(34% 26% at 50% 100%, rgba(66,165,245,0.05), transparent 70%)",
         }}
       />
 
@@ -50,8 +50,8 @@ export function DocsBackground() {
         ))}
         <defs>
           <linearGradient id="docsNet" x1="0" y1="0" x2="260" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#7c5cff" stopOpacity="0.25" />
-            <stop offset="1" stopColor="#22d3ee" stopOpacity="0.2" />
+            <stop stopColor="#2196F3" stopOpacity="0.25" />
+            <stop offset="1" stopColor="#42A5F5" stopOpacity="0.2" />
           </linearGradient>
         </defs>
       </svg>
@@ -71,8 +71,8 @@ export function DocsBackground() {
         ))}
         <defs>
           <linearGradient id="docsNet2" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#22d3ee" stopOpacity="0.22" />
-            <stop offset="1" stopColor="#7c5cff" stopOpacity="0.18" />
+            <stop stopColor="#42A5F5" stopOpacity="0.22" />
+            <stop offset="1" stopColor="#2196F3" stopOpacity="0.18" />
           </linearGradient>
         </defs>
       </svg>

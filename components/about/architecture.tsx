@@ -45,7 +45,7 @@ export function Architecture() {
           {PILLARS.map((c, i) => (
             <StaggerItem
               key={c.title}
-              className="rounded-2xl border border-border bg-surface-2/40 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong"
+              className="rounded-xl border border-border bg-surface-2 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong"
             >
               <div className="flex items-center justify-between">
                 <span className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-surface text-ai">

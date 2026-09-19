@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // Landing-page "Natural-language builder" section â€” recomposed as a
 // describe â†’ reason â†’ construct â†’ run product demonstration:

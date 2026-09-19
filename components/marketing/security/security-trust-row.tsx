@@ -36,7 +36,7 @@ export function SecurityTrustRow() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.45, delay: i * 0.08 }}
-            className="flex items-start gap-3.5 rounded-2xl border border-border bg-surface-2/40 p-5"
+            className="flex items-start gap-3.5 rounded-xl border border-border bg-surface-2 p-5"
           >
             <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
               <Icon name={t.icon} className="h-4.5 w-4.5" aria-hidden />

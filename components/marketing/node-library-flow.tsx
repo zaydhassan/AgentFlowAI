@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // Flow view â€” a miniature AgentFlow canvas mapping how node categories compose:
 // Trigger â†’ Think â†’ Control â†’ Connect. Pure SVG (bezier edges + SMIL traveling

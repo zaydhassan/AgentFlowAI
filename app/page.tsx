@@ -26,7 +26,7 @@ export default async function LandingPage() {
 
       <section className="relative overflow-hidden pt-32 pb-24 lg:pt-40 lg:pb-32">
         <HeroBackground />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-12 xl:gap-16 items-center">
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-12 xl:gap-16 items-center justify-items-center">
           <div className="text-center lg:text-left lg:self-start">
             <HeroFade y={12} duration={0.5}>
               <Badge
@@ -84,7 +84,7 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          <HeroFade y={24} duration={0.8} delay={0.3} className="relative">
+          <HeroFade y={24} duration={0.8} delay={0.3} className="relative lg:self-center">
             <HeroWorkflow />
           </HeroFade>
         </div>

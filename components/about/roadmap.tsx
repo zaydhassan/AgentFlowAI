@@ -15,7 +15,7 @@ const ROADMAP = [
     tone: "success" as const,
     dot: "bg-success border-success",
     itemIcon: "Check",
-    glow: "rgba(52,211,153,0.6)",
+    glow: "rgba(34,197,94,0.55)",
     items: [
       "Visual workflow builder with 60+ nodes",
       "AI agents with persistent memory & RAG",
@@ -28,7 +28,7 @@ const ROADMAP = [
     tone: "ai" as const,
     dot: "bg-ai border-ai",
     itemIcon: "CircleDot",
-    glow: "rgba(34,211,238,0.6)",
+    glow: "rgba(66,165,245,0.55)",
     items: [
       "Native MCP server & client nodes",
       "Multi-agent orchestration with shared state",
@@ -69,7 +69,7 @@ export function Roadmap() {
           </p>
         </BlurReveal>
 
-        <StaggerContainer className="relative rounded-2xl border border-border bg-surface-2/30 p-6 pl-10 sm:p-8 sm:pl-12" stagger={0.14}>
+        <StaggerContainer className="relative rounded-xl border border-border bg-surface-2 p-6 pl-10 sm:p-8 sm:pl-12" stagger={0.14}>
           {/* Timeline spine */}
           <div
             className="absolute bottom-8 left-[29px] top-8 w-px bg-gradient-to-b from-success/60 via-ai/50 to-fg-subtle/20 sm:left-[37px]"

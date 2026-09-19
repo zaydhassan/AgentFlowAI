@@ -85,7 +85,7 @@ export default function PricingPage() {
           {plans.map((p) => {
             const price = yearly ? p.price.yearly : p.price.monthly;
             return (
-              <div key={p.name} className={cn("card-hover relative flex flex-col rounded-2xl border p-6", p.featured ? "border-brand/50 bg-brand-soft/20 shadow-[0_10px_50px_-12px_rgba(124,92,255,0.5)]" : "glass border-border")}>
+              <div key={p.name} className={cn("card-hover relative flex flex-col rounded-xl border p-6", p.featured ? "border-brand/50 bg-brand-soft/20 shadow-[0_10px_50px_-12px_rgba(33,150,243,0.36)]" : "glass border-border")}>
                 {p.featured && <div className="absolute -top-3 left-1/2 -translate-x-1/2"><Badge tone="brand">Most popular</Badge></div>}
                 <div className="text-sm font-semibold text-fg-muted">{p.name}</div>
                 <div className="text-[11px] text-fg-subtle">{p.tagline}</div>
@@ -129,7 +129,7 @@ export default function PricingPage() {
         <h2 className="text-center text-2xl font-semibold tracking-tight">Frequently asked questions</h2>
         <div className="mt-8 space-y-3">
           {faqs.map((f) => (
-            <details key={f.q} className="group rounded-xl border border-border bg-surface-2/40 p-4 [&_summary]:cursor-pointer">
+            <details key={f.q} className="group rounded-xl border border-border bg-surface-2 p-4 [&_summary]:cursor-pointer">
               <summary className="flex items-center justify-between text-sm font-medium marker:content-none">
                 {f.q}
                 <Icon name="ChevronDown" className="h-4 w-4 text-fg-subtle transition-transform group-open:rotate-180" />
@@ -141,7 +141,7 @@ export default function PricingPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-24">
-        <div className="relative overflow-hidden rounded-3xl border border-border mesh-bg p-12 text-center">
+        <div className="relative overflow-hidden rounded-2xl border border-border mesh-bg p-12 text-center">
           <div className="relative">
             <h2 className="text-3xl font-semibold tracking-tight">Ready to automate?</h2>
             <p className="mx-auto mt-3 max-w-md text-fg-muted">Start free with 1,000 credits. No card required.</p>

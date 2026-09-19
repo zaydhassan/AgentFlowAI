@@ -42,8 +42,8 @@ export function WhyExists() {
       </div>
 
       {/* Mission / Vision */}
-      <BlurReveal className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:mt-20 md:grid-cols-2">
-        <div className="bg-surface-2/40 p-8 lg:p-10">
+      <BlurReveal className="mt-16 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:mt-20 md:grid-cols-2">
+        <div className="bg-surface-2 p-8 lg:p-10">
           <div className="inline-flex items-center gap-2 text-brand">
             <Icon name="Target" className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-widest">Mission</span>
@@ -53,7 +53,7 @@ export function WhyExists() {
             platform engineering org.
           </p>
         </div>
-        <div className="bg-surface-2/40 p-8 lg:p-10">
+        <div className="bg-surface-2 p-8 lg:p-10">
           <div className="inline-flex items-center gap-2 text-ai">
             <Icon name="Telescope" className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-widest">Vision</span>

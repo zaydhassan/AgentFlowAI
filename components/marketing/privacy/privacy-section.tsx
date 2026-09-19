@@ -27,10 +27,10 @@ export function PrivacySection({
   return (
     <FadeIn
       y={18}
-      className="group relative scroll-mt-28 rounded-2xl border border-border bg-surface-2/40 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_16px_40px_-16px_rgba(124,92,255,0.25)]"
+      className="group relative scroll-mt-28 rounded-xl border border-border bg-surface-2 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-[0_16px_40px_-16px_rgba(33,150,243,0.18)]"
       id={section.id}
     >
-      {/* Hairline purple→cyan accent along the top edge, brightening on hover. */}
+      {/* Hairline blue accent along the top edge, brightening on hover. */}
       <div
         className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-brand/40 via-brand-2/25 to-ai/40 transition-opacity duration-200 group-hover:opacity-100"
         aria-hidden

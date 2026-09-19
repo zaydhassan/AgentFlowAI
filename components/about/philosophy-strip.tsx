@@ -15,7 +15,7 @@ export function PhilosophyStrip() {
   return (
     <section className="border-b border-border">
       <BlurReveal className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 rounded-2xl border border-border bg-surface/40 p-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:p-0 lg:divide-x lg:divide-border">
+        <div className="grid grid-cols-1 gap-6 rounded-xl border border-border bg-surface p-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:p-0 lg:divide-x lg:divide-border">
           {CREEDS.map((c) => (
             <div key={c.title} className="flex items-start gap-3.5 lg:px-7 lg:py-6">
               <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface-2">

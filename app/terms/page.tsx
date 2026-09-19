@@ -107,7 +107,7 @@ export default function TermsPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-2xl border border-border bg-surface-2/40 p-6 text-sm text-fg-muted">
+        <div className="mt-12 rounded-xl border border-border bg-surface-2 p-6 text-sm text-fg-muted">
           Questions about these terms? Email{" "}
           <a href={`mailto:${site.legal.legal}`} className="text-brand hover:underline">{site.legal.legal}</a>{" "}
           or use our <a href="/contact" className="text-brand hover:underline">contact page</a>.

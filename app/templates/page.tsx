@@ -30,7 +30,7 @@ export default function TemplatesPage() {
       <section className="relative overflow-hidden">
         <div
           className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[680px] max-w-full -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.25), transparent 70%)" }}
+          style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.18), transparent 70%)" }}
           aria-hidden
         />
         <div className="relative mx-auto max-w-5xl px-5 pb-14 pt-20 text-center lg:px-8">
@@ -81,10 +81,10 @@ export default function TemplatesPage() {
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-5 pb-20 lg:px-8">
-        <BlurReveal className="relative overflow-hidden rounded-3xl border border-border bg-surface/90 px-6 py-10 text-center sm:px-10">
+        <BlurReveal className="relative overflow-hidden rounded-2xl border border-border bg-surface px-6 py-10 text-center sm:px-10">
           <div
             className="pointer-events-none absolute left-1/2 top-0 h-48 w-96 max-w-full -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.3), transparent 70%)" }}
+            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.22), transparent 70%)" }}
             aria-hidden
           />
           <div className="relative">
@@ -125,7 +125,7 @@ function TemplateCard({
   return (
     <Link
       href={CTA_HREF}
-      className="card-hover group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface-2/40 p-5 transition-colors duration-300 hover:border-border-strong hover:bg-surface-2/70 focus-ring"
+      className="card-hover group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-2 p-5 transition-colors duration-300 hover:border-border-strong hover:bg-surface-3 focus-ring"
     >
       {t.featured && featured && (
         <div

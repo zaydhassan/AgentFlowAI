@@ -40,14 +40,14 @@ export function SecurityCapabilityCard({
       transition={{ duration: 0.5, ease: "easeOut", delay: (index % 3) * 0.08 }}
       className="h-full"
     >
-      {/* INNER: hover lift + purple/cyan glow; variant labels drive icon and arrow. */}
+      {/* INNER: hover lift + blue glow; variant labels drive icon and arrow. */}
       <motion.div
         variants={cardVariants}
         initial="rest"
         animate="rest"
         whileHover="hover"
         transition={HOVER_TRANSITION}
-        className="group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface-2/80 p-7 transition-[border-color,box-shadow] duration-200 ease-out hover:border-brand/30 hover:shadow-[0_20px_48px_-16px_rgba(124,92,255,0.3)]"
+        className="group relative flex h-full flex-col overflow-hidden rounded-[20px] border border-border bg-surface-2 p-7 transition-[border-color,box-shadow] duration-200 ease-out hover:border-brand/30 hover:shadow-[0_20px_48px_-16px_rgba(33,150,243,0.22)]"
       >
         {/* Thin gradient accent along the top edge. */}
         <div
@@ -60,7 +60,7 @@ export function SecurityCapabilityCard({
           aria-hidden
           style={{
             background:
-              "radial-gradient(55% 35% at 12% 0%, rgba(124,92,255,0.09), transparent 70%), radial-gradient(45% 35% at 95% 100%, rgba(34,211,238,0.06), transparent 70%)",
+              "radial-gradient(55% 35% at 12% 0%, rgba(33,150,243,0.09), transparent 70%), radial-gradient(45% 35% at 95% 100%, rgba(66,165,245,0.06), transparent 70%)",
           }}
         />
 

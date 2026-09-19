@@ -18,13 +18,13 @@ export function SecurityHero({ description }: { description: string }) {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Hero ambience: purple glow left, cyan glow right, faded grid. */}
+      {/* Hero ambience: blue glow left and right, faded grid. */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(42% 50% at 8% 25%, rgba(124,92,255,0.12), transparent 70%), radial-gradient(38% 48% at 90% 30%, rgba(34,211,238,0.09), transparent 70%)",
+              "radial-gradient(42% 50% at 8% 25%, rgba(33,150,243,0.12), transparent 70%), radial-gradient(38% 48% at 90% 30%, rgba(66,165,245,0.09), transparent 70%)",
           }}
         />
         <div className="grid-overlay absolute inset-0 [mask-image:radial-gradient(75%_70%_at_50%_35%,#000,transparent)]" />
@@ -68,7 +68,7 @@ function ShieldVisual({ reduceMotion }: { reduceMotion: boolean | null }) {
           aria-hidden
           style={{
             background:
-              "radial-gradient(50% 50% at 50% 45%, rgba(124,92,255,0.16), transparent 70%), radial-gradient(35% 35% at 65% 65%, rgba(34,211,238,0.10), transparent 70%)",
+              "radial-gradient(50% 50% at 50% 45%, rgba(33,150,243,0.16), transparent 70%), radial-gradient(35% 35% at 65% 65%, rgba(66,165,245,0.10), transparent 70%)",
           }}
         />
 
@@ -87,8 +87,8 @@ function ShieldVisual({ reduceMotion }: { reduceMotion: boolean | null }) {
           animate={reduceMotion ? {} : { y: [-5, 5, -5] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         >
-          <div className="grid h-24 w-24 place-items-center rounded-3xl bg-gradient-to-br from-brand via-brand-2 to-ai shadow-[0_0_60px_-8px_rgba(124,92,255,0.7)] ring-1 ring-inset ring-white/15">
-            <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/25 to-transparent" />
+          <div className="grid h-24 w-24 place-items-center rounded-2xl bg-gradient-to-br from-brand via-brand-2 to-ai shadow-[0_0_60px_-8px_rgba(33,150,243,0.5)] ring-1 ring-inset ring-white/15">
+            <span className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-b from-white/25 to-transparent" />
             <Icon name="ShieldCheck" className="h-11 w-11 text-white" strokeWidth={1.5} />
           </div>
         </motion.div>
@@ -98,7 +98,7 @@ function ShieldVisual({ reduceMotion }: { reduceMotion: boolean | null }) {
           <motion.span
             key={l.text}
             aria-hidden
-            className={`absolute ${l.pos} rounded-full border border-border bg-surface-2/80 px-3 py-1 text-[11px] font-medium text-fg-muted backdrop-blur-sm`}
+            className={`absolute ${l.pos} rounded-full border border-border bg-surface-2 px-3 py-1 text-[11px] font-medium text-fg-muted`}
             animate={reduceMotion ? {} : { y: [0, -4, 0] }}
             transition={{ duration: 5 + l.delay, delay: l.delay, repeat: Infinity, ease: "easeInOut" }}
           >

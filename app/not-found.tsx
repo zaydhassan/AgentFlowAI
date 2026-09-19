@@ -43,7 +43,7 @@ export default function NotFound() {
             <Link
               key={d.href}
               href={d.href}
-              className="group flex items-start gap-3 rounded-2xl border border-border bg-surface-2/40 p-5 transition-colors hover:border-border-strong hover:bg-surface-2 focus-ring"
+              className="group flex items-start gap-3 rounded-xl border border-border bg-surface-2 p-5 transition-colors hover:border-border-strong hover:bg-surface-2 focus-ring"
             >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
                 <Icon name={d.icon} className="h-5 w-5" />

@@ -46,9 +46,9 @@ export function Principles() {
             {PRINCIPLES.map((p) => (
               <StaggerItem
                 key={p.title}
-                className="group rounded-2xl border border-border bg-surface-2/40 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-2/70"
+                className="group rounded-xl border border-border bg-surface-2 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-3"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-surface text-brand transition-shadow duration-300 group-hover:shadow-[0_0_18px_-2px_rgba(124,92,255,0.55)]">
+                <span className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-surface text-brand transition-shadow duration-300 group-hover:shadow-[0_0_18px_-2px_rgba(33,150,243,0.4)]">
                   <Icon name={p.icon} className="h-4.5 w-4.5" />
                 </span>
                 <h3 className="mt-4 text-base font-semibold">{p.title}</h3>

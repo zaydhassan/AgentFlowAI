@@ -76,11 +76,11 @@ export default function ChangelogPage() {
           <div className="grid-overlay absolute inset-0 opacity-70 [mask-image:radial-gradient(70%_60%_at_50%_35%,black,transparent)]" />
           <div
             className="absolute -left-40 top-[-160px] h-[480px] w-[480px] rounded-full opacity-50 blur-3xl"
-            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(124,92,255,0.28), transparent 70%)" }}
+            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(33,150,243,0.2), transparent 70%)" }}
           />
           <div
             className="absolute -right-40 top-[-120px] h-[420px] w-[420px] rounded-full opacity-40 blur-3xl"
-            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,0.22), transparent 70%)" }}
+            style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(66,165,245,0.18), transparent 70%)" }}
           />
           {/* Faint orbital arcs behind the heading. */}
           <div className="absolute left-1/2 top-24 h-[720px] w-[720px] -translate-x-1/2 opacity-50">
@@ -100,7 +100,7 @@ export default function ChangelogPage() {
           <HeroFade y={14} delay={0.15}>
             <h1 className="text-balance pt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
               Release{" "}
-              <span className="bg-[linear-gradient(90deg,#a78bfa,_#7c5cff_45%,_#5b8bff_70%,_#22d3ee)] bg-clip-text text-transparent">
+              <span className="bg-[linear-gradient(90deg,#90CAF9,_#2196F3_45%,_#64B5F6_70%,_#42A5F5)] bg-clip-text text-transparent">
                 notes
               </span>
             </h1>

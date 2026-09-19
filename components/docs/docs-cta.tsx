@@ -8,14 +8,14 @@ export function DocumentationCta() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border">
-      {/* Dark center with purple glow left, cyan glow right. */}
+    <div className="relative overflow-hidden rounded-2xl border border-border">
+      {/* Dark center with soft blue glow left, brighter blue right. */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden
         style={{
           background:
-            "radial-gradient(50% 90% at 0% 50%, rgba(124,92,255,0.16), transparent 70%), radial-gradient(45% 90% at 100% 50%, rgba(34,211,238,0.12), transparent 70%)",
+            "radial-gradient(50% 90% at 0% 50%, rgba(33,150,243,0.16), transparent 70%), radial-gradient(45% 90% at 100% 50%, rgba(66,165,245,0.12), transparent 70%)",
         }}
       />
       {/* Thin gradient border accent. */}
@@ -49,8 +49,8 @@ export function DocumentationCta() {
         )}
         <defs>
           <linearGradient id="ctaGrad" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#7c5cff" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#22d3ee" stopOpacity="0.3" />
+            <stop stopColor="#2196F3" stopOpacity="0.35" />
+            <stop offset="1" stopColor="#42A5F5" stopOpacity="0.3" />
           </linearGradient>
         </defs>
       </svg>

@@ -40,7 +40,7 @@ export function PrivacyToc({ items, activeId }: { items: TocItem[]; activeId: st
           const active = item.id === activeId;
           return (
             <li key={item.id} className="relative">
-              {/* Purple→cyan indicator for the active item. */}
+              {/* Blue indicator for the active item. */}
               {active && (
                 <span
                   aria-hidden
