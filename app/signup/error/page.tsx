@@ -34,7 +34,7 @@ function ErrorBody() {
       <div className="flex flex-col items-stretch gap-2">
         <Link
           href="/signup"
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-brand to-ai text-sm font-medium text-white shadow-[0_8px_24px_-8px_rgba(34,211,238,0.6)] transition-opacity hover:opacity-90"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-brand text-sm font-medium text-white shadow-[0_8px_24px_-8px_rgba(33,150,243,0.45)] transition-colors hover:bg-brand-2"
         >
           Try signing up again
         </Link>

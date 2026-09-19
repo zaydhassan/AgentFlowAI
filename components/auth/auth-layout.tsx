@@ -29,7 +29,7 @@ export function AuthLayout({
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-8px_rgba(124,92,255,0.8)]">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-8px_rgba(33,150,243,0.55)]">
               <Icon name="Workflow" className="h-4 w-4 text-white" />
             </div>
             <span className="text-base font-semibold tracking-tight">AgentFlow<span className="text-brand"> AI</span></span>

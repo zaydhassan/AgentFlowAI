@@ -66,7 +66,7 @@ function ResetForm() {
         </p>
         <Link
           href="/forgot-password"
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-brand to-ai px-5 text-sm font-medium text-white"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-5 text-sm font-medium text-white"
         >
           Request a new link
         </Link>
@@ -117,7 +117,7 @@ function ResetForm() {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-brand to-ai text-sm font-medium text-white shadow-[0_8px_24px_-8px_rgba(34,211,238,0.6)] transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand text-sm font-medium text-white shadow-[0_8px_24px_-8px_rgba(33,150,243,0.45)] transition-colors hover:bg-brand-2 disabled:opacity-60"
       >
         {pending && (
           <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden />

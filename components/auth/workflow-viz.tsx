@@ -10,12 +10,12 @@ import { Icon } from "@/components/ui/icon";
 // keyframe so the motion survives any panel height. Reduced-motion users see
 // the static pipeline with no particles.
 const NODES = [
-  { icon: "Mail", label: "Gmail Trigger", tint: "#22d3ee" },
-  { icon: "Sparkles", label: "AI Agent", tint: "#7c5cff" },
-  { icon: "Cpu", label: "Memory", tint: "#5b8bff" },
-  { icon: "Wrench", label: "MCP Tool", tint: "#7c5cff" },
-  { icon: "MessageSquare", label: "Slack", tint: "#22d3ee" },
-  { icon: "Database", label: "Database", tint: "#5b8bff" },
+  { icon: "Mail", label: "Gmail Trigger", tint: "#8B98A8" },
+  { icon: "Sparkles", label: "AI Agent", tint: "#2196F3" },
+  { icon: "Cpu", label: "Memory", tint: "#64B5F6" },
+  { icon: "Wrench", label: "MCP Tool", tint: "#42A5F5" },
+  { icon: "MessageSquare", label: "Slack", tint: "#8B98A8" },
+  { icon: "Database", label: "Database", tint: "#64B5F6" },
 ] as const;
 
 const CONNECTOR_HEIGHT = 20; // px — keep in sync with the `auth-flow` keyframe.
@@ -40,7 +40,7 @@ export function WorkflowViz({ className }: { className?: string }) {
                 transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 + i * 0.08 }}
               >
                 <div
-                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-2.5 py-1.5 backdrop-blur-sm"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5"
                   style={{ boxShadow: `0 0 24px -16px ${node.tint}` }}
                 >
                   <span

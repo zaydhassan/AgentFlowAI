@@ -10,7 +10,7 @@ export function PendingCard() {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-white shadow-[0_8px_30px_-8px_rgba(124,92,255,0.7)]"
+        className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-brand to-ai text-white shadow-[0_8px_30px_-8px_rgba(33,150,243,0.5)]"
       >
         <Icon name="Mail" className="h-7 w-7" />
       </motion.div>
