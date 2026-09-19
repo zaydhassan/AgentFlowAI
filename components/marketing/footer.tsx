@@ -65,7 +65,7 @@ export function Footer() {
             className={`inline-flex items-center gap-2.5 ${focusClass}`}
             aria-label="AgentFlow AI home"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-6px_rgba(124,92,255,0.8)]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-6px_rgba(33,150,243,0.5)]">
               <LogoMark className="h-4 w-4 text-white" />
             </span>
             <span className="text-base font-semibold tracking-tight">
@@ -125,14 +125,14 @@ export function Footer() {
             <span>© {year} AgentFlow AI. All rights reserved.</span>
             <span className="hidden sm:inline" aria-hidden="true">·</span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2/60 px-2 py-0.5 font-medium text-fg-muted">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2 py-0.5 font-medium text-fg-muted">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
                 v{site.version}
               </span>
             </span>
           </div>
           <p className="order-3 sm:order-2 w-full sm:w-auto text-center sm:text-right">
-            Built with <span className="text-rose-400" aria-hidden="true">❤</span><span className="sr-only">love</span> using Next.js
+            Built with <span className="text-danger" aria-hidden="true">❤</span><span className="sr-only">love</span> using Next.js
           </p>
         </SiteContainer>
       </div>

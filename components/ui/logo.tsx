@@ -32,9 +32,9 @@ export function LogoFull({
         <>
           <defs>
             <linearGradient id="af-tile" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#4338CA" />
-              <stop offset=".5" stopColor="#3B82F6" />
-              <stop offset="1" stopColor="#22D3EE" />
+              <stop stopColor="#1565C0" />
+              <stop offset=".5" stopColor="#2196F3" />
+              <stop offset="1" stopColor="#42A5F5" />
             </linearGradient>
           </defs>
           <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#af-tile)" />
@@ -50,13 +50,13 @@ export function LogoFull({
       {!tile && (
         <defs>
           <linearGradient id="af-stroke" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6366F1" />
-            <stop offset=".5" stopColor="#3B82F6" />
-            <stop offset="1" stopColor="#22D3EE" />
+            <stop stopColor="#1E88E5" />
+            <stop offset=".5" stopColor="#2196F3" />
+            <stop offset="1" stopColor="#42A5F5" />
           </linearGradient>
         </defs>
       )}
-      <g fill="#7C3AED">
+      <g fill="#2196F3">
         <circle cx="37" cy="20" r="3.4" />
         <circle cx="52" cy="53" r="3.4" />
         <circle cx="12" cy="53" r="3.4" />

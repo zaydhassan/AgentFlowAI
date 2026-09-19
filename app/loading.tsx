@@ -20,9 +20,9 @@ export default function Loading() {
       <svg viewBox="0 0 64 64" width="56" height="56" fill="none" aria-hidden="true">
         <defs>
           <linearGradient id="af-load" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6366F1" />
-            <stop offset=".5" stopColor="#3B82F6" />
-            <stop offset="1" stopColor="#22D3EE" />
+            <stop stopColor="#1E88E5" />
+            <stop offset=".5" stopColor="#2196F3" />
+            <stop offset="1" stopColor="#42A5F5" />
           </linearGradient>
         </defs>
         <path
@@ -66,7 +66,7 @@ export default function Loading() {
             fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: "1.05rem",
-            background: "linear-gradient(90deg,#6366F1,#3B82F6,#22D3EE)",
+            background: "linear-gradient(90deg,#1E88E5,#2196F3,#42A5F5)",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",

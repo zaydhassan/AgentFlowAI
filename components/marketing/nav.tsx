@@ -111,8 +111,8 @@ export function MarketingNav() {
         "nav-shell nav-edge fixed top-0 inset-x-0 z-50",
 
         scrolled
-          ? "h-16 border-b border-border/70 bg-bg/70 shadow-[0_1px_0_0_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
-          : "h-[72px] border-b border-border/50 bg-bg/65 backdrop-blur-xl"
+          ? "h-16 border-b border-border bg-bg shadow-[0_1px_0_0_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.45)]"
+          : "h-[72px] border-b border-border/60 bg-bg"
       )}
       initial={false}
       animate={{ y: hidden ? "-115%" : "0%" }}
@@ -127,7 +127,7 @@ export function MarketingNav() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 420, damping: 26 }}
-            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-brand via-brand-2 to-ai shadow-[0_8px_24px_-10px_rgba(124,92,255,0.65)] ring-1 ring-inset ring-white/10"
+            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-brand via-brand-2 to-ai shadow-[0_8px_24px_-10px_rgba(33,150,243,0.5)] ring-1 ring-inset ring-white/10"
           >
             {/* Top sheen — a soft light-from-above highlight inside the tile. */}
             <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 to-transparent" />
@@ -293,7 +293,7 @@ function MegaLink({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
-            className="absolute left-1/2 top-full mt-1.5 z-50 w-[24rem] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface-2/90 backdrop-blur-2xl shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]"
+            className="absolute left-1/2 top-full mt-1.5 z-50 w-[24rem] -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-surface-2 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]"
           >
             <div className="grid grid-cols-1 gap-1 p-2">
               {items.map((item) => (
@@ -330,7 +330,7 @@ function AIStatusBadge({ className }: { className?: string }) {
       aria-label="All systems operational"
       title="AI engine online — 99.98% uptime"
       className={cn(
-        "group flex items-center gap-2 rounded-full border border-border bg-surface-2/60 px-2.5 py-1 text-xs transition-colors duration-200 hover:border-border-strong hover:bg-surface-3/70",
+        "group flex items-center gap-2 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs transition-colors duration-200 hover:border-border-strong hover:bg-surface-3",
         className
       )}
     >
@@ -376,7 +376,7 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            className="fixed right-0 top-0 z-50 flex h-dvh w-[82%] max-w-sm flex-col border-l border-border bg-surface/95 backdrop-blur-2xl shadow-2xl lg:hidden"
+            className="fixed right-0 top-0 z-50 flex h-dvh w-[82%] max-w-sm flex-col border-l border-border bg-surface shadow-2xl lg:hidden"
             role="dialog"
             aria-label="Menu"
           >

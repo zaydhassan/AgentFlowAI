@@ -462,7 +462,7 @@ export function CommandPalette({
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-surface-2/95 backdrop-blur-2xl shadow-2xl shadow-black/60 animate-float-up">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-border bg-surface-2 shadow-2xl shadow-black/60 animate-float-up">
         {/* Search input */}
         <div className="flex items-center gap-3 border-b border-border px-4">
           <Icon name="Search" className="h-4 w-4 text-fg-subtle" />

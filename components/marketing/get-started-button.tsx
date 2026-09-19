@@ -48,29 +48,25 @@ export function GetStartedButton({
       style={{ x: sx, y: sy }}
       className={cn("group relative", className)}
     >
-      {/* Glow halo — sits behind the ring and breathes. */}
+      {/* Soft blue glow — sits behind the button and breathes. */}
       <span
         aria-hidden
-        className="cta-glow pointer-events-none absolute -inset-1.5 rounded-[14px] bg-gradient-to-r from-brand via-ai to-brand-2 opacity-50 blur-md transition-opacity duration-300 group-hover:opacity-90"
+        className="cta-glow pointer-events-none absolute -inset-1 rounded-[13px] bg-brand opacity-35 blur-md transition-opacity duration-300 group-hover:opacity-60"
       />
 
-      {/* Gradient hairline border ring. */}
+      {/* Primary CTA — solid electric blue. */}
       <Link
         href={href}
-        className="cta-ring relative inline-flex h-9 items-center gap-2 rounded-[11px] p-px text-sm font-medium shadow-[0_8px_24px_-10px_rgba(124,92,255,0.7)] transition-shadow duration-300 group-hover:shadow-[0_12px_32px_-8px_rgba(34,211,238,0.65)] focus-ring"
+        className="relative inline-flex h-9 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-medium text-white shadow-[0_8px_24px_-10px_rgba(33,150,243,0.6)] transition-colors duration-300 group-hover:bg-brand-2 focus-ring"
       >
-        {/* Dark glass fill with a faint inner sheen. */}
-        <span className="inline-flex h-full w-full items-center justify-center gap-1.5 rounded-[10px] bg-surface-2/90 px-4 text-fg backdrop-blur-md transition-colors duration-300 group-hover:bg-surface-3/90">
-          <span>{label}</span>
-          <motion.span
-            aria-hidden
-            initial={false}
-            className="text-ai"
-            whileHover={{ x: 1.5 }}
-          >
-            <Icon name="ArrowRight" className="h-3.5 w-3.5" />
-          </motion.span>
-        </span>
+        <span>{label}</span>
+        <motion.span
+          aria-hidden
+          initial={false}
+          whileHover={{ x: 1.5 }}
+        >
+          <Icon name="ArrowRight" className="h-3.5 w-3.5" />
+        </motion.span>
       </Link>
     </motion.div>
   );

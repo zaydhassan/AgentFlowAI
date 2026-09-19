@@ -2,7 +2,7 @@
   <!-- AgentFlow AI — favicon / app icon (auto-served by Next at /icon.svg) — final v2 -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4338CA"/><stop offset=".5" stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/>
+      <stop stop-color="#1565C0"/><stop offset=".5" stop-color="#2196F3"/><stop offset="1" stop-color="#42A5F5"/>
     </linearGradient>
   </defs>
   <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>

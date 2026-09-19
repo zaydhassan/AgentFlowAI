@@ -54,7 +54,7 @@ export function Sidebar({
   return (
     <>
       {/* Desktop — static rail (always visible at lg+) */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border bg-bg-soft/80 backdrop-blur-xl">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-border bg-bg-soft">
         <SidebarContent activeHref={activeHref} />
       </aside>
 
@@ -102,7 +102,7 @@ function SidebarContent({
           onClick={onNavigate}
           className="flex h-14 flex-1 items-center gap-2.5 px-5 transition-colors hover:bg-surface-2/60"
         >
-          <div className="relative grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-6px_rgba(124,92,255,0.8)]">
+          <div className="relative grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-ai shadow-[0_6px_20px_-6px_rgba(33,150,243,0.5)]">
             <LogoMark className="h-4 w-4 text-white" />
           </div>
           <div className="leading-tight">
@@ -162,7 +162,7 @@ function SidebarContent({
       </nav>
 
       <div className="border-t border-border p-3">
-        <div className="rounded-lg border border-border bg-surface-2/60 p-3">
+        <div className="rounded-lg border border-border bg-surface-2 p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-fg-muted">Credits</span>
             <span className="font-medium text-fg">142.5k</span>

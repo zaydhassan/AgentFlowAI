@@ -38,14 +38,14 @@ export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: 
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-bg/80 backdrop-blur-xl px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-bg px-4 lg:px-6">
       {/* Mobile menu trigger — opens the slide-in sidebar drawer (lg+ hides it; the static rail is always visible there) */}
       <button
         type="button"
         suppressHydrationWarning
         onClick={onOpenSidebar}
         aria-label="Open menu"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface-2/60 text-fg-muted transition-colors hover:border-border-strong hover:text-fg lg:hidden"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface-2 text-fg-muted transition-colors hover:border-border-strong hover:text-fg lg:hidden"
       >
         <Icon name="Menu" className="h-4 w-4" />
       </button>
@@ -61,7 +61,7 @@ export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: 
       <button
         suppressHydrationWarning
         onClick={onOpenCommand}
-        className="group flex h-9 flex-1 max-w-md items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 text-sm text-fg-subtle hover:border-border-strong transition-colors"
+        className="group flex h-9 flex-1 max-w-md items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg-subtle hover:border-border-strong transition-colors"
       >
         <Icon name="Search" className="h-4 w-4" />
         <span className="flex-1 text-left">Search workflows, nodes, docs…</span>
@@ -72,7 +72,7 @@ export function Topbar({ onOpenCommand, onOpenSidebar, user }: { onOpenCommand: 
 
       <div className="ml-auto flex items-center gap-1.5">
         {/* Running agents */}
-        <div className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-2.5 py-1.5 text-xs">
+        <div className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs">
           <span className="dot dot-live bg-success" />
           <span className="text-fg-muted">12 agents running</span>
         </div>
